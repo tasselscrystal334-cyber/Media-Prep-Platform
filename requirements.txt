@@ -8,3 +8,5 @@ fastapi>=0.115.0
 uvicorn>=0.30.0
 httpx2>=0.28.0
 pytest>=8.0.0
+# Optional desktop GUI dependency for `mediaqc gui`.
+# PySide6>=6.7.0

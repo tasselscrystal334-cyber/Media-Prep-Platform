@@ -6,11 +6,11 @@ Document the PreviewWindow responsibilities in the 05_UI documentation area.
 
 ## Overview
 
-Covers future PySide6 studio UI with a professional dark interface, dockable workspace, asset browser, inspector, preview, batch queue, settings, themes, and shortcuts.
+Covers the right-side Preview and Logs tabs in the V1.0 PySide6 GUI.
 
 ## Architecture
 
-This area must respect the layered architecture, avoid circular dependencies, and keep feature-specific behavior behind documented service, plugin, API, or configuration boundaries.
+The preview pane shows generated report output paths and can open HTML/PDF reports through desktop services. The log pane records scan lifecycle events and cancellation requests.
 
 ## Workflow
 
@@ -26,11 +26,11 @@ Configuration must remain explicit and versionable. Use YAML for rules, profiles
 
 ## Example
 
-Use this document as the reference when implementing or reviewing PreviewWindow changes.
+After a scan, use Open HTML or the File menu Export PDF action to inspect generated reports.
 
 ## Known Limitations
 
-This document describes the intended architecture and current command-line implementation. Desktop, cloud, and enterprise features may be staged behind roadmap milestones.
+This is not a video playback surface yet. FFplay preview remains available through `mediaqc play`.
 
 ## Future Improvements
 
@@ -41,6 +41,8 @@ Expand this document when the subsystem receives a new module, public API, UI su
 - `README.md`
 - `PROJECT_CONSTITUTION.md`
 - `docs/01_Architecture/SystemOverview.md`
+- `mediaqc/gui/main_window.py`
+- `mediaqc/processing/ffplay.py`
 
 ## Revision History
 

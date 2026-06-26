@@ -6,15 +6,15 @@ Document the Workspace responsibilities in the 05_UI documentation area.
 
 ## Overview
 
-Covers future PySide6 studio UI with a professional dark interface, dockable workspace, asset browser, inspector, preview, batch queue, settings, themes, and shortcuts.
+Covers the V1.0 workspace layout: left Projects/Rules/History navigation, center Scan workspace, and right Preview/Logs panel.
 
 ## Architecture
 
-This area must respect the layered architecture, avoid circular dependencies, and keep feature-specific behavior behind documented service, plugin, API, or configuration boundaries.
+`MainWindow` composes the workspace with Qt splitters and tabs. Scan execution is delegated to `ScanWorker` and `QtScanThread` so the UI remains responsive.
 
 ## Workflow
 
-Before changing related code, read this document and nearby architecture notes. After implementation, update this document, tests, examples, and changelog entries where needed.
+Operators drag folders or files into the scan field, build a project queue, start scans, request cancellation, and inspect generated outputs.
 
 ## Dependencies
 
@@ -26,11 +26,11 @@ Configuration must remain explicit and versionable. Use YAML for rules, profiles
 
 ## Example
 
-Use this document as the reference when implementing or reviewing Workspace changes.
+The workspace exports JSON, CSV, HTML, and PDF into the selected output folder for each queued project.
 
 ## Known Limitations
 
-This document describes the intended architecture and current command-line implementation. Desktop, cloud, and enterprise features may be staged behind roadmap milestones.
+The V1.0 workspace is focused on scanning and reporting. Editing rules inside the GUI is reserved for a later milestone.
 
 ## Future Improvements
 
@@ -41,6 +41,8 @@ Expand this document when the subsystem receives a new module, public API, UI su
 - `README.md`
 - `PROJECT_CONSTITUTION.md`
 - `docs/01_Architecture/SystemOverview.md`
+- `mediaqc/gui/main_window.py`
+- `mediaqc/gui/queue.py`
 
 ## Revision History
 

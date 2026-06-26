@@ -6,41 +6,47 @@ Document the README responsibilities in the 05_UI documentation area.
 
 ## Overview
 
-Covers future PySide6 studio UI with a professional dark interface, dockable workspace, asset browser, inspector, preview, batch queue, settings, themes, and shortcuts.
+Covers the V1.0 PySide6 studio UI with a professional dark interface, project/rule/history navigation, scan workspace, preview/log panes, batch queue, settings, themes, and shortcuts.
 
 ## Architecture
 
-This area must respect the layered architecture, avoid circular dependencies, and keep feature-specific behavior behind documented service, plugin, API, or configuration boundaries.
+The GUI lives under `mediaqc/gui/`. PySide6 imports are delayed until `mediaqc gui` starts so CLI and test environments do not require GUI dependencies. Scanning is executed in a background thread and reuses existing report writers.
 
 ## Workflow
 
-Before changing related code, read this document and nearby architecture notes. After implementation, update this document, tests, examples, and changelog entries where needed.
+Launch with `mediaqc gui`. Operators can drop folders or files, queue multiple projects, start scans, request cancellation, watch progress, inspect logs, and open generated HTML/PDF reports.
 
 ## Dependencies
 
-Relevant dependencies may include Python 3.11+, FFmpeg tooling, SQLite, FastAPI, Typer, Rich, Jinja2, PyYAML, watchdog, PySide6 for future desktop UI, and platform GPU APIs when applicable.
+Python 3.11+, optional `PySide6`, FFmpeg tooling, SQLite, Jinja2, PyYAML, and the existing scan/report stack.
 
 ## Configuration
 
-Configuration must remain explicit and versionable. Use YAML for rules, profiles, output specs, canvas specs, presets, and future project settings unless an architecture document approves another format.
+GUI scans currently use explicit folder/output selection and existing YAML/project profile files. Future settings should remain versionable and documented.
 
 ## Example
 
-Use this document as the reference when implementing or reviewing README changes.
+```bash
+python -m pip install "mediaqc[gui]"
+mediaqc gui
+```
 
 ## Known Limitations
 
-This document describes the intended architecture and current command-line implementation. Desktop, cloud, and enterprise features may be staged behind roadmap milestones.
+Cancellation is cooperative. If a scan is already inside a long file operation, the current operation may finish before the UI marks the job cancelled.
 
 ## Future Improvements
 
-Expand this document when the subsystem receives a new module, public API, UI surface, or deployment contract.
+Add persistent GUI settings, richer preview playback, PDF styling, rule/profile editing, and dashboard handoff.
 
 ## Related Modules
 
 - `README.md`
 - `PROJECT_CONSTITUTION.md`
 - `docs/01_Architecture/SystemOverview.md`
+- `mediaqc/gui/main_window.py`
+- `mediaqc/gui/workers.py`
+- `mediaqc/report.py`
 
 ## Revision History
 

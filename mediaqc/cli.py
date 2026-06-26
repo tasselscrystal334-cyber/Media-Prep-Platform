@@ -163,6 +163,19 @@ def play(
 
 
 @app.command()
+def gui() -> None:
+    """Launch the PySide6 desktop GUI."""
+
+    try:
+        from .gui.app import launch_gui
+        exit_code = launch_gui()
+    except RuntimeError as exc:
+        console.print(f"GUI failed: {exc}", markup=False)
+        raise typer.Exit(code=1) from exc
+    raise typer.Exit(code=exit_code)
+
+
+@app.command()
 def transcode(
     input_path: Path = typer.Argument(
         ...,

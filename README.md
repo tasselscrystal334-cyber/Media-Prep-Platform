@@ -12,6 +12,7 @@ MediaPrep Studio is a professional media preparation and quality-control platfor
 - Modular validation engine with YAML rules and project profiles.
 - Live event checks for output specs, LED canvas layouts, codec risk, manifests, and integrity verification.
 - FFmpeg/FFplay environment checks, preview playback, transcode presets, subtitles, logo overlays, and batch job reports.
+- PySide6 desktop GUI with dark theme, project/rule/history panels, scan queue, preview/log panes, and JSON/CSV/HTML/PDF export.
 - JSON, CSV, and HTML reporting.
 - FastAPI dashboard with REST API foundations.
 
@@ -42,6 +43,23 @@ python -m pip install -e .
 mediaqc scan ./Media --profile disguise --output ./reports --html
 mediaqc tools doctor
 ```
+
+## Desktop GUI
+
+Install the optional GUI dependency and launch the desktop app:
+
+```bash
+python -m pip install "mediaqc[gui]"
+mediaqc gui
+```
+
+The V1.0 GUI provides a dark PySide6 workspace with:
+
+- Left navigation for Projects, Rules, and History.
+- Center scan workspace with drag-and-drop, batch queue, progress, and cancel request.
+- Right Preview and Logs tabs.
+- Background scanning in a worker thread.
+- Automatic JSON, CSV, HTML, and PDF report export.
 
 ## Documentation Entry Points
 

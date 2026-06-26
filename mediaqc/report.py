@@ -118,6 +118,16 @@ def write_html_report(report: dict[str, Any], output_dir: Path) -> Path:
     return output_path
 
 
+def write_pdf_report(report: dict[str, Any], output_dir: Path) -> Path:
+    """Write a lightweight PDF report without external runtime dependencies."""
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_path = output_dir / "media_qc_report.pdf"
+    lines = _pdf_lines(report)
+    _write_simple_pdf(output_path, lines)
+    return output_path
+
+
 def build_summary(files: list[MediaFileResult]) -> dict[str, int]:
     """Build pass/warn/fail counts for terminal and HTML reporting."""
 
@@ -202,3 +212,69 @@ def _first_stream(ffprobe: dict[str, Any], codec_type: str) -> dict[str, Any]:
 
 def _status(value: Any) -> str:
     return getattr(value, "status", "") if value is not None else ""
+
+
+def _pdf_lines(report: dict[str, Any]) -> list[str]:
+    summary = report.get("summary") or {}
+    lines = [
+        "MediaPrep Studio QC Report",
+        f"Project: {report.get('project_name') or report.get('project_path', '-')}",
+        f"Generated: {report.get('generated_at', '-')}",
+        f"Total Files: {report.get('total_files', 0)}",
+        f"PASS: {summary.get('rule_pass', 0)}  WARN: {summary.get('rule_warn', 0)}  FAIL: {summary.get('rule_fail', 0)}",
+        "",
+        "Files:",
+    ]
+    for item in report.get("files", [])[:80]:
+        lines.append(
+            f"- {item.get('filename', '-')}: {item.get('rule_status', item.get('status', '-'))} "
+            f"{item.get('extension', '')} {item.get('size_bytes', '')} bytes"
+        )
+        errors = item.get("errors") or []
+        if errors:
+            lines.append(f"  Errors: {'; '.join(errors)[:180]}")
+    if len(report.get("files", [])) > 80:
+        lines.append(f"... {len(report['files']) - 80} additional files omitted from PDF summary.")
+    return lines
+
+
+def _write_simple_pdf(path: Path, lines: list[str]) -> None:
+    escaped_lines = [_escape_pdf_text(line) for line in lines]
+    text_ops = ["BT", "/F1 11 Tf", "50 790 Td", "14 TL"]
+    for index, line in enumerate(escaped_lines):
+        if index == 0:
+            text_ops.append(f"({line}) Tj")
+        else:
+            text_ops.append(f"T* ({line}) Tj")
+    text_ops.append("ET")
+    stream = "\n".join(text_ops).encode("utf-8")
+    objects = [
+        b"<< /Type /Catalog /Pages 2 0 R >>",
+        b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 842] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>",
+        b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+        b"<< /Length " + str(len(stream)).encode("ascii") + b" >>\nstream\n" + stream + b"\nendstream",
+    ]
+    content = bytearray(b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n")
+    offsets = [0]
+    for number, obj in enumerate(objects, start=1):
+        offsets.append(len(content))
+        content.extend(f"{number} 0 obj\n".encode("ascii"))
+        content.extend(obj)
+        content.extend(b"\nendobj\n")
+    xref_offset = len(content)
+    content.extend(f"xref\n0 {len(objects) + 1}\n".encode("ascii"))
+    content.extend(b"0000000000 65535 f \n")
+    for offset in offsets[1:]:
+        content.extend(f"{offset:010d} 00000 n \n".encode("ascii"))
+    content.extend(
+        f"trailer\n<< /Size {len(objects) + 1} /Root 1 0 R >>\nstartxref\n{xref_offset}\n%%EOF\n".encode(
+            "ascii"
+        )
+    )
+    path.write_bytes(bytes(content))
+
+
+def _escape_pdf_text(value: str) -> str:
+    ascii_value = value.encode("latin-1", errors="replace").decode("latin-1")
+    return ascii_value.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
