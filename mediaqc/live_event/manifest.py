@@ -5,6 +5,7 @@ from __future__ import annotations
 import csv
 import json
 from datetime import datetime
+from fractions import Fraction
 from pathlib import Path
 from typing import Any
 
@@ -78,7 +79,7 @@ def _entry(root: Path, media: Any) -> dict[str, Any]:
         "codec": video.get("codec_name"),
         "width": video.get("width"),
         "height": video.get("height"),
-        "fps": video.get("avg_frame_rate"),
+        "fps": _fps(video.get("avg_frame_rate")),
         "color_space": video.get("color_space"),
         "status": getattr(media, "rule_status", None) or media.status,
     }
@@ -95,4 +96,15 @@ def _float_or_none(value: Any) -> float | None:
     try:
         return float(value) if value not in (None, "") else None
     except (TypeError, ValueError):
+        return None
+
+
+def _fps(value: Any) -> float | None:
+    if value in (None, "", "0/0"):
+        return None
+    try:
+        if isinstance(value, str) and "/" in value:
+            return float(Fraction(value))
+        return float(value)
+    except (TypeError, ValueError, ZeroDivisionError):
         return None

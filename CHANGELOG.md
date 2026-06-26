@@ -11,10 +11,13 @@ The format follows Keep a Changelog and the project aims to follow Semantic Vers
 - Repository documentation system for MediaPrep Studio.
 - Project constitution, security policy, code of conduct, and AI collaboration documents.
 - Product specifications under `docs/17_Specifications/`.
+- Direct tests for Live Event output spec and codec profile risk behavior.
 
 ### Changed
 
 - Root documentation now uses MediaPrep Studio as the product name while preserving the current `mediaqc` CLI implementation.
+- Manifest `fps` values are normalized to numeric values for delivery manifests.
+- HAP Alpha checks now warn when alpha is requested by codec name but not confirmed by pixel format metadata.
 
 ## [0.95.0] - 2026-06-26
 

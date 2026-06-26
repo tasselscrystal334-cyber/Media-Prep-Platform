@@ -7,6 +7,7 @@ Document live event-specific media preparation checks.
 ## Overview
 
 Live event checks validate output specs, canvas layouts, codec playback risk, manifests, and project integrity.
+Manifest exports store delivery-facing fields such as relative path, SHA256, size, modified time, codec, dimensions, numeric FPS, color space, and status.
 
 ## Architecture
 
@@ -29,6 +30,7 @@ mediaqc scan ./Media \
 - PyYAML
 - FFprobe metadata
 - SHA256 hashing
+- FFmpeg-derived codec naming and pixel format metadata
 
 ## Configuration
 
@@ -47,17 +49,22 @@ mediaqc verify ./Media --manifest ./reports/manifest.json
 ## Known Limitations
 
 EDID validation is currently project output spec validation, not hardware EDID acquisition.
+Alpha-channel detection depends on codec and pixel-format metadata; uncertain alpha information produces WARN instead of FAIL.
 
 ## Future Improvements
 
 Add hardware EDID capture and processor mapping exports.
+Add frame sampling for alpha-channel confirmation.
 
 ## Related Modules
 
 - `mediaqc/live_event/edid.py`
 - `mediaqc/live_event/canvas.py`
+- `mediaqc/live_event/codec_profiles.py`
 - `mediaqc/live_event/manifest.py`
+- `mediaqc/live_event/integrity.py`
 
 ## Revision History
 
 - Documentation version: 0.95
+- Last updated: 2026-06-27

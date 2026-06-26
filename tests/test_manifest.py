@@ -36,6 +36,7 @@ def test_build_and_write_manifest(tmp_path: Path) -> None:
 
     assert manifest["media_count"] == 1
     assert manifest["files"][0]["relative_path"] == "Media/Opening.mov"
+    assert manifest["files"][0]["fps"] == 60.0
     assert json.loads(json_path.read_text(encoding="utf-8"))["project_name"] == "LED Show"
     rows = list(csv.DictReader(csv_path.open(encoding="utf-8-sig")))
     assert rows[0]["filename"] == "Opening.mov"

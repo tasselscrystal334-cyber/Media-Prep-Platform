@@ -124,7 +124,8 @@ def _category(codec: str) -> str:
 
 
 def _has_alpha(codec: str, pix_fmt: str) -> bool:
-    return any(token in pix_fmt for token in ("a", "rgba", "yuva", "argb", "bgra")) or "alpha" in codec or "4444" in codec
+    alpha_formats = {"rgba", "argb", "bgra", "abgr", "yuva420p", "yuva422p", "yuva444p"}
+    return pix_fmt in alpha_formats or pix_fmt.startswith("yuva") or "4444" in codec
 
 
 def _max_risk(left: str, right: str) -> str:
