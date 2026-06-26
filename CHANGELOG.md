@@ -1,54 +1,31 @@
 # Changelog
 
-## Purpose
+All notable changes to MediaPrep Studio are documented in this file.
 
-Track released project changes without preserving short-lived development logs.
+The format follows Keep a Changelog and the project aims to follow Semantic Versioning after the public v1.0 release.
 
-## Overview
+## [Unreleased]
 
-This changelog records the current documented release state only. Completed task chatter, bug archaeology, discarded plans, and obsolete implementation notes are intentionally excluded.
+### Added
 
-## Architecture
+- Repository documentation system for MediaPrep Studio.
+- Project constitution, security policy, code of conduct, and AI collaboration documents.
+- Product specifications under `docs/17_Specifications/`.
 
-Changes are grouped by product capability and linked to repository documentation where possible.
+### Changed
 
-## Workflow
+- Root documentation now uses MediaPrep Studio as the product name while preserving the current `mediaqc` CLI implementation.
 
-Update this file whenever implementation changes are merged into the repository documentation set.
+## [0.95.0] - 2026-06-26
 
-## Dependencies
+### Added
 
-No runtime dependencies.
-
-## Configuration
-
-No configuration.
-
-## Example
-
-```text
-0.95.0 - Live Event Media QC Extension
-```
-
-## Known Limitations
-
-This file records release-level changes only.
-
-## Future Improvements
-
-Add release artifact links when packaging is introduced.
-
-## Related Modules
-
-- `README.md`
-- `docs/15_Roadmap/Product_Roadmap.md`
+- Live Event Media QC extension with output spec checks, canvas validation, codec risk profiles, manifest generation, and integrity verification.
+- FastAPI dashboard and REST API foundation.
+- SQLite hash cache, history, and duplicate search.
+- Watch mode, project profiles, validation engine, FFmpeg deep analysis, and HTML reporting.
 
 ## Revision History
 
-### 0.95.0
-
-- Added Live Event output specification checks.
-- Added canvas validation.
-- Added codec risk profiles for HAP, NotchLC, ProRes, H264, HEVC, and other codecs.
-- Added manifest generation and integrity verification.
-- Added dashboard REST API and documentation structure.
+- Documentation version: 1.0
+- Last updated: 2026-06-27

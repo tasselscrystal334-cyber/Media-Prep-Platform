@@ -1,12 +1,12 @@
-# Contributing
+# MediaPrep Studio Documentation
 
 ## Purpose
 
-Define how humans and AI contributors safely change MediaPrep Studio.
+Provide the central index for repository documentation.
 
 ## Overview
 
-Every change must preserve architecture, tests, and documentation. The GitHub repository is the source of truth for standards and decisions.
+Documentation is organized by project, architecture, development, codecs, pipeline, UI, render, GPU, database, plugins, API, testing, deployment, user guide, AI collaboration, commercial planning, operations, and specifications.
 
 ## Architecture
 
@@ -14,7 +14,7 @@ This document aligns with the MediaPrep Studio layered architecture: presentatio
 
 ## Workflow
 
-Use Git Flow-style branches: `feature/<topic>`, `fix/<topic>`, `docs/<topic>`, `test/<topic>`, and `release/<version>`. Commit messages should follow Conventional Commits such as `feat:`, `fix:`, `docs:`, `test:`, `refactor:`, and `chore:`. Pull requests must include scope, test evidence, documentation updates, and risk notes.
+Read this document before changing related code, update implementation and tests, then revise documentation if behavior changes.
 
 ## Dependencies
 
@@ -26,7 +26,7 @@ Configuration is stored in YAML project rules, profiles, output specifications, 
 
 ## Example
 
-Definition of Done: design documented, code implemented, tests passing, docs updated, changelog updated when user-facing behavior changes, and review checklist complete.
+Open this file in Typora with `open -a Typora docs/README.md` on macOS or `Start-Process "typora" "docs/README.md"` in Windows PowerShell.
 
 ## Known Limitations
 
@@ -39,9 +39,8 @@ Expand this document when the subsystem receives a new module, public API, UI su
 ## Related Modules
 
 - `PROJECT_CONSTITUTION.md`
-- `docs/02_Development/GitWorkflow.md`
-- `docs/02_Development/DefinitionOfDone.md`
-- `docs/14_AI/AICommitRules.md`
+- `docs/00_Project/README.md`
+- `docs/17_Specifications/README.md`
 
 ## Revision History
 

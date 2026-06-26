@@ -1,12 +1,12 @@
-# Contributing
+# Specifications
 
 ## Purpose
 
-Define how humans and AI contributors safely change MediaPrep Studio.
+Index the durable data and contract specifications for MediaPrep Studio.
 
 ## Overview
 
-Every change must preserve architecture, tests, and documentation. The GitHub repository is the source of truth for standards and decisions.
+Specification documents define data models, fields, JSON examples, SQLite mappings, dataclass drafts, lifecycle, state machines, validation rules, errors, APIs, thread safety, serialization, examples, related documents, and revision history.
 
 ## Architecture
 
@@ -14,7 +14,7 @@ This document aligns with the MediaPrep Studio layered architecture: presentatio
 
 ## Workflow
 
-Use Git Flow-style branches: `feature/<topic>`, `fix/<topic>`, `docs/<topic>`, `test/<topic>`, and `release/<version>`. Commit messages should follow Conventional Commits such as `feat:`, `fix:`, `docs:`, `test:`, `refactor:`, and `chore:`. Pull requests must include scope, test evidence, documentation updates, and risk notes.
+Read this document before changing related code, update implementation and tests, then revise documentation if behavior changes.
 
 ## Dependencies
 
@@ -26,7 +26,7 @@ Configuration is stored in YAML project rules, profiles, output specifications, 
 
 ## Example
 
-Definition of Done: design documented, code implemented, tests passing, docs updated, changelog updated when user-facing behavior changes, and review checklist complete.
+See `docs/14_Examples/Example_Commands.md` and `docs/13_UserGuide/QuickStart.md` for operator-facing examples.
 
 ## Known Limitations
 
@@ -38,10 +38,9 @@ Expand this document when the subsystem receives a new module, public API, UI su
 
 ## Related Modules
 
-- `PROJECT_CONSTITUTION.md`
-- `docs/02_Development/GitWorkflow.md`
-- `docs/02_Development/DefinitionOfDone.md`
-- `docs/14_AI/AICommitRules.md`
+- `docs/01_Architecture/SystemOverview.md`
+- `docs/08_Database/Schema.md`
+- `docs/10_API/ApplicationAPI.md`
 
 ## Revision History
 
