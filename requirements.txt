@@ -10,3 +10,9 @@ httpx2>=0.28.0
 pytest>=8.0.0
 # Optional desktop GUI dependency for `mediaqc gui`.
 # PySide6>=6.7.0
+# Optional enterprise dependencies for `mediaqc enterprise-api` production stacks.
+# celery>=5.4.0
+# psycopg[binary]>=3.2.0
+# redis>=5.0.0
+# boto3>=1.34.0
+# minio>=7.2.0

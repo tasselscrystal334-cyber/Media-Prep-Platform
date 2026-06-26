@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mediaqc"
-version = "1.5.0"
+version = "2.0.0"
 description = "Cross-platform media QC command line tool."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -25,6 +25,13 @@ dev = [
 ]
 gui = [
     "PySide6>=6.7.0",
+]
+enterprise = [
+    "celery>=5.4.0",
+    "psycopg[binary]>=3.2.0",
+    "redis>=5.0.0",
+    "boto3>=1.34.0",
+    "minio>=7.2.0",
 ]
 
 [project.scripts]

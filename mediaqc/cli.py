@@ -872,6 +872,26 @@ def dashboard(
     )
 
 
+@app.command("enterprise-api")
+def enterprise_api(
+    host: str = typer.Option("127.0.0.1", "--host", help="Enterprise API host."),
+    port: int = typer.Option(8080, "--port", help="Enterprise API port."),
+    reload: bool = typer.Option(False, "--reload", help="Enable uvicorn auto reload."),
+) -> None:
+    """Run the V2.0 enterprise MAM API."""
+
+    try:
+        import uvicorn
+        from .enterprise.api import create_enterprise_app
+    except ImportError as exc:
+        console.print("[bold red]Enterprise API failed:[/bold red] FastAPI/uvicorn is not installed.")
+        raise typer.Exit(code=1) from exc
+
+    console.print(f"[green]Enterprise API:[/green] http://{host}:{port}")
+    console.print(f"[green]OpenAPI:[/green] http://{host}:{port}/docs")
+    uvicorn.run(create_enterprise_app(), host=host, port=port, reload=reload, log_level="info")
+
+
 def _print_summary(
     files: list[object],
     json_path: Path,

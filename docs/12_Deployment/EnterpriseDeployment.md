@@ -6,11 +6,11 @@ Document the EnterpriseDeployment responsibilities in the 12_Deployment document
 
 ## Overview
 
-Covers packaging, installers, auto update, enterprise deployment, Windows, macOS, Linux, portable mode, and offline install.
+Covers packaging, installers, auto update, enterprise deployment, Windows, macOS, Linux, portable mode, offline install, and V2.0 container deployment.
 
 ## Architecture
 
-This area must respect the layered architecture, avoid circular dependencies, and keep feature-specific behavior behind documented service, plugin, API, or configuration boundaries.
+V2.0 deployment uses Docker Compose for local enterprise stacks: API, PostgreSQL, Redis, RabbitMQ, MinIO, and optional Celery worker.
 
 ## Workflow
 
@@ -26,11 +26,14 @@ Configuration must remain explicit and versionable. Use YAML for rules, profiles
 
 ## Example
 
-Use this document as the reference when implementing or reviewing EnterpriseDeployment changes.
+```bash
+cp .env.example .env
+docker compose up
+```
 
 ## Known Limitations
 
-This document describes the intended architecture and current command-line implementation. Desktop, cloud, and enterprise features may be staged behind roadmap milestones.
+The Compose stack is a development/reference deployment. Production deployments require secrets management, TLS, backups, monitoring, and external identity providers.
 
 ## Future Improvements
 
@@ -41,6 +44,9 @@ Expand this document when the subsystem receives a new module, public API, UI su
 - `README.md`
 - `PROJECT_CONSTITUTION.md`
 - `docs/01_Architecture/SystemOverview.md`
+- `docker-compose.yml`
+- `Dockerfile`
+- `.env.example`
 
 ## Revision History
 

@@ -16,6 +16,7 @@ The format follows Keep a Changelog and the project aims to follow Semantic Vers
 - Adobe Media Encoder NotchLC Watch Folder preparation workflow with official-only plugin policy, `ame_jobs.json`, `ame_jobs.csv`, and operator instructions.
 - V1.0 PySide6 desktop GUI with dark theme, Projects/Rules/History navigation, drag-and-drop scan queue, threaded scanning, progress, cancellation request, logs, preview pane, and JSON/CSV/HTML/PDF export.
 - V1.5 Media Pipeline for NAS/SMB/AFP/NFS mounted sync, SHA256 transfer reports, FFprobe/optional MediaInfo metadata, compare reports, and project packages for Millumin, Disguise, Pixera, TouchDesigner, and Notch workflows.
+- V2.0 enterprise MAM foundation with users, permissions, project management, REST/OpenAPI, GraphQL entry point, webhooks, notifications, storage adapters, Docker Compose, PostgreSQL, Redis, Celery, RabbitMQ, and MinIO configuration.
 
 ### Changed
 
@@ -23,7 +24,7 @@ The format follows Keep a Changelog and the project aims to follow Semantic Vers
 - Manifest `fps` values are normalized to numeric values for delivery manifests.
 - HAP Alpha checks now warn when alpha is requested by codec name but not confirmed by pixel format metadata.
 - HTML report template can display a Processing Summary when processing job data is provided.
-- Package version updated to `1.5.0`.
+- Package version updated to `2.0.0`.
 
 ## [0.95.0] - 2026-06-26
 

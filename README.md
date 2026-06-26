@@ -14,6 +14,7 @@ MediaPrep Studio is a professional media preparation and quality-control platfor
 - FFmpeg/FFplay environment checks, preview playback, transcode presets, subtitles, logo overlays, and batch job reports.
 - PySide6 desktop GUI with dark theme, project/rule/history panels, scan queue, preview/log panes, and JSON/CSV/HTML/PDF export.
 - Media Pipeline for NAS/SMB/AFP/NFS-mounted workflows, SHA256 sync, FFprobe/MediaInfo metadata, transfer reports, compare reports, and project packages.
+- Enterprise Media Asset Management foundation with users, roles, projects, assets, REST API, GraphQL entry point, webhooks, notification adapters, and Docker Compose services for PostgreSQL, Redis, RabbitMQ, and MinIO.
 - JSON, CSV, and HTML reporting.
 - FastAPI dashboard with REST API foundations.
 
@@ -73,6 +74,42 @@ mediaqc pipeline package ./Media --profile millumin --output ./packages
 ```
 
 Pipeline commands automatically calculate SHA256, run FFprobe, optionally collect MediaInfo when the `mediainfo` command is installed, generate `manifest.json`, synchronize media to the server path, write `transfer_report.json/csv`, write `sha256_compare.json/csv`, and create a project package for Millumin, Disguise, Pixera, TouchDesigner, or Notch handoff.
+
+## Enterprise MAM
+
+Start the V2.0 enterprise API locally:
+
+```bash
+mediaqc enterprise-api --host 127.0.0.1 --port 8080
+```
+
+Default development login:
+
+- Email: `admin@example.com`
+- Password: `admin`
+
+OpenAPI is available at `http://127.0.0.1:8080/docs`. The enterprise dashboard is available at `http://127.0.0.1:8080/dashboard`. The API currently includes login, users, projects, assets, overview counts, webhook preview, notification dry-runs, and a minimal GraphQL endpoint at `/graphql`.
+
+Run the container stack:
+
+```bash
+cp .env.example .env
+docker compose up --build
+```
+
+The compose stack defines services for the API, Celery worker, PostgreSQL, Redis, RabbitMQ, and MinIO. V2.0 stores API data in an in-memory reference repository while the deployment contract and configuration are prepared for PostgreSQL-backed persistence in the next enterprise iteration.
+
+Supported storage contracts:
+
+- NAS/local mounted paths, including SMB, AFP, and NFS shares mounted by the operating system.
+- S3, Azure, Google Drive, and WebDAV URI adapters for future provider implementations.
+
+Supported notification adapters:
+
+- Feishu
+- Slack
+- Microsoft Teams
+- Email
 
 ## Documentation Entry Points
 
