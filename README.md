@@ -64,7 +64,7 @@ See `ROADMAP.md` and `docs/00_Project/Roadmap.md`.
 
 ## License
 
-This repository currently uses the MIT License. Commercial licensing and enterprise activation plans are documented separately under `docs/15_Commercial/`.
+This repository currently uses the Apache License 2.0. Commercial licensing and enterprise activation plans are documented separately under `docs/15_Commercial/`.
 
 ## Legacy Level 1 Overview
 
