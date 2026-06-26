@@ -2,45 +2,52 @@
 
 ## Purpose
 
-Document the Processing responsibilities in the 04_Pipeline documentation area.
+Document transcode, subtitle, logo overlay, dry-run, batch job, logging, and processing report behavior.
 
 ## Overview
 
-Covers import, discovery, metadata, hash, validation, quality control, preview, processing, verification, packaging, and export.
+Processing commands create explicit jobs with input path, output path, preset, command, status, timing, error, and log path. Jobs can be run one at a time by default or with an explicit worker count.
 
 ## Architecture
 
-This area must respect the layered architecture, avoid circular dependencies, and keep feature-specific behavior behind documented service, plugin, API, or configuration boundaries.
+Processing modules live under `mediaqc/processing/`. FFmpeg execution is centralized in `ffmpeg_runner.py`; presets are YAML-driven; NotchLC encoding is an optional backend; job execution and report writing are centralized in `jobs.py`.
 
 ## Workflow
 
-Before changing related code, read this document and nearby architecture notes. After implementation, update this document, tests, examples, and changelog entries where needed.
+Use `mediaqc tools doctor` before processing on a show machine. Use `--dry-run` to inspect commands before rendering. Batch operations should continue after individual failures and write `job_report.json` plus `job_report.csv`.
 
 ## Dependencies
 
-Relevant dependencies may include Python 3.11+, FFmpeg tooling, SQLite, FastAPI, Typer, Rich, Jinja2, PyYAML, watchdog, PySide6 for future desktop UI, and platform GPU APIs when applicable.
+Python 3.11+, FFmpeg tools, PyYAML, Rich, and optional external encoder backends such as a NotchLC encoder.
 
 ## Configuration
 
-Configuration must remain explicit and versionable. Use YAML for rules, profiles, output specs, canvas specs, presets, and future project settings unless an architecture document approves another format.
+Transcode presets live in `config/transcode_presets/`. Optional external encoders are configured in `config/encoder_backends.yaml`.
 
 ## Example
 
-Use this document as the reference when implementing or reviewing Processing changes.
+```bash
+mediaqc transcode ./Media --preset h264_preview --output ./preview --recursive --dry-run
+mediaqc subtitle input.mov --subtitle captions.srt --mode soft --output output.mp4
+mediaqc logo input.mov --logo logo.png --position top-right --output output_logo.mp4
+```
 
 ## Known Limitations
 
-This document describes the intended architecture and current command-line implementation. Desktop, cloud, and enterprise features may be staged behind roadmap milestones.
+Processing quality depends on installed FFmpeg encoders and optional external encoder tools. NotchLC encoding is not assumed to be available.
 
 ## Future Improvements
 
-Expand this document when the subsystem receives a new module, public API, UI surface, or deployment contract.
+Add GPU encoding policies, preset compatibility matrices, queue persistence, cancellation, and GUI integration.
 
 ## Related Modules
 
 - `README.md`
 - `PROJECT_CONSTITUTION.md`
 - `docs/01_Architecture/SystemOverview.md`
+- `mediaqc/processing/ffmpeg_runner.py`
+- `mediaqc/processing/transcode.py`
+- `mediaqc/processing/jobs.py`
 
 ## Revision History
 

@@ -1,0 +1,14 @@
+name: "NotchLC"
+description: "Optional NotchLC encode preset; requires an available NotchLC encoder backend"
+container: "mov"
+video:
+  codec: "notchlc"
+  quality: "high"
+  pix_fmt: "yuv422p10le"
+audio:
+  mode: "copy"
+output:
+  suffix: "_NotchLC"
+  extension: ".mov"
+backend:
+  preferred: "notchlc_external"

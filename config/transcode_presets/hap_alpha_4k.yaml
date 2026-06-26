@@ -1,0 +1,16 @@
+name: "HAP Alpha 4K"
+description: "Realtime alpha playback preset for live event review and playback"
+container: "mov"
+video:
+  codec: "hap"
+  format: "hap_alpha"
+  pix_fmt: "rgba"
+  fps: "source"
+  extra_args:
+    - "-chunks"
+    - "4"
+audio:
+  mode: "none"
+output:
+  suffix: "_HAP_ALPHA"
+  extension: ".mov"

@@ -1,0 +1,12 @@
+name: "ProRes 4444"
+description: "Alpha-capable ProRes master preset"
+container: "mov"
+video:
+  codec: "prores_ks"
+  profile: "4444"
+  pix_fmt: "yuva444p10le"
+audio:
+  mode: "copy"
+output:
+  suffix: "_PR4444"
+  extension: ".mov"

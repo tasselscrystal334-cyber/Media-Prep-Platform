@@ -1,0 +1,18 @@
+notchlc:
+  enabled: false
+  executable_path: "/Applications/NotchLC Encoder/NotchLCEncoder"
+  default_quality: "high"
+  extra_args: []
+custom:
+  notchlc:
+    enabled: false
+    encoder_path: "/Applications/NotchLC Encoder/NotchLCEncoder"
+    quality: "high"
+    command_template:
+      - "{encoder_path}"
+      - "-i"
+      - "{input}"
+      - "-o"
+      - "{output}"
+      - "--quality"
+      - "{quality}"

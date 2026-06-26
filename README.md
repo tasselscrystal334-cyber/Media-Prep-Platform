@@ -11,6 +11,7 @@ MediaPrep Studio is a professional media preparation and quality-control platfor
 - FFprobe metadata extraction and FFmpeg deep decode analysis.
 - Modular validation engine with YAML rules and project profiles.
 - Live event checks for output specs, LED canvas layouts, codec risk, manifests, and integrity verification.
+- FFmpeg/FFplay environment checks, preview playback, transcode presets, subtitles, logo overlays, and batch job reports.
 - JSON, CSV, and HTML reporting.
 - FastAPI dashboard with REST API foundations.
 
@@ -39,6 +40,7 @@ source .venv/bin/activate
 python -m pip install -r requirements.txt
 python -m pip install -e .
 mediaqc scan ./Media --profile disguise --output ./reports --html
+mediaqc tools doctor
 ```
 
 ## Documentation Entry Points
@@ -61,6 +63,75 @@ mediaqc --help
 ## Roadmap
 
 See `ROADMAP.md` and `docs/00_Project/Roadmap.md`.
+
+## FFmpeg / FFplay
+
+Install a full FFmpeg package that includes `ffmpeg`, `ffprobe`, and `ffplay`.
+
+```bash
+brew install ffmpeg
+mediaqc tools doctor
+```
+
+The doctor command reports binary paths, FFmpeg version, available encoder/filter counts, and support hints for HAP, ProRes, libx264, libx265, and NotchLC decode/encode.
+
+## Preview Playback
+
+```bash
+mediaqc play ./Media/Opening.mov
+mediaqc play ./Media/Opening.mov --loop --mute --scale 0.5 --timecode
+mediaqc play ./Media/Opening.mov --start 00:01:20
+```
+
+If `ffplay` is missing, install a full FFmpeg package rather than an ffmpeg-only runtime.
+
+## Transcode Presets
+
+Preset YAML files live in `config/transcode_presets/`.
+
+```bash
+mediaqc transcode input.mov --preset hap_q_4k --output ./encoded
+mediaqc transcode ./Media --preset h264_preview --output ./preview --recursive
+mediaqc transcode input.mov --preset prores_4444 --output ./masters --dry-run
+```
+
+Transcode jobs write `job_report.json` and `job_report.csv`, and each job can write its own log file.
+
+## NotchLC Encoding
+
+NotchLC decode/probe support is separate from NotchLC encoding support. Encoding requires an optional backend configured in `config/encoder_backends.yaml`:
+
+- `ffmpeg` backend for codecs available in the local FFmpeg build.
+- `notchlc_external` backend for an external NotchLC encoder executable.
+- `custom_command` backend for user-defined command templates.
+
+If the NotchLC encoder backend is unavailable, MediaPrep Studio reports a clear error and does not crash.
+
+## Subtitles
+
+```bash
+mediaqc subtitle input.mov --subtitle captions.srt --mode soft --output output.mp4
+mediaqc subtitle input.mov --subtitle captions.ass --mode burn --fonts-dir ./fonts --output output_subbed.mp4
+```
+
+Soft subtitles add a subtitle track. Burned subtitles use the FFmpeg `subtitles` filter and write stderr to a log on failure.
+
+## Logo Overlay
+
+```bash
+mediaqc logo input.mov --logo logo.png --position top-right --output output_logo.mp4
+mediaqc logo input.mov --logo logo.png --x 100 --y 80 --opacity 0.8 --output output_logo.mp4
+mediaqc logo ./Media --logo logo.png --position bottom-right --output ./review --recursive --preset h264_preview
+```
+
+Logo overlay uses FFmpeg filter graphs and supports PNG alpha, opacity, position presets, custom x/y, start/end timing, dry-run, and batch jobs.
+
+## Common Processing Errors
+
+- `ffmpeg was not found`: install FFmpeg and confirm the binary is on `PATH`.
+- `ffplay was not found`: install a full FFmpeg package with FFplay included.
+- `Encoder is not available`: choose another preset or install/configure the required encoder.
+- `NotchLC encoder backend is not available`: configure `config/encoder_backends.yaml` or use HAP/ProRes/H264 presets.
 
 ## License
 

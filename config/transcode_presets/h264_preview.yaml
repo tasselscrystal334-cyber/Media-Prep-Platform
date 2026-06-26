@@ -1,0 +1,15 @@
+name: "H264 Preview"
+description: "Lightweight review preset for client and operator preview"
+container: "mp4"
+video:
+  codec: "libx264"
+  pix_fmt: "yuv420p"
+  crf: 18
+  preset: "medium"
+  max_width: 1920
+audio:
+  codec: "aac"
+  bitrate: "192k"
+output:
+  suffix: "_preview"
+  extension: ".mp4"

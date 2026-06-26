@@ -297,6 +297,49 @@
     {% endif %}
     {% endif %}
 
+    {% if report.processing %}
+    <h2>Processing Summary</h2>
+    <section class="validation-strip" aria-label="Processing summary">
+      <div class="validation-pill">Jobs {{ report.processing.total_jobs }}</div>
+      <div class="validation-pill pass">Success {{ report.processing.success }}</div>
+      <div class="validation-pill fail">Failed {{ report.processing.failed }}</div>
+      <div class="validation-pill warn">Skipped {{ report.processing.skipped }}</div>
+    </section>
+    {% if report.processing.jobs %}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Output</th>
+            <th>Status</th>
+            <th>Preset</th>
+            <th>Duration</th>
+            <th>Size</th>
+            <th>Log</th>
+            <th>Command</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for job in report.processing.jobs %}
+          <tr>
+            <td>
+              <strong>{{ job.output_path }}</strong>
+              <div class="path">{{ job.input_path }}</div>
+            </td>
+            <td><span class="badge {{ job.status | lower }}">{{ job.status }}</span></td>
+            <td>{{ job.preset }}</td>
+            <td>{{ job.duration_seconds }}</td>
+            <td>{{ job.output_size_bytes | default("-", true) }}</td>
+            <td>{{ job.log_path | default("-", true) }}</td>
+            <td><code>{{ job.command | join(" ") }}</code></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+    {% endif %}
+
     <h2>Files</h2>
     <div class="table-wrap">
       <table>

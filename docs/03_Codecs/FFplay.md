@@ -6,42 +6,44 @@ Reserve codec documentation space for FFplay preview workflows.
 
 ## Overview
 
-FFplay is not currently invoked by MediaPrepTool.
+FFplay is invoked by `mediaqc play` for operator preview.
 
 ## Architecture
 
-No FFplay integration exists in the source code.
+FFplay command construction lives in `mediaqc/processing/ffplay.py` and execution is routed through `mediaqc/processing/ffmpeg_runner.py`.
 
 ## Workflow
 
-Operators may use FFplay manually for spot checks.
+Operators can preview media with loop, mute, start time, scale, and timecode options.
 
 ## Dependencies
 
-- Optional `ffplay` binary.
+- Optional `ffplay` binary from a full FFmpeg package.
 
 ## Configuration
 
-No configuration.
+No persistent configuration is required. CLI options control preview behavior.
 
 ## Example
 
 ```bash
-ffplay ./Media/Opening.mov
+mediaqc play ./Media/Opening.mov --loop --mute --scale 0.5 --timecode
 ```
 
 ## Known Limitations
 
-No automated FFplay preview support.
+FFplay availability depends on the local FFmpeg package.
 
 ## Future Improvements
 
-Add optional preview command integration.
+Add LUT and color-check preview modes.
 
 ## Related Modules
 
-- `docs/03_Codecs/FFmpeg.md`
+- `mediaqc/processing/ffplay.py`
+- `mediaqc/processing/ffmpeg_runner.py`
 
 ## Revision History
 
 - Documentation version: 0.95
+- Last updated: 2026-06-27

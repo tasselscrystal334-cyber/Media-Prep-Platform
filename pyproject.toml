@@ -43,3 +43,14 @@ profiles = [
     "profiles/TouchDesigner.yaml",
     "profiles/Notch.yaml",
 ]
+"config/transcode_presets" = [
+    "config/transcode_presets/hap_q_4k.yaml",
+    "config/transcode_presets/hap_alpha_4k.yaml",
+    "config/transcode_presets/prores_4444.yaml",
+    "config/transcode_presets/h264_preview.yaml",
+    "config/transcode_presets/h265_preview.yaml",
+    "config/transcode_presets/notchlc.yaml",
+]
+config = [
+    "config/encoder_backends.yaml",
+]

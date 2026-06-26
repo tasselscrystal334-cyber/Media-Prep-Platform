@@ -1,0 +1,19 @@
+name: "HAP Q 4K"
+description: "Realtime playback preset for Millumin / Resolume / TouchDesigner"
+container: "mov"
+video:
+  codec: "hap"
+  format: "hap_q"
+  pix_fmt: "rgb0"
+  fps: "source"
+  scale:
+    width: "source"
+    height: "source"
+  extra_args:
+    - "-chunks"
+    - "4"
+audio:
+  mode: "copy"
+output:
+  suffix: "_HAPQ"
+  extension: ".mov"

@@ -21,18 +21,231 @@ from .live_event.edid import check_output_spec, load_output_spec, summarize_outp
 from .live_event.integrity import verify_manifest
 from .live_event.manifest import build_manifest, write_manifest
 from .probe import FFprobeNotFoundError, probe_media
+from .processing.ffmpeg_runner import (
+    EncoderNotAvailableError,
+    FFplayNotFoundError,
+    build_doctor_report,
+)
+from .processing.ffplay import play_media
+from .processing.jobs import ProcessingJob, run_jobs, write_job_report
+from .processing.overlay import build_logo_command
+from .processing.progress import make_processing_progress
+from .processing.subtitles import build_subtitle_command, ensure_subtitle_filter_available
+from .processing.transcode import build_transcode_jobs, collect_inputs
 from .profiles import load_profile
 from .report import build_report, build_summary, write_csv_report, write_html_report, write_json_report
 from .rules import ProjectRules, evaluate_rules, load_rules
 from .scanner import SUPPORTED_EXTENSIONS, scan_media_files
 
 app = typer.Typer(help="Media QC Tool for show, LED, Millumin, Disguise, and TD workflows.")
+tools_app = typer.Typer(help="Environment and diagnostic tools.")
+app.add_typer(tools_app, name="tools")
 console = Console()
 
 
 @app.callback()
 def main() -> None:
     """Media QC Tool."""
+
+
+@tools_app.command("doctor")
+def tools_doctor() -> None:
+    """Check FFmpeg, FFprobe, FFplay, encoder, and filter availability."""
+
+    report = build_doctor_report()
+    table = Table(title="MediaQC Tools Doctor")
+    table.add_column("Check")
+    table.add_column("Value")
+    values = report.to_dict()
+    for key, value in values.items():
+        if key == "errors":
+            continue
+        table.add_row(key, str(value))
+    if report.errors:
+        table.add_row("errors", "; ".join(report.errors), style="red")
+    console.print(table)
+
+
+@app.command()
+def play(
+    input_path: Path = typer.Argument(
+        ...,
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        resolve_path=True,
+        help="Media file to preview.",
+    ),
+    loop: bool = typer.Option(False, "--loop", help="Loop playback."),
+    mute: bool = typer.Option(False, "--mute", help="Disable audio playback."),
+    start: str | None = typer.Option(None, "--start", help="Start time, e.g. 00:01:20."),
+    scale: float | None = typer.Option(None, "--scale", min=0.05, help="Preview scale factor."),
+    timecode: bool = typer.Option(False, "--timecode", help="Overlay timecode during preview."),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Print command without launching ffplay."),
+) -> None:
+    """Preview a media file with FFplay."""
+
+    try:
+        result = play_media(input_path, loop=loop, mute=mute, start=start, scale=scale, timecode=timecode, dry_run=dry_run)
+    except FFplayNotFoundError as exc:
+        console.print(f"[bold red]FFplay failed:[/bold red] {exc}")
+        raise typer.Exit(code=1) from exc
+    console.print(" ".join(result.command))
+    if result.returncode != 0:
+        console.print(f"[bold red]FFplay exited with {result.returncode}[/bold red]")
+        raise typer.Exit(code=result.returncode)
+
+
+@app.command()
+def transcode(
+    input_path: Path = typer.Argument(
+        ...,
+        exists=True,
+        readable=True,
+        resolve_path=True,
+        help="Input media file or folder.",
+    ),
+    preset: str = typer.Option(..., "--preset", "-p", help="Transcode preset name or YAML path."),
+    output: Path = typer.Option(Path("./encoded"), "--output", "-o", file_okay=False, dir_okay=True, help="Output folder."),
+    recursive: bool = typer.Option(False, "--recursive", help="Scan folders recursively."),
+    preserve_structure: bool = typer.Option(True, "--preserve-structure/--flat", help="Preserve input folder structure."),
+    overwrite: bool = typer.Option(False, "--overwrite", help="Overwrite existing outputs."),
+    skip_existing: bool = typer.Option(False, "--skip-existing", help="Skip outputs that already exist."),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Build jobs and commands without executing."),
+    workers: int = typer.Option(1, "--workers", min=1, help="Concurrent workers. Default 1 for show machines."),
+) -> None:
+    """Transcode one file or a batch using a YAML preset."""
+
+    try:
+        jobs = build_transcode_jobs(
+            input_path=input_path,
+            output_dir=output,
+            preset_name=preset,
+            recursive=recursive,
+            preserve_structure=preserve_structure,
+            overwrite=overwrite,
+            skip_existing=skip_existing,
+        )
+    except (OSError, ValueError, EncoderNotAvailableError) as exc:
+        console.print(f"[bold red]Transcode failed:[/bold red] {exc}")
+        raise typer.Exit(code=1) from exc
+    _run_processing_jobs(jobs, output, dry_run=dry_run, workers=workers)
+
+
+@app.command()
+def subtitle(
+    input_path: Path = typer.Argument(
+        ...,
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        resolve_path=True,
+        help="Input media file.",
+    ),
+    subtitle_path: Path = typer.Option(
+        ...,
+        "--subtitle",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        resolve_path=True,
+        help="Subtitle file (.srt, .ass, .vtt).",
+    ),
+    mode: str = typer.Option("soft", "--mode", help="Subtitle mode: soft or burn."),
+    output: Path = typer.Option(..., "--output", "-o", file_okay=True, dir_okay=False, help="Output media file."),
+    fonts_dir: Path | None = typer.Option(None, "--fonts-dir", file_okay=False, dir_okay=True, help="Fonts directory for burn mode."),
+    overwrite: bool = typer.Option(False, "--overwrite", help="Overwrite existing output."),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Build command without executing."),
+) -> None:
+    """Embed or burn subtitles into a media file."""
+
+    try:
+        if mode == "burn":
+            ensure_subtitle_filter_available()
+        command = build_subtitle_command(input_path, subtitle_path, output, mode, fonts_dir=fonts_dir, overwrite=overwrite)
+    except (ValueError, EncoderNotAvailableError) as exc:
+        console.print(f"[bold red]Subtitle failed:[/bold red] {exc}")
+        raise typer.Exit(code=1) from exc
+    job = ProcessingJob(input_path=input_path, output_path=output, preset=f"subtitle_{mode}", command=command, log_path=output.with_suffix(output.suffix + ".log"))
+    _run_processing_jobs([job], output.parent, dry_run=dry_run, workers=1)
+
+
+@app.command()
+def logo(
+    input_path: Path = typer.Argument(
+        ...,
+        exists=True,
+        readable=True,
+        resolve_path=True,
+        help="Input media file or folder.",
+    ),
+    logo_path: Path = typer.Option(
+        ...,
+        "--logo",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        resolve_path=True,
+        help="Logo image, usually PNG with alpha.",
+    ),
+    output: Path = typer.Option(..., "--output", "-o", help="Output file for single input or output folder for batch."),
+    position: str = typer.Option("top-right", "--position", help="top-left, top-right, bottom-left, bottom-right, center."),
+    x: int | None = typer.Option(None, "--x", help="Custom overlay x coordinate."),
+    y: int | None = typer.Option(None, "--y", help="Custom overlay y coordinate."),
+    opacity: float = typer.Option(1.0, "--opacity", min=0.0, max=1.0, help="Logo opacity."),
+    start: float | None = typer.Option(None, "--start", help="Overlay start time in seconds."),
+    end: float | None = typer.Option(None, "--end", help="Overlay end time in seconds."),
+    logo_scale: float | None = typer.Option(None, "--logo-scale", min=0.01, help="Scale logo by factor."),
+    preset: str = typer.Option("h264_preview", "--preset", help="Output transcode preset."),
+    recursive: bool = typer.Option(False, "--recursive", help="Batch process folder recursively."),
+    overwrite: bool = typer.Option(False, "--overwrite", help="Overwrite existing outputs."),
+    skip_existing: bool = typer.Option(False, "--skip-existing", help="Skip existing outputs."),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Build jobs and commands without executing."),
+    workers: int = typer.Option(1, "--workers", min=1, help="Concurrent workers."),
+) -> None:
+    """Overlay a logo on one file or a batch."""
+
+    try:
+        inputs = collect_inputs(input_path, recursive=recursive)
+        jobs = []
+        for source in inputs:
+            if Path(input_path).is_dir():
+                output_path = output / f"{source.stem}_logo.mp4"
+            else:
+                output_path = output
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            command = build_logo_command(
+                source,
+                logo_path,
+                output_path,
+                position=position,
+                x=x,
+                y=y,
+                opacity=opacity,
+                start=start,
+                end=end,
+                logo_scale=logo_scale,
+                preset_name=preset,
+                overwrite=overwrite,
+            )
+            jobs.append(
+                ProcessingJob(
+                    input_path=source,
+                    output_path=output_path,
+                    preset=f"logo_{preset}",
+                    command=command,
+                    log_path=output_path.with_suffix(output_path.suffix + ".log"),
+                    skip_existing=skip_existing,
+                )
+            )
+    except (OSError, ValueError, EncoderNotAvailableError) as exc:
+        console.print(f"[bold red]Logo failed:[/bold red] {exc}")
+        raise typer.Exit(code=1) from exc
+    _run_processing_jobs(jobs, output if Path(input_path).is_dir() else output.parent, dry_run=dry_run, workers=workers)
 
 
 @app.command()
@@ -716,6 +929,46 @@ def _watch_table(state: dict[str, object], lock: threading.Lock) -> Table:
     table.add_row("Files", total)
     table.add_row("Database", db_path)
     return table
+
+
+def _run_processing_jobs(
+    jobs: list[ProcessingJob],
+    output_dir: Path,
+    dry_run: bool,
+    workers: int,
+) -> None:
+    if not jobs:
+        console.print("[yellow]Processing:[/yellow] no supported input files found.")
+        return
+    completed: list[ProcessingJob] = []
+    with make_processing_progress(console) as progress:
+        task = progress.add_task("Processing jobs...", total=len(jobs))
+
+        def on_update(job: ProcessingJob) -> None:
+            completed.append(job)
+            progress.update(task, advance=1, description=f"{job.status}: {job.output_path.name}")
+
+        run_jobs(jobs, dry_run=dry_run, workers=workers, on_update=on_update)
+    json_path, csv_path = write_job_report(jobs, output_dir)
+    table = Table(title="Processing Summary")
+    table.add_column("Total", justify="right")
+    table.add_column("SUCCESS", justify="right", style="green")
+    table.add_column("FAILED", justify="right", style="red")
+    table.add_column("SKIPPED", justify="right", style="yellow")
+    table.add_row(
+        str(len(jobs)),
+        str(sum(1 for job in jobs if job.status == "SUCCESS")),
+        str(sum(1 for job in jobs if job.status == "FAILED")),
+        str(sum(1 for job in jobs if job.status == "SKIPPED")),
+    )
+    console.print(table)
+    console.print(f"[green]Job JSON:[/green] {json_path}")
+    console.print(f"[green]Job CSV:[/green] {csv_path}")
+    failed = [job for job in jobs if job.status == "FAILED"]
+    if failed:
+        for job in failed[:5]:
+            console.print(f"[red]FAILED[/red] {job.input_path}: {job.error}")
+        raise typer.Exit(code=1)
 
 
 def _is_supported_path(path: Path) -> bool:
