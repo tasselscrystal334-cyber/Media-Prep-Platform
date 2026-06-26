@@ -13,6 +13,7 @@ The format follows Keep a Changelog and the project aims to follow Semantic Vers
 - Product specifications under `docs/17_Specifications/`.
 - Direct tests for Live Event output spec and codec profile risk behavior.
 - FFmpeg/FFplay processing extension with tools doctor, preview playback, YAML transcode presets, optional encoder backends, subtitle embedding/burn-in, logo overlay, batch jobs, logs, and job reports.
+- Adobe Media Encoder NotchLC Watch Folder preparation workflow with official-only plugin policy, `ame_jobs.json`, `ame_jobs.csv`, and operator instructions.
 
 ### Changed
 

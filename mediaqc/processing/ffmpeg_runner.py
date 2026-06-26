@@ -60,6 +60,8 @@ class DoctorReport:
     libx265_support: bool = False
     notchlc_decode_support: bool = False
     notchlc_encode_support: bool = False
+    adobe_media_encoder_path: str | None = None
+    notchlc_adobe_plugin_hint: bool = False
     errors: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
@@ -77,6 +79,8 @@ class DoctorReport:
             "libx265_support": self.libx265_support,
             "notchlc_decode_support": self.notchlc_decode_support,
             "notchlc_encode_support": self.notchlc_encode_support,
+            "adobe_media_encoder_path": self.adobe_media_encoder_path,
+            "notchlc_adobe_plugin_hint": self.notchlc_adobe_plugin_hint,
             "errors": self.errors,
         }
 
@@ -183,6 +187,8 @@ def get_ffmpeg_version() -> str | None:
 
 
 def build_doctor_report() -> DoctorReport:
+    from .adobe_ame import detect_adobe_media_encoder, detect_notchlc_adobe_plugin_hint
+
     report = DoctorReport()
     try:
         report.ffmpeg_path = check_ffmpeg_available()
@@ -211,6 +217,9 @@ def build_doctor_report() -> DoctorReport:
         report.libx265_support = "libx265" in encoders
         report.notchlc_decode_support = "notchlc" in decoders
         report.notchlc_encode_support = "notchlc" in encoders
+    ame_path = detect_adobe_media_encoder()
+    report.adobe_media_encoder_path = str(ame_path) if ame_path else None
+    report.notchlc_adobe_plugin_hint = detect_notchlc_adobe_plugin_hint()
     return report
 
 

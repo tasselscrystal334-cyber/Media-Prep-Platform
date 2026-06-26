@@ -137,8 +137,10 @@ def load_backend_config(path: Path | None = None) -> dict[str, Any]:
 
 
 def available_backends(config_path: Path | None = None) -> list[EncoderBackend]:
+    from .adobe_ame import AdobeMediaEncoderBackend
+
     config = load_backend_config(config_path)
-    backends: list[EncoderBackend] = [FFmpegBackend()]
+    backends: list[EncoderBackend] = [FFmpegBackend(), AdobeMediaEncoderBackend()]
     if isinstance(config.get("notchlc"), dict):
         backends.append(NotchLCExternalBackend(config["notchlc"]))
     custom = config.get("custom") or {}
@@ -151,6 +153,8 @@ def available_backends(config_path: Path | None = None) -> list[EncoderBackend]:
 def select_backend(preset: TranscodePreset, config_path: Path | None = None) -> EncoderBackend:
     codec = preset.video_codec
     for backend in available_backends(config_path):
+        if backend.name == "adobe_media_encoder":
+            continue
         if backend.supports(codec) and backend.check_available():
             if isinstance(backend, FFmpegBackend):
                 encoders = get_available_encoders()

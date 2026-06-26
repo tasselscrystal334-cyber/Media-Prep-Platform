@@ -21,6 +21,12 @@ from .live_event.edid import check_output_spec, load_output_spec, summarize_outp
 from .live_event.integrity import verify_manifest
 from .live_event.manifest import build_manifest, write_manifest
 from .probe import FFprobeNotFoundError, probe_media
+from .processing.adobe_ame import (
+    OFFICIAL_NOTCHLC_POLICY,
+    detect_adobe_media_encoder,
+    detect_notchlc_adobe_plugin_hint,
+    prepare_ame_notchlc_jobs,
+)
 from .processing.ffmpeg_runner import (
     EncoderNotAvailableError,
     FFplayNotFoundError,
@@ -39,7 +45,9 @@ from .scanner import SUPPORTED_EXTENSIONS, scan_media_files
 
 app = typer.Typer(help="Media QC Tool for show, LED, Millumin, Disguise, and TD workflows.")
 tools_app = typer.Typer(help="Environment and diagnostic tools.")
+notchlc_app = typer.Typer(help="Official NotchLC workflow helpers.")
 app.add_typer(tools_app, name="tools")
+app.add_typer(notchlc_app, name="notchlc")
 console = Console()
 
 
@@ -64,6 +72,63 @@ def tools_doctor() -> None:
     if report.errors:
         table.add_row("errors", "; ".join(report.errors), style="red")
     console.print(table)
+
+
+@notchlc_app.command("prepare")
+def notchlc_prepare(
+    input_path: Path = typer.Argument(
+        ...,
+        exists=True,
+        readable=True,
+        resolve_path=True,
+        help="Input media file or folder for AME watch-folder preparation.",
+    ),
+    watch_folder: Path = typer.Option(
+        ...,
+        "--watch-folder",
+        file_okay=False,
+        dir_okay=True,
+        help="Adobe Media Encoder watch folder to populate.",
+    ),
+    output: Path = typer.Option(
+        ...,
+        "--output",
+        "-o",
+        file_okay=False,
+        dir_okay=True,
+        help="Expected AME output folder for encoded NotchLC files.",
+    ),
+    recursive: bool = typer.Option(False, "--recursive", help="Prepare folder inputs recursively."),
+    link: bool = typer.Option(False, "--link", help="Use symlinks instead of copying source files."),
+    wait: bool = typer.Option(False, "--wait", help="Wait for output files, then build manifest and QC report."),
+    timeout: int = typer.Option(0, "--timeout", min=0, help="Seconds to wait for output files. 0 waits until Ctrl+C."),
+) -> None:
+    """Prepare an official Adobe Media Encoder NotchLC watch-folder workflow."""
+
+    ame_path = detect_adobe_media_encoder()
+    plugin_hint = detect_notchlc_adobe_plugin_hint()
+    if ame_path is None:
+        console.print(
+            "[yellow]Adobe Media Encoder was not detected.[/yellow] "
+            "Install Adobe Media Encoder and the official NotchLC Adobe plugin, "
+            "or use an official NotchLC SDK/tool backend."
+        )
+    console.print(f"[bold]Policy:[/bold] {OFFICIAL_NOTCHLC_POLICY}")
+    payload = prepare_ame_notchlc_jobs(
+        input_path=input_path,
+        watch_folder=watch_folder,
+        output_dir=output,
+        recursive=recursive,
+        link=link,
+    )
+    console.print(f"[green]AME jobs JSON:[/green] {Path(watch_folder) / 'ame_jobs.json'}")
+    console.print(f"[green]AME jobs CSV:[/green] {Path(watch_folder) / 'ame_jobs.csv'}")
+    console.print(f"[green]Instructions:[/green] {Path(watch_folder) / 'README_AME_NOTCHLC.txt'}")
+    console.print(f"[green]Jobs prepared:[/green] {payload['total_jobs']}")
+    console.print(f"[green]Adobe Media Encoder:[/green] {ame_path or 'NOT DETECTED'}")
+    console.print(f"[green]NotchLC plugin hint:[/green] {plugin_hint}")
+    if wait:
+        _wait_for_notchlc_output(output, timeout)
 
 
 @app.command()
@@ -969,6 +1034,42 @@ def _run_processing_jobs(
         for job in failed[:5]:
             console.print(f"[red]FAILED[/red] {job.input_path}: {job.error}")
         raise typer.Exit(code=1)
+
+
+def _wait_for_notchlc_output(output: Path, timeout: int) -> None:
+    output_path = Path(output)
+    console.print(f"[cyan]notchlc[/cyan] waiting for encoded files in {output_path}")
+    started = time.monotonic()
+    try:
+        while True:
+            files = scan_media_files(output_path) if output_path.exists() else []
+            if files:
+                console.print(f"[green]notchlc[/green] detected {len(files)} output file(s). Running QC and manifest.")
+                reports = output_path / "mediaqc_reports"
+                scan_files, json_path, csv_path, html_path, _ = _run_scan(
+                    project_path=output_path,
+                    output=reports,
+                    database=reports / "media.db",
+                    project_rules=None,
+                    active_rules_path=None,
+                    html=True,
+                    deep=False,
+                    output_spec_path=None,
+                    canvas_spec_path=None,
+                    write_manifest_files=True,
+                    show_progress=True,
+                )
+                console.print(f"[green]Output files checked:[/green] {len(scan_files)}")
+                console.print(f"[green]JSON:[/green] {json_path}")
+                console.print(f"[green]CSV:[/green] {csv_path}")
+                console.print(f"[green]HTML:[/green] {html_path}")
+                return
+            if timeout and time.monotonic() - started >= timeout:
+                console.print("[yellow]notchlc[/yellow] wait timed out before encoded files appeared.")
+                return
+            time.sleep(2)
+    except KeyboardInterrupt:
+        console.print("\n[yellow]notchlc[/yellow] wait cancelled.")
 
 
 def _is_supported_path(path: Path) -> bool:

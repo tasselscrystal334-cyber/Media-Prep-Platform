@@ -103,7 +103,18 @@ NotchLC decode/probe support is separate from NotchLC encoding support. Encoding
 
 - `ffmpeg` backend for codecs available in the local FFmpeg build.
 - `notchlc_external` backend for an external NotchLC encoder executable.
+- `adobe_media_encoder` workflow for preparing Adobe Media Encoder Watch Folders.
 - `custom_command` backend for user-defined command templates.
+
+MediaPrep Studio does not reverse engineer, decompile, patch, recompile, or directly load any NotchLC Adobe plugin binary. NotchLC encoding depends on official Adobe Media Encoder, Premiere, After Effects, or official NotchLC SDK/tool availability.
+
+Prepare an official AME Watch Folder workflow:
+
+```bash
+mediaqc notchlc prepare ./Media --watch-folder ./AME_Watch --output ./Encoded_NotchLC
+```
+
+The command writes `ame_jobs.json`, `ame_jobs.csv`, and `README_AME_NOTCHLC.txt`, then asks the operator to select an official NotchLC preset inside Adobe Media Encoder.
 
 If the NotchLC encoder backend is unavailable, MediaPrep Studio reports a clear error and does not crash.
 

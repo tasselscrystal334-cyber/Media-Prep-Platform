@@ -4,6 +4,7 @@ from __future__ import annotations
 
 __all__ = [
     "encoder_backends",
+    "adobe_ame",
     "ffmpeg_runner",
     "ffplay",
     "jobs",

@@ -3,6 +3,10 @@ notchlc:
   executable_path: "/Applications/NotchLC Encoder/NotchLCEncoder"
   default_quality: "high"
   extra_args: []
+adobe_media_encoder:
+  enabled: true
+  workflow: "watch_folder"
+  note: "Use only official Adobe Media Encoder/Premiere/After Effects NotchLC plugin workflows."
 custom:
   notchlc:
     enabled: false
