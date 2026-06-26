@@ -10,15 +10,15 @@ Covers NAS workflow, SHA256 verification, file sync, live deployment checks, med
 
 ## Architecture
 
-This area must respect the layered architecture, avoid circular dependencies, and keep feature-specific behavior behind documented service, plugin, API, or configuration boundaries.
+NAS, SMB, AFP, and NFS workflows are modeled as mounted filesystem paths. `mediaqc/pipeline/` performs path validation, media discovery, SHA256 hashing, FFprobe/MediaInfo metadata, sync, compare, transfer reporting, and package generation without owning OS-level mount credentials.
 
 ## Workflow
 
-Before changing related code, read this document and nearby architecture notes. After implementation, update this document, tests, examples, and changelog entries where needed.
+Mount the NAS share through the operating system, run `mediaqc pipeline sync`, verify with `mediaqc pipeline compare`, and archive or hand off with `mediaqc pipeline package`.
 
 ## Dependencies
 
-Relevant dependencies may include Python 3.11+, FFmpeg tooling, SQLite, FastAPI, Typer, Rich, Jinja2, PyYAML, watchdog, PySide6 for future desktop UI, and platform GPU APIs when applicable.
+Python 3.11+, FFmpeg/FFprobe, optional MediaInfo CLI, and OS-mounted SMB/AFP/NFS shares.
 
 ## Configuration
 
@@ -26,21 +26,27 @@ Configuration must remain explicit and versionable. Use YAML for rules, profiles
 
 ## Example
 
-Use this document as the reference when implementing or reviewing NASWorkflow changes.
+```bash
+mediaqc pipeline sync ./Media --destination /Volumes/ShowNAS/Media --output ./reports
+mediaqc pipeline compare ./Media --destination /Volumes/ShowNAS/Media --output ./reports
+```
 
 ## Known Limitations
 
-This document describes the intended architecture and current command-line implementation. Desktop, cloud, and enterprise features may be staged behind roadmap milestones.
+V1.5 does not mount or authenticate NAS shares. Operators must confirm the share is mounted and writable before syncing.
 
 ## Future Improvements
 
-Expand this document when the subsystem receives a new module, public API, UI surface, or deployment contract.
+Add mount health checks, bandwidth tracking, retry policies, and conflict resolution presets.
 
 ## Related Modules
 
 - `README.md`
 - `PROJECT_CONSTITUTION.md`
 - `docs/01_Architecture/SystemOverview.md`
+- `mediaqc/pipeline/network.py`
+- `mediaqc/pipeline/sync.py`
+- `mediaqc/pipeline/compare.py`
 
 ## Revision History
 

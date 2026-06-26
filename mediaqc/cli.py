@@ -38,6 +38,9 @@ from .processing.overlay import build_logo_command
 from .processing.progress import make_processing_progress
 from .processing.subtitles import build_subtitle_command, ensure_subtitle_filter_available
 from .processing.transcode import build_transcode_jobs, collect_inputs
+from .pipeline.compare import compare_sha256, write_compare_report
+from .pipeline.package import build_project_package
+from .pipeline.sync import PipelineSyncResult, run_pipeline_sync
 from .profiles import load_profile
 from .report import build_report, build_summary, write_csv_report, write_html_report, write_json_report
 from .rules import ProjectRules, evaluate_rules, load_rules
@@ -46,8 +49,10 @@ from .scanner import SUPPORTED_EXTENSIONS, scan_media_files
 app = typer.Typer(help="Media QC Tool for show, LED, Millumin, Disguise, and TD workflows.")
 tools_app = typer.Typer(help="Environment and diagnostic tools.")
 notchlc_app = typer.Typer(help="Official NotchLC workflow helpers.")
+pipeline_app = typer.Typer(help="NAS sync, compare, and project package pipeline.")
 app.add_typer(tools_app, name="tools")
 app.add_typer(notchlc_app, name="notchlc")
+app.add_typer(pipeline_app, name="pipeline")
 console = Console()
 
 
@@ -71,6 +76,115 @@ def tools_doctor() -> None:
         table.add_row(key, str(value))
     if report.errors:
         table.add_row("errors", "; ".join(report.errors), style="red")
+    console.print(table)
+
+
+@pipeline_app.command("sync")
+def pipeline_sync(
+    project_path: Path = typer.Argument(
+        ...,
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Source media/project folder.",
+    ),
+    destination: Path = typer.Option(..., "--destination", "-d", help="Mounted NAS/server destination folder."),
+    output: Path = typer.Option(Path("./reports"), "--output", "-o", file_okay=False, dir_okay=True, help="Report output folder."),
+    profile: str | None = typer.Option(None, "--profile", help="Workflow profile: millumin, disguise, pixera, touchdesigner, notch."),
+    skip_existing: bool = typer.Option(False, "--skip-existing", help="Skip destination files that already exist."),
+    overwrite: bool = typer.Option(False, "--overwrite", help="Overwrite destination files."),
+    mediainfo: bool = typer.Option(True, "--mediainfo/--no-mediainfo", help="Collect optional MediaInfo metadata when available."),
+) -> None:
+    """Sync media to a mounted NAS/server path and generate transfer reports."""
+
+    result = run_pipeline_sync(
+        project_path,
+        destination,
+        output,
+        profile=profile,
+        skip_existing=skip_existing,
+        overwrite=overwrite,
+        collect_mediainfo=mediainfo,
+    )
+    _print_pipeline_sync(result)
+
+
+@pipeline_app.command("compare")
+def pipeline_compare(
+    project_path: Path = typer.Argument(
+        ...,
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Source media/project folder.",
+    ),
+    destination: Path = typer.Option(
+        ...,
+        "--destination",
+        "-d",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Destination folder.",
+    ),
+    output: Path = typer.Option(Path("./reports"), "--output", "-o", file_okay=False, dir_okay=True, help="Report output folder."),
+) -> None:
+    """Compare source and destination files by SHA256."""
+
+    report = compare_sha256(project_path, destination)
+    json_path, csv_path = write_compare_report(report, output)
+    table = Table(title="SHA256 Compare")
+    table.add_column("Total", justify="right")
+    table.add_column("Match", justify="right", style="green")
+    table.add_column("Mismatch", justify="right", style="red")
+    table.add_column("Missing", justify="right", style="yellow")
+    table.add_column("Error", justify="right", style="red")
+    table.add_row(
+        str(report["total_files"]),
+        str(report["match"]),
+        str(report["mismatch"]),
+        str(report["missing"]),
+        str(report["error"]),
+    )
+    console.print(table)
+    console.print(f"[green]Compare JSON:[/green] {json_path}")
+    console.print(f"[green]Compare CSV:[/green] {csv_path}")
+    if report["mismatch"] or report["missing"] or report["error"]:
+        raise typer.Exit(code=1)
+
+
+@pipeline_app.command("package")
+def pipeline_package(
+    project_path: Path = typer.Argument(
+        ...,
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Source media/project folder.",
+    ),
+    output: Path = typer.Option(Path("./packages"), "--output", "-o", file_okay=False, dir_okay=True, help="Package output folder."),
+    profile: str | None = typer.Option(None, "--profile", help="Package profile: millumin, disguise, pixera, touchdesigner, notch."),
+) -> None:
+    """Generate a project package zip with media, manifest, and package metadata."""
+
+    try:
+        package = build_project_package(project_path, output, profile=profile)
+    except ValueError as exc:
+        console.print(f"[bold red]Package failed:[/bold red] {exc}")
+        raise typer.Exit(code=1) from exc
+    table = Table(title="Project Package")
+    table.add_column("Field")
+    table.add_column("Value")
+    for key, value in package.items():
+        table.add_row(key, str(value))
     console.print(table)
 
 
@@ -1046,6 +1160,30 @@ def _run_processing_jobs(
     if failed:
         for job in failed[:5]:
             console.print(f"[red]FAILED[/red] {job.input_path}: {job.error}")
+        raise typer.Exit(code=1)
+
+
+def _print_pipeline_sync(result: PipelineSyncResult) -> None:
+    summary = result.to_dict()
+    table = Table(title="Media Pipeline Sync")
+    table.add_column("Total", justify="right")
+    table.add_column("Success", justify="right", style="green")
+    table.add_column("Failed", justify="right", style="red")
+    table.add_column("Skipped", justify="right", style="yellow")
+    table.add_row(
+        str(summary["total_files"]),
+        str(summary["success"]),
+        str(summary["failed"]),
+        str(summary["skipped"]),
+    )
+    console.print(table)
+    console.print(f"[green]Manifest JSON:[/green] {result.manifest_path}")
+    console.print(f"[green]Manifest CSV:[/green] {result.manifest_csv_path}")
+    console.print(f"[green]Transfer JSON:[/green] {result.transfer_json_path}")
+    console.print(f"[green]Transfer CSV:[/green] {result.transfer_csv_path}")
+    for warning in result.warnings[:8]:
+        console.print(f"[yellow]Pipeline warning:[/yellow] {warning}")
+    if summary["failed"]:
         raise typer.Exit(code=1)
 
 

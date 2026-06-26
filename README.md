@@ -13,6 +13,7 @@ MediaPrep Studio is a professional media preparation and quality-control platfor
 - Live event checks for output specs, LED canvas layouts, codec risk, manifests, and integrity verification.
 - FFmpeg/FFplay environment checks, preview playback, transcode presets, subtitles, logo overlays, and batch job reports.
 - PySide6 desktop GUI with dark theme, project/rule/history panels, scan queue, preview/log panes, and JSON/CSV/HTML/PDF export.
+- Media Pipeline for NAS/SMB/AFP/NFS-mounted workflows, SHA256 sync, FFprobe/MediaInfo metadata, transfer reports, compare reports, and project packages.
 - JSON, CSV, and HTML reporting.
 - FastAPI dashboard with REST API foundations.
 
@@ -60,6 +61,18 @@ The V1.0 GUI provides a dark PySide6 workspace with:
 - Right Preview and Logs tabs.
 - Background scanning in a worker thread.
 - Automatic JSON, CSV, HTML, and PDF report export.
+
+## Media Pipeline
+
+MediaPrep Studio treats NAS protocols such as SMB, AFP, and NFS as mounted filesystem paths. Mount the share with the operating system first, then run pipeline commands against the mounted path.
+
+```bash
+mediaqc pipeline sync ./Media --destination /Volumes/ShowNAS/Media --profile disguise --output ./reports
+mediaqc pipeline compare ./Media --destination /Volumes/ShowNAS/Media --output ./reports
+mediaqc pipeline package ./Media --profile millumin --output ./packages
+```
+
+Pipeline commands automatically calculate SHA256, run FFprobe, optionally collect MediaInfo when the `mediainfo` command is installed, generate `manifest.json`, synchronize media to the server path, write `transfer_report.json/csv`, write `sha256_compare.json/csv`, and create a project package for Millumin, Disguise, Pixera, TouchDesigner, or Notch handoff.
 
 ## Documentation Entry Points
 

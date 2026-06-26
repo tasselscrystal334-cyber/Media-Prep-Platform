@@ -7,6 +7,7 @@ Provide practical usage for operators preparing media.
 ## Overview
 
 Operators can scan, watch, generate manifests, verify projects, and open a dashboard.
+V1.5 also supports NAS/server pipeline operations for sync, SHA256 comparison, and project package generation.
 
 ## Architecture
 
@@ -35,6 +36,9 @@ Use project profiles or YAML configs under `config/`.
 ```bash
 mediaqc scan ./Media --profile disguise --output ./reports --html --manifest
 mediaqc verify ./Media --manifest ./reports/manifest.json
+mediaqc pipeline sync ./Media --destination /Volumes/ShowNAS/Media --profile disguise --output ./reports
+mediaqc pipeline compare ./Media --destination /Volumes/ShowNAS/Media --output ./reports
+mediaqc pipeline package ./Media --profile disguise --output ./packages
 ```
 
 ## Known Limitations
