@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+{% block content %}
+<h1 class="h3 mb-3">Overview</h1>
+<div class="row g-3 mb-4">
+  {{ ui.metric("Projects", overview.counts.Project) }}
+  {{ ui.metric("Files", overview.counts.Media) }}
+  {{ ui.metric("Hashes", overview.counts.Hash) }}
+  {{ ui.metric("Scans", overview.counts.History) }}
+  {{ ui.metric("Duplicates", overview.duplicates) }}
+</div>
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="card"><div class="card-body">
+      <h2 class="h5">Recent Scan</h2>
+      <div class="table-responsive">
+        <table class="table table-sm align-middle">
+          <thead><tr><th>Started</th><th>Project</th><th>Files</th><th>PASS</th><th>WARN</th><th>FAIL</th></tr></thead>
+          <tbody>
+          {% for row in overview.recent_history %}
+            <tr><td>{{ row.scan_started }}</td><td>{{ row.project_name or row.project_path }}</td><td>{{ row.total_files }}</td><td>{{ row.pass_count }}</td><td>{{ row.warn_count }}</td><td>{{ row.fail_count }}</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div></div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card"><div class="card-body">
+      <h2 class="h5">Errors</h2>
+      <div class="chart-box"><canvas id="errorsChart"></canvas></div>
+    </div></div>
+  </div>
+</div>
+<script>
+new Chart(document.getElementById('errorsChart'), {
+  type: 'doughnut',
+  data: { labels: {{ stats.errors | map(attribute='label') | list | tojson }}, datasets: [{ data: {{ stats.errors | map(attribute='count') | list | tojson }} }] },
+  options: { maintainAspectRatio: false, plugins: { legend: { labels: { color: '#e7edf5' } } } }
+});
+</script>
+{% endblock %}

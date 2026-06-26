@@ -1,0 +1,29 @@
+profile_name: "Notch"
+project_name: "Notch Profile"
+validators:
+  codec: true
+  resolution: false
+  framerate: true
+  colorspace: true
+  pixfmt: true
+  bitrate: true
+  audio: true
+  filename: true
+  filesize: true
+  folder_structure: true
+video:
+  expected_fps: 60
+  allowed_codecs: [notchlc, hap, prores]
+  allowed_pix_fmt: [rgb0, yuv422p10le, yuva444p10le]
+  expected_color_space: bt709
+audio:
+  allow_audio: false
+filename:
+  required_pattern: "^[A-Za-z0-9][A-Za-z0-9_.-]+\\.(mov|mp4|mxf|mkv|avi|exr)$"
+  forbidden_pattern: "[\\s]"
+folder:
+  required_path_patterns:
+    - "(?i)/(media|notch|content|footage|video)/"
+file:
+  min_size_bytes: 1024
+  max_size_bytes: 100000000000

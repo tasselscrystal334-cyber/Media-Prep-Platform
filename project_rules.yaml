@@ -1,0 +1,33 @@
+project_name: "LED Show 2026"
+validators:
+  codec: true
+  resolution: true
+  framerate: true
+  colorspace: true
+  pixfmt: true
+  bitrate: true
+  audio: true
+  filename: false
+  filesize: true
+video:
+  allowed_codecs:
+    - hap
+    - prores
+    - notchlc
+  expected_width: 3840
+  expected_height: 2160
+  expected_fps: 60
+  allowed_pix_fmt:
+    - rgb0
+    - yuv422p10le
+  expected_color_space: bt709
+  min_bit_rate: 10000000
+  max_bit_rate: 900000000
+audio:
+  allow_audio: false
+filename:
+  required_pattern: null
+  forbidden_pattern: null
+file:
+  min_size_bytes: 1024
+  max_size_bytes: 50000000000

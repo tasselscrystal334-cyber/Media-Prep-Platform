@@ -1,0 +1,32 @@
+profile_name: "LED 8K"
+project_name: "LED 8K Profile"
+validators:
+  codec: true
+  resolution: true
+  framerate: true
+  colorspace: true
+  pixfmt: true
+  bitrate: true
+  audio: true
+  filename: true
+  filesize: true
+  folder_structure: true
+video:
+  expected_width: 7680
+  expected_height: 4320
+  expected_fps: 60
+  allowed_codecs: [hap, prores, notchlc]
+  allowed_pix_fmt: [rgb0, yuv422p10le, yuva444p10le]
+  expected_color_space: bt709
+  expected_bit_depth: 8
+audio:
+  allow_audio: false
+filename:
+  required_pattern: "^[A-Za-z0-9][A-Za-z0-9_.-]+\\.(mov|mp4|mxf|mkv|avi|png|jpg|jpeg|tif|tiff|exr|wav|aiff|mp3)$"
+  forbidden_pattern: "[\\s\\u4e00-\\u9fff]"
+folder:
+  required_path_patterns:
+    - "(?i)/(media|content|footage|playback|led)/"
+file:
+  min_size_bytes: 1024
+  max_size_bytes: 200000000000

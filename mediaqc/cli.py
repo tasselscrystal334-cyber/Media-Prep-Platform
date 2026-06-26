@@ -1,0 +1,726 @@
+"""Command line interface for mediaqc."""
+
+from __future__ import annotations
+
+import threading
+import time
+from pathlib import Path
+
+import typer
+from rich.live import Live
+from rich.console import Console
+from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.table import Table
+
+from .database import MediaDatabase, utc_now
+from .deep_analysis import FFmpegNotFoundError, analyze_media
+from .hash_check import calculate_sha256
+from .live_event.canvas import check_media_canvas, load_canvas_spec, summarize_canvas, validate_canvas_spec
+from .live_event.codec_profiles import analyze_codec_profile, summarize_codec_profiles
+from .live_event.edid import check_output_spec, load_output_spec, summarize_output_spec
+from .live_event.integrity import verify_manifest
+from .live_event.manifest import build_manifest, write_manifest
+from .probe import FFprobeNotFoundError, probe_media
+from .profiles import load_profile
+from .report import build_report, build_summary, write_csv_report, write_html_report, write_json_report
+from .rules import ProjectRules, evaluate_rules, load_rules
+from .scanner import SUPPORTED_EXTENSIONS, scan_media_files
+
+app = typer.Typer(help="Media QC Tool for show, LED, Millumin, Disguise, and TD workflows.")
+console = Console()
+
+
+@app.callback()
+def main() -> None:
+    """Media QC Tool."""
+
+
+@app.command()
+def scan(
+    project_path: Path = typer.Argument(
+        ...,
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Folder containing media assets.",
+    ),
+    output: Path = typer.Option(
+        Path("./reports"),
+        "--output",
+        "-o",
+        file_okay=False,
+        dir_okay=True,
+        help="Output folder for JSON and CSV reports.",
+    ),
+    database: Path | None = typer.Option(
+        None,
+        "--database",
+        help="SQLite database path. Defaults to <output>/media.db.",
+    ),
+    rules: Path | None = typer.Option(
+        None,
+        "--rules",
+        "-r",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        resolve_path=True,
+        help="YAML project rules file.",
+    ),
+    profile: str | None = typer.Option(
+        None,
+        "--profile",
+        help="Built-in project profile, e.g. disguise, millumin, pixera, touchdesigner.",
+    ),
+    html: bool = typer.Option(
+        False,
+        "--html",
+        help="Generate media_qc_report.html.",
+    ),
+    deep: bool = typer.Option(
+        False,
+        "--deep",
+        help="Run FFmpeg deep decode analysis for video files.",
+    ),
+    output_spec: Path | None = typer.Option(
+        None,
+        "--output-spec",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        resolve_path=True,
+        help="YAML live event output specification.",
+    ),
+    canvas_spec: Path | None = typer.Option(
+        None,
+        "--canvas-spec",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        resolve_path=True,
+        help="YAML multi-screen canvas specification.",
+    ),
+    manifest: bool = typer.Option(
+        False,
+        "--manifest",
+        help="Generate manifest.json and manifest.csv with the scan.",
+    ),
+) -> None:
+    """Scan media files and generate JSON/CSV QC reports."""
+
+    project_rules, active_rules_path = _load_rule_source(rules, profile)
+    files, json_path, csv_path, html_path, db_path = _run_scan(
+        project_path=project_path,
+        output=output,
+        database=database,
+        project_rules=project_rules,
+        active_rules_path=active_rules_path,
+        html=html,
+        deep=deep,
+        output_spec_path=output_spec,
+        canvas_spec_path=canvas_spec,
+        write_manifest_files=manifest,
+        show_progress=True,
+    )
+
+    _print_summary(files, json_path, csv_path, html_path, db_path)
+
+
+@app.command()
+def watch(
+    project_path: Path = typer.Argument(
+        ...,
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Folder containing media assets.",
+    ),
+    output: Path = typer.Option(
+        Path("./reports"),
+        "--output",
+        "-o",
+        file_okay=False,
+        dir_okay=True,
+        help="Output folder for JSON/CSV/HTML reports.",
+    ),
+    database: Path | None = typer.Option(
+        None,
+        "--database",
+        help="SQLite database path. Defaults to <output>/media.db.",
+    ),
+    rules: Path | None = typer.Option(
+        None,
+        "--rules",
+        "-r",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        resolve_path=True,
+        help="YAML project rules file.",
+    ),
+    profile: str | None = typer.Option(
+        None,
+        "--profile",
+        help="Built-in project profile, e.g. disguise, millumin, pixera, touchdesigner.",
+    ),
+    deep: bool = typer.Option(
+        False,
+        "--deep",
+        help="Run FFmpeg deep decode analysis for video files.",
+    ),
+    debounce: float = typer.Option(
+        1.5,
+        "--debounce",
+        min=0.2,
+        help="Seconds to wait after file events before refreshing reports.",
+    ),
+) -> None:
+    """Watch a folder and refresh database/HTML reports on media changes."""
+
+    try:
+        from watchdog.events import FileSystemEventHandler
+        from watchdog.observers import Observer
+    except ImportError as exc:
+        console.print("[bold red]Watch failed:[/bold red] watchdog is not installed.")
+        console.print("Run: python -m pip install -r requirements.txt")
+        raise typer.Exit(code=1) from exc
+
+    project_rules, active_rules_path = _load_rule_source(rules, profile)
+    stop_event = threading.Event()
+    refresh_event = threading.Event()
+    lock = threading.Lock()
+    state = {
+        "last_event": "Initial scan",
+        "last_scan": "-",
+        "total": 0,
+        "db": str(database or (output / "media.db")),
+    }
+
+    class MediaEventHandler(FileSystemEventHandler):
+        def on_any_event(self, event):  # noqa: ANN001
+            if event.is_directory:
+                return
+            paths = [Path(event.src_path)]
+            if getattr(event, "dest_path", ""):
+                paths.append(Path(event.dest_path))
+            if not any(_is_supported_path(path) for path in paths):
+                return
+            with lock:
+                state["last_event"] = f"{event.event_type}: {paths[-1]}"
+            console.print(f"[cyan]watch[/cyan] {event.event_type}: {paths[-1]}")
+            refresh_event.set()
+
+    def refresh(reason: str) -> None:
+        console.print(f"[cyan]watch[/cyan] refreshing reports ({reason})")
+        files, _, _, html_path, db_path = _run_scan(
+            project_path=project_path,
+            output=output,
+            database=database,
+            project_rules=project_rules,
+            active_rules_path=active_rules_path,
+            html=True,
+            deep=deep,
+            output_spec_path=None,
+            canvas_spec_path=None,
+            write_manifest_files=False,
+            show_progress=False,
+        )
+        with lock:
+            state["last_scan"] = utc_now()
+            state["total"] = len(files)
+            state["db"] = str(db_path)
+        console.print(f"[green]watch[/green] updated HTML: {html_path}")
+
+    refresh("startup")
+    observer = Observer()
+    observer.schedule(MediaEventHandler(), str(project_path), recursive=True)
+    observer.start()
+
+    console.print("[green]watch[/green] running. Press Ctrl+C to stop.")
+    try:
+        with Live(_watch_table(state, lock), console=console, refresh_per_second=2) as live:
+            while not stop_event.is_set():
+                if refresh_event.wait(0.25):
+                    refresh_event.clear()
+                    time.sleep(debounce)
+                    while refresh_event.is_set():
+                        refresh_event.clear()
+                        time.sleep(debounce)
+                    refresh("file change")
+                live.update(_watch_table(state, lock))
+    except KeyboardInterrupt:
+        console.print("\n[yellow]watch[/yellow] stopping...")
+    finally:
+        stop_event.set()
+        observer.stop()
+        observer.join(timeout=5)
+        console.print("[green]watch[/green] stopped safely.")
+
+
+@app.command("db")
+def db_info(
+    database: Path = typer.Option(
+        Path("./reports/media.db"),
+        "--database",
+        "-d",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        help="SQLite database path.",
+    ),
+) -> None:
+    """Show SQLite database table counts."""
+
+    with MediaDatabase(database) as db:
+        counts = db.database_counts()
+
+    table = Table(title=f"Media QC Database: {database}")
+    table.add_column("Table")
+    table.add_column("Rows", justify="right")
+    for name, count in counts.items():
+        table.add_row(name, str(count))
+    console.print(table)
+
+
+@app.command()
+def history(
+    database: Path = typer.Option(
+        Path("./reports/media.db"),
+        "--database",
+        "-d",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        help="SQLite database path.",
+    ),
+    limit: int = typer.Option(20, "--limit", "-n", min=1, help="Maximum rows to show."),
+) -> None:
+    """Show scan history."""
+
+    with MediaDatabase(database) as db:
+        rows = db.history(limit)
+
+    table = Table(title="Scan History")
+    table.add_column("Started")
+    table.add_column("Project")
+    table.add_column("Files", justify="right")
+    table.add_column("PASS", justify="right", style="green")
+    table.add_column("WARN", justify="right", style="yellow")
+    table.add_column("FAIL", justify="right", style="red")
+    table.add_column("Deep")
+    for row in rows:
+        table.add_row(
+            row["scan_started"],
+            row["project_name"] or row["project_path"],
+            str(row["total_files"]),
+            str(row["pass_count"]),
+            str(row["warn_count"]),
+            str(row["fail_count"]),
+            "yes" if row["deep"] else "no",
+        )
+    console.print(table)
+
+
+@app.command()
+def duplicates(
+    database: Path = typer.Option(
+        Path("./reports/media.db"),
+        "--database",
+        "-d",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        help="SQLite database path.",
+    ),
+) -> None:
+    """Search duplicate media by SHA256."""
+
+    with MediaDatabase(database) as db:
+        rows = db.duplicates()
+
+    table = Table(title="Duplicate Media")
+    table.add_column("SHA256")
+    table.add_column("Files", justify="right")
+    table.add_column("Total Size", justify="right")
+    table.add_column("Paths")
+    for row in rows:
+        table.add_row(
+            row["sha256"],
+            str(row["file_count"]),
+            str(row["total_size"]),
+            row["paths"],
+        )
+    console.print(table)
+
+
+@app.command()
+def manifest(
+    project_path: Path = typer.Argument(
+        ...,
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Folder containing media assets.",
+    ),
+    output: Path = typer.Option(
+        Path("./reports"),
+        "--output",
+        "-o",
+        file_okay=False,
+        dir_okay=True,
+        help="Output folder for manifest.json and manifest.csv.",
+    ),
+    project_name: str | None = typer.Option(None, "--project-name", help="Manifest project name."),
+) -> None:
+    """Generate manifest.json and manifest.csv."""
+
+    data = build_manifest(project_path, project_name=project_name)
+    json_path, csv_path = write_manifest(data, output)
+    console.print(f"[green]Manifest JSON:[/green] {json_path}")
+    console.print(f"[green]Manifest CSV:[/green] {csv_path}")
+
+
+@app.command()
+def verify(
+    project_path: Path = typer.Argument(
+        ...,
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Folder containing media assets.",
+    ),
+    manifest_path: Path = typer.Option(
+        ...,
+        "--manifest",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        resolve_path=True,
+        help="Manifest JSON path.",
+    ),
+) -> None:
+    """Verify a media folder against a manifest.json."""
+
+    report = verify_manifest(project_path, manifest_path)
+    table = Table(title=f"Integrity Check: {report.status}")
+    table.add_column("Category")
+    table.add_column("Count", justify="right")
+    table.add_row("Missing", str(len(report.missing_files)))
+    table.add_row("Modified", str(len(report.modified_files)))
+    table.add_row("New", str(len(report.new_files)))
+    table.add_row("Duplicates", str(len(report.duplicate_files)))
+    table.add_row("Empty", str(len(report.empty_files)))
+    table.add_row("Naming WARN", str(len(report.naming_warnings)))
+    table.add_row("Offline refs", str(len(report.offline_references)))
+    console.print(table)
+    raise typer.Exit(code=1 if report.status == "FAIL" else 0)
+
+
+@app.command()
+def dashboard(
+    database: Path = typer.Option(
+        Path("./reports/media.db"),
+        "--database",
+        "-d",
+        file_okay=True,
+        dir_okay=False,
+        help="SQLite database path.",
+    ),
+    host: str = typer.Option("127.0.0.1", "--host", help="Dashboard host."),
+    port: int = typer.Option(8000, "--port", help="Dashboard port."),
+    reload: bool = typer.Option(False, "--reload", help="Enable uvicorn auto reload."),
+) -> None:
+    """Run the FastAPI dashboard."""
+
+    try:
+        import uvicorn
+        from .dashboard import create_app
+    except ImportError as exc:
+        console.print("[bold red]Dashboard failed:[/bold red] FastAPI/uvicorn is not installed.")
+        console.print("Run: python -m pip install -r requirements.txt")
+        raise typer.Exit(code=1) from exc
+
+    console.print(f"[green]Dashboard:[/green] http://{host}:{port}")
+    console.print(f"[green]Database:[/green] {database}")
+    uvicorn.run(
+        create_app(database),
+        host=host,
+        port=port,
+        reload=reload,
+        log_level="info",
+    )
+
+
+def _print_summary(
+    files: list[object],
+    json_path: Path,
+    csv_path: Path,
+    html_path: Path | None = None,
+    db_path: Path | None = None,
+) -> None:
+    summary = build_summary(files)
+
+    table = Table(title="Media QC Summary")
+    table.add_column("Total", justify="right")
+    table.add_column("PASS", justify="right", style="green")
+    table.add_column("FAIL", justify="right", style="red")
+    table.add_column("Rule PASS", justify="right", style="green")
+    table.add_column("Rule WARN", justify="right", style="yellow")
+    table.add_column("Rule FAIL", justify="right", style="red")
+    table.add_row(
+        str(summary["total"]),
+        str(summary["status_pass"]),
+        str(summary["status_fail"]),
+        str(summary["rule_pass"]),
+        str(summary["rule_warn"]),
+        str(summary["rule_fail"]),
+    )
+    console.print(table)
+    console.print(f"[green]JSON:[/green] {json_path}")
+    console.print(f"[green]CSV:[/green] {csv_path}")
+    if html_path is not None:
+        console.print(f"[green]HTML:[/green] {html_path}")
+    if db_path is not None:
+        console.print(f"[green]DB:[/green] {db_path}")
+
+
+def _load_rule_source(
+    rules: Path | None,
+    profile: str | None,
+) -> tuple[ProjectRules | None, Path | None]:
+    project_rules: ProjectRules | None = None
+    active_rules_path: Path | None = None
+    if rules is not None and profile is not None:
+        console.print("[bold red]Rules failed:[/bold red] Use either --rules or --profile, not both.")
+        raise typer.Exit(code=1)
+    if profile is not None:
+        try:
+            project_rules, active_rules_path = load_profile(profile)
+        except (OSError, ValueError) as exc:
+            console.print(f"[bold red]Profile failed:[/bold red] {exc}")
+            raise typer.Exit(code=1) from exc
+    if rules is not None:
+        try:
+            project_rules = load_rules(rules)
+            active_rules_path = rules
+        except (OSError, ValueError) as exc:
+            console.print(f"[bold red]Rules failed:[/bold red] {exc}")
+            raise typer.Exit(code=1) from exc
+    return project_rules, active_rules_path
+
+
+def _run_scan(
+    project_path: Path,
+    output: Path,
+    database: Path | None,
+    project_rules: ProjectRules | None,
+    active_rules_path: Path | None,
+    html: bool,
+    deep: bool,
+    output_spec_path: Path | None,
+    canvas_spec_path: Path | None,
+    write_manifest_files: bool,
+    show_progress: bool,
+) -> tuple[list[object], Path, Path, Path | None, Path]:
+    scan_started = utc_now()
+    output_spec = load_output_spec(output_spec_path) if output_spec_path else None
+    canvas_spec = load_canvas_spec(canvas_spec_path) if canvas_spec_path else None
+    canvas_layout_report = validate_canvas_spec(canvas_spec) if canvas_spec else None
+
+    try:
+        files = scan_media_files(project_path)
+    except (FileNotFoundError, NotADirectoryError, PermissionError) as exc:
+        console.print(f"[bold red]Scan failed:[/bold red] {exc}")
+        raise typer.Exit(code=1) from exc
+
+    if show_progress:
+        console.print(f"[bold]Project:[/bold] {project_path}")
+        if project_rules and project_rules.project_name:
+            console.print(f"[bold]Rules project:[/bold] {project_rules.project_name}")
+        if project_rules and project_rules.profile_name:
+            console.print(f"[bold]Profile:[/bold] {project_rules.profile_name}")
+        console.print(f"[bold]Supported media files:[/bold] {len(files)}")
+
+    db_path = database or (output / "media.db")
+    db = MediaDatabase(db_path)
+    project_id = db.get_or_create_project(
+        project_path,
+        project_rules.project_name if project_rules else None,
+    )
+
+    try:
+        if show_progress:
+            with Progress(
+                SpinnerColumn(),
+                TextColumn("[progress.description]{task.description}"),
+                console=console,
+                transient=True,
+            ) as progress:
+                task = progress.add_task("Checking media...", total=None)
+                for item in files:
+                    progress.update(task, description=f"Checking {item.filename}")
+                    _check_file(item, db, project_id, project_rules, deep, output_spec, canvas_spec)
+        else:
+            for item in files:
+                _check_file(item, db, project_id, project_rules, deep, output_spec, canvas_spec)
+
+        removed = db.prune_missing_media(project_id, {item.path for item in files})
+        if removed and show_progress:
+            console.print(f"[yellow]DB:[/yellow] removed {removed} missing file(s)")
+
+        summary = build_summary(files)
+        history_pass = summary["rule_pass"] if project_rules is not None else summary["status_pass"]
+        history_warn = summary["rule_warn"] if project_rules is not None else 0
+        history_fail = summary["rule_fail"] if project_rules is not None else summary["status_fail"]
+        db.record_history(
+            project_id=project_id,
+            project_path=project_path,
+            project_name=project_rules.project_name if project_rules else None,
+            total_files=summary["total"],
+            pass_count=history_pass,
+            warn_count=history_warn,
+            fail_count=history_fail,
+            rules_path=active_rules_path,
+            deep=deep,
+            html=html,
+            scan_started=scan_started,
+        )
+    finally:
+        db.close()
+
+    manifest_data = build_manifest(
+        project_path,
+        project_name=project_rules.project_name if project_rules else None,
+        files=files,
+    ) if write_manifest_files else None
+    if manifest_data:
+        write_manifest(manifest_data, output)
+
+    live_event = _live_event_summary(output_spec, canvas_spec, canvas_layout_report, files, manifest_data)
+    report = build_report(
+        project_path,
+        files,
+        rules_path=active_rules_path,
+        project_name=project_rules.project_name if project_rules else None,
+        profile_name=project_rules.profile_name if project_rules else None,
+        live_event=live_event,
+    )
+    json_path = write_json_report(report, output)
+    csv_path = write_csv_report(files, output)
+    html_path = write_html_report(report, output) if html else None
+    return files, json_path, csv_path, html_path, db_path
+
+
+def _check_file(
+    item: object,
+    db: MediaDatabase,
+    project_id: int,
+    project_rules: ProjectRules | None,
+    deep: bool,
+    output_spec: dict | None,
+    canvas_spec: dict | None,
+) -> None:
+    try:
+        item.sha256, item.hash_cached = db.get_or_calculate_sha256(
+            item.path,
+            calculate_sha256,
+        )
+    except OSError as exc:
+        item.fail(f"SHA256 failed: {exc}")
+
+    try:
+        item.ffprobe = probe_media(item.path)
+    except FFprobeNotFoundError as exc:
+        item.fail(str(exc))
+    except Exception as exc:  # noqa: BLE001 - each file must record errors and continue.
+        item.fail(str(exc))
+
+    if deep:
+        try:
+            item.decode_report = analyze_media(item.path, item.ffprobe)
+        except FFmpegNotFoundError as exc:
+            item.fail(str(exc))
+        except Exception as exc:  # noqa: BLE001 - deep analysis should not stop the scan.
+            item.fail(f"Deep analysis failed: {exc}")
+
+    if project_rules is not None:
+        evaluate_rules(item, project_rules)
+
+    try:
+        item.codec_profile = analyze_codec_profile(item)
+        if output_spec is not None:
+            item.output_match = check_output_spec(item, output_spec)
+        if canvas_spec is not None:
+            item.canvas_match = check_media_canvas(item, canvas_spec)
+        item.manifest_status = "READY"
+    except Exception as exc:  # noqa: BLE001
+        item.warnings.append(f"Live event checks failed: {exc}")
+
+    db.record_media(project_id, item)
+
+
+def _live_event_summary(
+    output_spec: dict | None,
+    canvas_spec: dict | None,
+    canvas_layout_report: object | None,
+    files: list[object],
+    manifest_data: dict | None,
+) -> dict[str, object]:
+    output_checks = [item.output_match for item in files if item.output_match is not None]
+    canvas_checks = [item.canvas_match for item in files if item.canvas_match is not None]
+    codec_profiles = [item.codec_profile for item in files if item.codec_profile is not None]
+    summary: dict[str, object] = {
+        "codec_profiles": summarize_codec_profiles(codec_profiles),
+    }
+    output_summary = summarize_output_spec(output_spec, output_checks)
+    if output_summary:
+        summary["output_spec"] = output_summary
+    canvas_summary = summarize_canvas(canvas_spec, canvas_layout_report, canvas_checks)
+    if canvas_summary:
+        summary["canvas"] = canvas_summary
+    if manifest_data:
+        summary["manifest"] = {
+            "media_count": manifest_data["media_count"],
+            "generated_at": manifest_data["generated_at"],
+        }
+    return summary
+
+
+def _watch_table(state: dict[str, object], lock: threading.Lock) -> Table:
+    with lock:
+        last_event = str(state["last_event"])
+        last_scan = str(state["last_scan"])
+        total = str(state["total"])
+        db_path = str(state["db"])
+    table = Table(title="MediaQC Watch")
+    table.add_column("Field")
+    table.add_column("Value")
+    table.add_row("Last Event", last_event)
+    table.add_row("Last Scan", last_scan)
+    table.add_row("Files", total)
+    table.add_row("Database", db_path)
+    return table
+
+
+def _is_supported_path(path: Path) -> bool:
+    return path.suffix.lower() in SUPPORTED_EXTENSIONS
+
+
+if __name__ == "__main__":
+    app()

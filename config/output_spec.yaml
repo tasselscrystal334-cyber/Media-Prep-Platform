@@ -1,0 +1,18 @@
+project_name: "LED Show 2026"
+output:
+  name: "Main LED"
+  target_width: 6400
+  target_height: 2000
+  refresh_rate: 60
+  color_space: "bt709"
+  color_range: "full"
+  bit_depth: 8
+  expected_inputs:
+    - name: "DP1"
+      width: 3840
+      height: 2160
+      refresh_rate: 60
+    - name: "DP2"
+      width: 2560
+      height: 2160
+      refresh_rate: 60

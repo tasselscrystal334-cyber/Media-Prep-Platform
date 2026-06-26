@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="h3 mb-3">History</h1>
+<div class="card"><div class="card-body table-responsive">
+  <table class="table table-sm align-middle">
+    <thead><tr><th>Started</th><th>Finished</th><th>Project</th><th>Files</th><th>PASS</th><th>WARN</th><th>FAIL</th><th>Deep</th><th>HTML</th></tr></thead>
+    <tbody>
+    {% for row in history %}
+      <tr><td>{{ row.scan_started }}</td><td>{{ row.scan_finished }}</td><td>{{ row.project_name or row.project_path }}</td><td>{{ row.total_files }}</td><td>{{ row.pass_count }}</td><td>{{ row.warn_count }}</td><td>{{ row.fail_count }}</td><td>{{ "Yes" if row.deep else "No" }}</td><td>{{ "Yes" if row.html else "No" }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div></div>
+{% endblock %}

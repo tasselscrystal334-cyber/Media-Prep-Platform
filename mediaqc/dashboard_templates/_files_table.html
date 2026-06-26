@@ -1,0 +1,21 @@
+{% import "_macros.html" as ui %}
+<div class="table-responsive">
+  <table class="table table-sm align-middle">
+    <thead><tr><th>File</th><th>Project</th><th>Status</th><th>Rule</th><th>Codec</th><th>Resolution</th><th>FPS</th><th>Size</th><th>Path</th></tr></thead>
+    <tbody>
+    {% for file in files %}
+      <tr>
+        <td>{{ file.filename }}</td>
+        <td>{{ file.project_name or "" }}</td>
+        <td>{{ ui.status_badge(file.status) }}</td>
+        <td>{{ ui.status_badge(file.rule_status) }}</td>
+        <td>{{ file.video_codec or "-" }}</td>
+        <td>{% if file.width and file.height %}{{ file.width }}x{{ file.height }}{% else %}-{% endif %}</td>
+        <td>{{ file.fps or "-" }}</td>
+        <td>{{ file.size_bytes }}</td>
+        <td class="path">{{ file.path }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>

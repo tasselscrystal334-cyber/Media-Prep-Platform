@@ -1,0 +1,29 @@
+profile_name: "TouchDesigner"
+project_name: "TouchDesigner Profile"
+validators:
+  codec: true
+  resolution: false
+  framerate: true
+  colorspace: true
+  pixfmt: true
+  bitrate: true
+  audio: true
+  filename: true
+  filesize: true
+  folder_structure: true
+video:
+  expected_fps: 60
+  allowed_codecs: [hap, h264, hevc, prores, notchlc]
+  allowed_pix_fmt: [rgb0, yuv420p, yuv422p10le]
+  expected_color_space: bt709
+audio:
+  allow_audio: true
+filename:
+  required_pattern: "^[A-Za-z0-9][A-Za-z0-9_.-]+\\.(mov|mp4|mxf|mkv|avi|png|jpg|jpeg|tif|tiff|exr|wav|aiff|mp3)$"
+  forbidden_pattern: "[\\s]"
+folder:
+  required_path_patterns:
+    - "(?i)/(media|touchdesigner|td|content|footage)/"
+file:
+  min_size_bytes: 1024
+  max_size_bytes: 100000000000

@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="h3 mb-3">Statistics</h1>
+<div class="row g-3">
+  {% for chart_id, title, data in [
+    ("codecChart", "Codec", stats.codec),
+    ("resolutionChart", "Resolution", stats.resolution),
+    ("fpsChart", "FPS", stats.fps),
+    ("errorsChart", "Errors", stats.errors),
+  ] %}
+  <div class="col-lg-6">
+    <div class="card"><div class="card-body">
+      <h2 class="h5">{{ title }}</h2>
+      <div class="chart-box"><canvas id="{{ chart_id }}"></canvas></div>
+    </div></div>
+  </div>
+  {% endfor %}
+</div>
+<script>
+const charts = [
+  ['codecChart', {{ stats.codec | map(attribute='label') | list | tojson }}, {{ stats.codec | map(attribute='count') | list | tojson }}],
+  ['resolutionChart', {{ stats.resolution | map(attribute='label') | list | tojson }}, {{ stats.resolution | map(attribute='count') | list | tojson }}],
+  ['fpsChart', {{ stats.fps | map(attribute='label') | list | tojson }}, {{ stats.fps | map(attribute='count') | list | tojson }}],
+  ['errorsChart', {{ stats.errors | map(attribute='label') | list | tojson }}, {{ stats.errors | map(attribute='count') | list | tojson }}],
+];
+for (const [id, labels, data] of charts) {
+  new Chart(document.getElementById(id), {
+    type: 'bar',
+    data: { labels, datasets: [{ data, label: id.replace('Chart', '') }] },
+    options: { maintainAspectRatio: false, plugins: { legend: { labels: { color: '#e7edf5' } } }, scales: { x: { ticks: { color: '#c9d4e2' } }, y: { ticks: { color: '#c9d4e2' } } } }
+  });
+}
+</script>
+{% endblock %}

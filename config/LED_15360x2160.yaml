@@ -1,0 +1,35 @@
+project_name: "LED 15360x2160"
+output:
+  name: "Main LED 15360x2160"
+  target_width: 15360
+  target_height: 2160
+  refresh_rate: 60
+  color_space: "bt709"
+  color_range: "full"
+  bit_depth: 8
+canvas:
+  name: "Main Canvas"
+  width: 15360
+  height: 2160
+  fps: 60
+  layout:
+    - name: "Processor Input 1"
+      x: 0
+      y: 0
+      width: 3840
+      height: 2160
+    - name: "Processor Input 2"
+      x: 3840
+      y: 0
+      width: 3840
+      height: 2160
+    - name: "Processor Input 3"
+      x: 7680
+      y: 0
+      width: 3840
+      height: 2160
+    - name: "Processor Input 4"
+      x: 11520
+      y: 0
+      width: 3840
+      height: 2160

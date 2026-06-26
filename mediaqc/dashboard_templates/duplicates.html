@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="h3 mb-3">Duplicate Files</h1>
+<div class="card"><div class="card-body table-responsive">
+  <table class="table table-sm align-middle">
+    <thead><tr><th>SHA256</th><th>Files</th><th>Total Size</th><th>Paths</th></tr></thead>
+    <tbody>
+    {% for row in duplicates %}
+      <tr><td class="path">{{ row.sha256 }}</td><td>{{ row.file_count }}</td><td>{{ row.total_size }}</td><td class="path">{{ row.paths.replace('\n', '<br>') | safe }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div></div>
+{% endblock %}

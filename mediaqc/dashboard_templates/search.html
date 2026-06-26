@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="h3 mb-3">Search</h1>
+<div class="card mb-3"><div class="card-body">
+  <input class="form-control" name="q" value="{{ query }}" placeholder="Search filename, path, or SHA256" hx-get="/search" hx-trigger="keyup changed delay:300ms" hx-target="#search-results" hx-push-url="true">
+</div></div>
+<div id="search-results">
+  {% include "_files_table.html" %}
+</div>
+{% endblock %}

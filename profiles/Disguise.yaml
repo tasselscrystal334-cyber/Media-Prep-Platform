@@ -1,0 +1,34 @@
+profile_name: "Disguise"
+project_name: "Disguise Profile"
+validators:
+  codec: true
+  resolution: true
+  framerate: true
+  colorspace: true
+  pixfmt: true
+  bitrate: true
+  audio: true
+  filename: true
+  filesize: true
+  folder_structure: true
+video:
+  expected_width: 3840
+  expected_height: 2160
+  expected_fps: 60
+  allowed_codecs: [hap, prores, notchlc]
+  allowed_pix_fmt: [rgb0, yuv422p10le, yuva444p10le]
+  expected_color_space: bt709
+  expected_bit_depth: 8
+  min_bit_rate: 10000000
+  max_bit_rate: 900000000
+audio:
+  allow_audio: false
+filename:
+  required_pattern: "^[A-Za-z0-9][A-Za-z0-9_.-]+\\.(mov|mp4|mxf|mkv|avi)$"
+  forbidden_pattern: "[\\s\\u4e00-\\u9fff]"
+folder:
+  required_path_patterns:
+    - "(?i)/(objects|video|media|content|footage)/"
+file:
+  min_size_bytes: 1024
+  max_size_bytes: 100000000000

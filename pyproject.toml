@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mediaqc"
+version = "0.95.0"
+description = "Cross-platform media QC command line tool."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "typer>=0.12.0",
+    "rich>=13.0.0",
+    "PyYAML>=6.0.0",
+    "Jinja2>=3.1.0",
+    "watchdog>=4.0.0",
+    "fastapi>=0.115.0",
+    "uvicorn>=0.30.0",
+    "httpx2>=0.28.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+]
+
+[project.scripts]
+mediaqc = "mediaqc.cli:app"
+
+[tool.setuptools.packages.find]
+include = ["mediaqc*"]
+
+[tool.setuptools.package-data]
+mediaqc = ["templates/*.html.j2", "dashboard_templates/*.html"]
+
+[tool.setuptools.data-files]
+profiles = [
+    "profiles/LED_4K.yaml",
+    "profiles/LED_8K.yaml",
+    "profiles/Millumin.yaml",
+    "profiles/Disguise.yaml",
+    "profiles/Pixera.yaml",
+    "profiles/TouchDesigner.yaml",
+    "profiles/Notch.yaml",
+]

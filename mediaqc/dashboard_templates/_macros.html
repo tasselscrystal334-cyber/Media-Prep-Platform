@@ -1,0 +1,22 @@
+{% macro status_badge(status) -%}
+  {% if status == "PASS" %}
+  <span class="badge badge-pass">PASS</span>
+  {% elif status == "WARN" %}
+  <span class="badge badge-warn">WARN</span>
+  {% elif status == "FAIL" %}
+  <span class="badge badge-fail">FAIL</span>
+  {% else %}
+  <span class="badge bg-secondary">{{ status or "UNKNOWN" }}</span>
+  {% endif %}
+{%- endmacro %}
+
+{% macro metric(label, value) -%}
+<div class="col-sm-6 col-lg-2">
+  <div class="card h-100">
+    <div class="card-body">
+      <div class="text-muted small text-uppercase">{{ label }}</div>
+      <div class="fs-2 fw-semibold">{{ value }}</div>
+    </div>
+  </div>
+</div>
+{%- endmacro %}

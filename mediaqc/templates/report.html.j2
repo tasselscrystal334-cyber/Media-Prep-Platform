@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Media QC Report</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0e1117;
+      --panel: #151a23;
+      --panel-2: #1b2230;
+      --line: #303847;
+      --text: #e7edf5;
+      --muted: #9aa7b8;
+      --pass: #31d17c;
+      --warn: #f0b84a;
+      --fail: #ff5f68;
+      --chip-bg: #232b39;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    main {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 32px 28px 48px;
+    }
+
+    header {
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 24px;
+      padding-bottom: 20px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      font-weight: 680;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      margin: 28px 0 12px;
+      font-size: 18px;
+      font-weight: 650;
+      letter-spacing: 0;
+    }
+
+    .meta {
+      color: var(--muted);
+      display: grid;
+      gap: 4px;
+      overflow-wrap: anywhere;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin: 20px 0 28px;
+    }
+
+    .metric {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+    }
+
+    .metric .label {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    .metric .value {
+      font-size: 28px;
+      font-weight: 720;
+      margin-top: 4px;
+    }
+
+    .validation-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: -8px 0 28px;
+    }
+
+    .validation-pill {
+      background: var(--chip-bg);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      font-weight: 700;
+      padding: 7px 12px;
+    }
+
+    .table-wrap {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow-x: auto;
+      background: var(--panel);
+    }
+
+    table {
+      border-collapse: collapse;
+      min-width: 1180px;
+      width: 100%;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid var(--line);
+      padding: 10px 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: var(--panel-2);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    td.path {
+      color: var(--muted);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+      max-width: 360px;
+      overflow-wrap: anywhere;
+    }
+
+    .badge {
+      border-radius: 999px;
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 720;
+      line-height: 1;
+      padding: 5px 9px;
+      white-space: nowrap;
+    }
+
+    .pass {
+      background: rgba(49, 209, 124, 0.14);
+      color: var(--pass);
+    }
+
+    .warn {
+      background: rgba(240, 184, 74, 0.15);
+      color: var(--warn);
+    }
+
+    .fail {
+      background: rgba(255, 95, 104, 0.16);
+      color: var(--fail);
+    }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+    }
+
+    .list {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    .empty {
+      color: var(--muted);
+    }
+
+    .detail-grid {
+      display: grid;
+      gap: 8px;
+      min-width: 220px;
+    }
+
+    .detail-line {
+      color: var(--muted);
+    }
+
+    .detail-line strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    @media (max-width: 720px) {
+      main {
+        padding: 22px 14px 32px;
+      }
+
+      h1 {
+        font-size: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>{{ report.project_name | default("Media QC Report", true) }}</h1>
+      <div class="meta">
+        <div>Generated: {{ report.generated_at }}</div>
+        <div>Project path: {{ report.project_path }}</div>
+        {% if report.profile_name %}
+        <div>Profile: {{ report.profile_name }}</div>
+        {% endif %}
+        {% if report.rules_path %}
+        <div>Rules: {{ report.rules_path }}</div>
+        {% endif %}
+      </div>
+    </header>
+
+    <section class="summary" aria-label="Summary">
+      <div class="metric">
+        <div class="label">Total Files</div>
+        <div class="value">{{ report.summary.total }}</div>
+      </div>
+      <div class="metric">
+        <div class="label">Scan PASS</div>
+        <div class="value">{{ report.summary.status_pass }}</div>
+      </div>
+      <div class="metric">
+        <div class="label">Rule PASS</div>
+        <div class="value">{{ report.summary.rule_pass }}</div>
+      </div>
+      <div class="metric">
+        <div class="label">Rule WARN</div>
+        <div class="value">{{ report.summary.rule_warn }}</div>
+      </div>
+      <div class="metric">
+        <div class="label">Rule FAIL</div>
+        <div class="value">{{ report.summary.rule_fail }}</div>
+      </div>
+      <div class="metric">
+        <div class="label">Decode FAIL</div>
+        <div class="value">{{ report.summary.decode_fail }}</div>
+      </div>
+    </section>
+
+    <section class="validation-strip" aria-label="Validation result counts">
+      <div class="validation-pill pass">✓ PASS {{ report.summary.validation_pass }}</div>
+      <div class="validation-pill warn">⚠ WARN {{ report.summary.validation_warn }}</div>
+      <div class="validation-pill fail">✗ FAIL {{ report.summary.validation_fail }}</div>
+      <div class="validation-pill pass">Decode PASS {{ report.summary.decode_pass }}</div>
+      <div class="validation-pill warn">Decode WARN {{ report.summary.decode_warn }}</div>
+      <div class="validation-pill fail">Decode FAIL {{ report.summary.decode_fail }}</div>
+    </section>
+
+    {% if report.live_event %}
+    <h2>Live Event Summary</h2>
+    <section class="validation-strip" aria-label="Live event summary">
+      {% if report.live_event.output_spec %}
+      <div class="validation-pill warn">Output WARN {{ report.live_event.output_spec.warn }}</div>
+      <div class="validation-pill fail">Output FAIL {{ report.live_event.output_spec.fail }}</div>
+      {% endif %}
+      {% if report.live_event.canvas %}
+      <div class="validation-pill warn">Canvas WARN {{ report.live_event.canvas.warn }}</div>
+      <div class="validation-pill fail">Canvas FAIL {{ report.live_event.canvas.fail }}</div>
+      {% endif %}
+      {% if report.live_event.codec_profiles %}
+      <div class="validation-pill pass">Codec LOW {{ report.live_event.codec_profiles.low }}</div>
+      <div class="validation-pill warn">Codec MED {{ report.live_event.codec_profiles.medium }}</div>
+      <div class="validation-pill fail">Codec HIGH {{ report.live_event.codec_profiles.high }}</div>
+      <div class="validation-pill">Realtime Avg {{ report.live_event.codec_profiles.average_score }}</div>
+      {% endif %}
+      {% if report.live_event.manifest %}
+      <div class="validation-pill pass">Manifest {{ report.live_event.manifest.media_count }} files</div>
+      {% endif %}
+      {% if report.live_event.integrity %}
+      <div class="validation-pill {{ report.live_event.integrity.status | lower }}">Integrity {{ report.live_event.integrity.status }}</div>
+      {% endif %}
+    </section>
+    {% if report.live_event.canvas and report.live_event.canvas.layout %}
+    <div class="metric">
+      <div class="label">Canvas Summary</div>
+      <div class="detail-line">Layout status: {{ report.live_event.canvas.layout.status }} | Coverage: {{ report.live_event.canvas.layout.details.coverage_percent }}%</div>
+    </div>
+    {% endif %}
+    {% endif %}
+
+    <h2>Files</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>File</th>
+            <th>Status</th>
+            <th>Rule</th>
+            <th>Video</th>
+            <th>Format</th>
+            <th>Decode</th>
+            <th>Live Event</th>
+            <th>SHA256</th>
+            <th>Errors</th>
+            <th>Validators</th>
+            <th>Rule Mismatches</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for file in report.files %}
+          {% set ffprobe = file.ffprobe or {} %}
+          {% set streams = ffprobe.streams or [] %}
+          {% set video = namespace(value={}) %}
+          {% set audio = namespace(found=false) %}
+          {% set decode = file.decode_report or {} %}
+          {% set codec_profile = file.codec_profile or {} %}
+          {% for stream in streams %}
+            {% if stream.codec_type == "video" and not video.value %}
+              {% set video.value = stream %}
+            {% endif %}
+            {% if stream.codec_type == "audio" %}
+              {% set audio.found = true %}
+            {% endif %}
+          {% endfor %}
+          <tr>
+            <td>
+              <strong>{{ file.filename }}</strong>
+              <div class="path">{{ file.path }}</div>
+            </td>
+            <td><span class="badge {{ file.status | lower }}">{{ file.status }}</span></td>
+            <td><span class="badge {{ file.rule_status | lower }}">{{ file.rule_status }}</span></td>
+            <td>
+              <div class="detail-grid">
+                <div class="detail-line"><strong>Codec:</strong> {{ video.value.codec_name | default("-", true) }}</div>
+                <div class="detail-line"><strong>Size:</strong> {{ video.value.width | default("-", true) }} x {{ video.value.height | default("-", true) }}</div>
+                <div class="detail-line"><strong>FPS:</strong> {{ video.value.avg_frame_rate | default("-", true) }}</div>
+                <div class="detail-line"><strong>Pix fmt:</strong> {{ video.value.pix_fmt | default("-", true) }}</div>
+                <div class="detail-line"><strong>Color:</strong> {{ video.value.color_space | default("-", true) }} / {{ video.value.color_range | default("-", true) }}</div>
+                <div class="detail-line"><strong>Audio:</strong> {{ "Yes" if audio.found else "No" }}</div>
+              </div>
+            </td>
+            <td>
+              <div class="detail-grid">
+                <div class="detail-line"><strong>Ext:</strong> {{ file.extension }}</div>
+                <div class="detail-line"><strong>Bytes:</strong> {{ file.size_bytes }}</div>
+                <div class="detail-line"><strong>Duration:</strong> {{ ffprobe.duration | default("-", true) }}</div>
+                <div class="detail-line"><strong>Bit rate:</strong> {{ ffprobe.bit_rate | default("-", true) }}</div>
+                <div class="detail-line"><strong>Format:</strong> {{ ffprobe.format_name | default("-", true) }}</div>
+              </div>
+            </td>
+            <td>
+              {% if decode %}
+              <div class="detail-grid">
+                <div>
+                  {% if decode.status == "PASS" %}
+                  <span class="badge pass">✓ PASS</span>
+                  {% elif decode.status == "WARN" %}
+                  <span class="badge warn">⚠ WARN</span>
+                  {% else %}
+                  <span class="badge fail">✗ FAIL</span>
+                  {% endif %}
+                </div>
+                <div class="detail-line"><strong>Total Frames:</strong> {{ decode.total_frames }}</div>
+                <div class="detail-line"><strong>Dropped:</strong> {{ decode.dropped_frames }}</div>
+                <div class="detail-line"><strong>Decode Errors:</strong> {{ decode.decode_errors }}</div>
+                <div class="detail-line"><strong>Average Bitrate:</strong> {{ decode.average_bit_rate | default("-", true) }}</div>
+                <div class="detail-line"><strong>Peak Bitrate:</strong> {{ decode.peak_bit_rate | default("-", true) }}</div>
+                <div class="detail-line"><strong>VFR:</strong> {{ "Yes" if decode.is_vfr else "No" }}</div>
+                <div class="detail-line"><strong>Max Keyframe Gap:</strong> {{ decode.keyframe_interval_max | default("-", true) }}</div>
+                {% if decode.failures or decode.warnings %}
+                <ul class="list">
+                  {% for failure in decode.failures %}
+                  <li><span class="badge fail">✗ FAIL</span> {{ failure }}</li>
+                  {% endfor %}
+                  {% for warning in decode.warnings %}
+                  <li><span class="badge warn">⚠ WARN</span> {{ warning }}</li>
+                  {% endfor %}
+                </ul>
+                {% endif %}
+              </div>
+              {% else %}
+              <span class="empty">Not run</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="detail-grid">
+                <div class="detail-line"><strong>Output:</strong> {{ file.output_match.status if file.output_match else "-" }}</div>
+                <div class="detail-line"><strong>Canvas:</strong> {{ file.canvas_match.status if file.canvas_match else "-" }}</div>
+                <div class="detail-line"><strong>Codec Risk:</strong> {{ file.codec_risk_level | default("-", true) }}</div>
+                <div class="detail-line"><strong>Realtime:</strong> {{ file.realtime_score | default("-", true) }}</div>
+                <div class="detail-line"><strong>Manifest:</strong> {{ file.manifest_status | default("-", true) }}</div>
+                <div class="detail-line"><strong>Integrity:</strong> {{ file.integrity_status | default("-", true) }}</div>
+                {% if codec_profile.recommendations %}
+                <ul class="list">
+                  {% for recommendation in codec_profile.recommendations %}
+                  <li>{{ recommendation }}</li>
+                  {% endfor %}
+                </ul>
+                {% endif %}
+              </div>
+            </td>
+            <td class="mono">{{ file.sha256 | default("", true) }}</td>
+            <td>
+              {% if file.errors %}
+              <ul class="list">
+                {% for error in file.errors %}
+                <li>{{ error }}</li>
+                {% endfor %}
+              </ul>
+              {% else %}
+              <span class="empty">None</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if file.validation_results %}
+              <ul class="list">
+                {% for result in file.validation_results %}
+                <li>
+                  {% if result.status == "PASS" %}
+                  <span class="badge pass">✓ PASS</span>
+                  {% elif result.status == "WARN" %}
+                  <span class="badge warn">⚠ WARN</span>
+                  {% else %}
+                  <span class="badge fail">✗ FAIL</span>
+                  {% endif %}
+                  <strong>{{ result.validator }}</strong>: {{ result.message }}
+                </li>
+                {% endfor %}
+              </ul>
+              {% else %}
+              <span class="empty">None</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if file.failures or file.warnings %}
+              <ul class="list">
+                {% for failure in file.failures %}
+                <li><span class="badge fail">FAIL</span> {{ failure }}</li>
+                {% endfor %}
+                {% for warning in file.warnings %}
+                <li><span class="badge warn">WARN</span> {{ warning }}</li>
+                {% endfor %}
+              </ul>
+              {% else %}
+              <span class="empty">None</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </main>
+</body>
+</html>
