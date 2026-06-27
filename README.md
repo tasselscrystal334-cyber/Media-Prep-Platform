@@ -43,7 +43,9 @@ source .venv/bin/activate
 python -m pip install -r requirements.txt
 python -m pip install -e .
 mediaqc scan ./Media --profile disguise --output ./reports --html
+mediaqc version
 mediaqc tools doctor
+mediaqc tools install-check
 ```
 
 ## Desktop GUI
@@ -134,6 +136,21 @@ FFmpeg can be provided externally on `PATH`, pointed to with `MEDIAQC_FFMPEG_PAT
 - User guide: `docs/13_UserGuide/README.md`
 - AI collaboration: `docs/14_AI/README.md`
 - Specifications: `docs/17_Specifications/README.md`
+
+## Example Project
+
+A copyable live-event example is available in `examples/LED_Show_6400x2000/`. Add media files to its `Media/` folder, then run the command in that example README to generate JSON, CSV, HTML, and manifest reports.
+
+## Diagnostics And Updates
+
+```bash
+mediaqc doctor
+mediaqc tools install-check
+mediaqc tools logs
+mediaqc update check
+```
+
+Logs are written to the platform log directory by default, or to `--log-dir` / `MEDIAQC_LOG_DIR` when configured.
 
 ## Development Entry Points
 

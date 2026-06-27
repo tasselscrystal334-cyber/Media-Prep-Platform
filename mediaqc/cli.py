@@ -12,8 +12,10 @@ from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 
+from . import __version__
 from .database import MediaDatabase, utc_now
 from .deep_analysis import FFmpegNotFoundError, analyze_media
+from .diagnostics import build_install_report, configure_logging, default_log_dir
 from .hash_check import calculate_sha256
 from .live_event.canvas import check_media_canvas, load_canvas_spec, summarize_canvas, validate_canvas_spec
 from .live_event.codec_profiles import analyze_codec_profile, summarize_codec_profiles
@@ -45,20 +47,42 @@ from .profiles import load_profile
 from .report import build_report, build_summary, write_csv_report, write_html_report, write_json_report
 from .rules import ProjectRules, evaluate_rules, load_rules
 from .scanner import SUPPORTED_EXTENSIONS, scan_media_files
+from .updater import DEFAULT_RELEASE_API, check_for_updates
 
 app = typer.Typer(help="Media QC Tool for show, LED, Millumin, Disguise, and TD workflows.")
 tools_app = typer.Typer(help="Environment and diagnostic tools.")
 notchlc_app = typer.Typer(help="Official NotchLC workflow helpers.")
 pipeline_app = typer.Typer(help="NAS sync, compare, and project package pipeline.")
+update_app = typer.Typer(help="Update checks for packaged MediaQC releases.")
 app.add_typer(tools_app, name="tools")
 app.add_typer(notchlc_app, name="notchlc")
 app.add_typer(pipeline_app, name="pipeline")
+app.add_typer(update_app, name="update")
 console = Console()
 
 
 @app.callback()
-def main() -> None:
+def main(
+    log_dir: Path | None = typer.Option(None, "--log-dir", help="Directory for MediaQC logs."),
+    debug: bool = typer.Option(False, "--debug", help="Enable verbose file logging."),
+) -> None:
     """Media QC Tool."""
+
+    configure_logging(log_dir, debug=debug)
+
+
+@app.command("version")
+def version_command() -> None:
+    """Print the installed MediaQC version."""
+
+    console.print(__version__)
+
+
+@app.command("doctor")
+def doctor_alias() -> None:
+    """Run the tools doctor from the root command."""
+
+    tools_doctor()
 
 
 @tools_app.command("doctor")
@@ -77,6 +101,62 @@ def tools_doctor() -> None:
     if report.errors:
         table.add_row("errors", "; ".join(report.errors), style="red")
     console.print(table)
+
+
+@tools_app.command("install-check")
+def tools_install_check(
+    json_output: bool = typer.Option(False, "--json", help="Print the install report as JSON."),
+) -> None:
+    """Check installation health, write access, and FFmpeg tools."""
+
+    import json
+
+    report = build_install_report()
+    if json_output:
+        console.print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+        return
+    table = Table(title="MediaQC Install Check")
+    table.add_column("Check")
+    table.add_column("Status")
+    table.add_column("Message")
+    for check in report.checks:
+        style = "green" if check.status == "PASS" else "yellow" if check.status == "WARN" else "red"
+        table.add_row(check.name, check.status, check.message, style=style)
+    table.add_row("logs", "INFO", report.log_path or str(default_log_dir()))
+    console.print(table)
+    if report.status == "FAIL":
+        raise typer.Exit(code=1)
+
+
+@tools_app.command("logs")
+def tools_logs() -> None:
+    """Show the current MediaQC log directory."""
+
+    log_path = configure_logging()
+    console.print(f"[green]Log file:[/green] {log_path}")
+    console.print(f"[green]Log directory:[/green] {log_path.parent}")
+
+
+@update_app.command("check")
+def update_check(
+    api_url: str = typer.Option(DEFAULT_RELEASE_API, "--api-url", help="Release API endpoint."),
+    timeout: int = typer.Option(5, "--timeout", min=1, help="Network timeout in seconds."),
+    json_output: bool = typer.Option(False, "--json", help="Print update check result as JSON."),
+) -> None:
+    """Check whether a newer MediaQC release is available."""
+
+    import json
+
+    info = check_for_updates(api_url=api_url, timeout=timeout)
+    if json_output:
+        console.print(json.dumps(info.to_dict(), ensure_ascii=False, indent=2))
+        return
+    style = "yellow" if info.update_available else "green"
+    console.print(f"[{style}]{info.message}[/{style}]")
+    console.print(f"Current: {info.current_version}")
+    console.print(f"Latest: {info.latest_version or 'unknown'}")
+    if info.release_url:
+        console.print(f"Release: {info.release_url}")
 
 
 @pipeline_app.command("sync")

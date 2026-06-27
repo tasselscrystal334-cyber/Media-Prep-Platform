@@ -6,7 +6,7 @@ Document the AutoUpdate responsibilities in the 12_Deployment documentation area
 
 ## Overview
 
-Covers packaging, installers, auto update, enterprise deployment, Windows, macOS, Linux, portable mode, and offline install.
+Covers packaging, installers, auto update, enterprise deployment, Windows, macOS, Linux, portable mode, and offline install. V2.0 provides update checking through GitHub release metadata.
 
 ## Architecture
 
@@ -26,7 +26,10 @@ Configuration must remain explicit and versionable. Use YAML for rules, profiles
 
 ## Example
 
-Use this document as the reference when implementing or reviewing AutoUpdate changes.
+```bash
+mediaqc update check
+mediaqc update check --json
+```
 
 ## Known Limitations
 
@@ -41,6 +44,7 @@ Expand this document when the subsystem receives a new module, public API, UI su
 - `README.md`
 - `PROJECT_CONSTITUTION.md`
 - `docs/01_Architecture/SystemOverview.md`
+- `mediaqc/updater.py`
 
 ## Revision History
 

@@ -6,7 +6,7 @@ Document the README responsibilities in the 12_Deployment documentation area.
 
 ## Overview
 
-Covers packaging, installers, auto update, enterprise deployment, Windows, macOS, Linux, portable mode, offline install, PyInstaller bundles, Docker images, and release assets.
+Covers packaging, installers, auto update, enterprise deployment, Windows, macOS, Linux, portable mode, offline install, PyInstaller bundles, Docker images, release assets, and command stability.
 
 ## Architecture
 
@@ -42,6 +42,7 @@ Expand this document when the subsystem receives a new module, public API, UI su
 - `PROJECT_CONSTITUTION.md`
 - `docs/01_Architecture/SystemOverview.md`
 - `docs/12_Deployment/PackagingRelease.md`
+- `docs/12_Deployment/CommandStability.md`
 
 ## Revision History
 

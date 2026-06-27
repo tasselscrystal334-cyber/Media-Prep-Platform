@@ -1,0 +1,28 @@
+project_name: "LED Show 6400x2000 Example"
+video:
+  allowed_codecs:
+    - hap
+    - hap_q
+    - notchlc
+    - prores
+  expected_width: 6400
+  expected_height: 2000
+  expected_fps: 60
+  allowed_pix_fmt:
+    - rgb0
+    - rgba
+    - yuv422p10le
+  expected_color_space: bt709
+audio:
+  allow_audio: false
+filesize:
+  min_bytes: 1024
+validators:
+  codec: true
+  resolution: true
+  framerate: true
+  colorspace: true
+  pixfmt: true
+  audio: true
+  filesize: true
+  filename: true

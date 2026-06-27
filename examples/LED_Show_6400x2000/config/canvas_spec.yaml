@@ -1,0 +1,16 @@
+canvas:
+  name: "Main Canvas"
+  width: 6400
+  height: 2000
+  fps: 60
+  layout:
+    - name: "Processor Input 1"
+      x: 0
+      y: 0
+      width: 3840
+      height: 2000
+    - name: "Processor Input 2"
+      x: 3840
+      y: 0
+      width: 2560
+      height: 2000

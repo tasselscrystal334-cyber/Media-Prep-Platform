@@ -6,7 +6,7 @@ Document the Troubleshooting responsibilities in the 13_UserGuide documentation 
 
 ## Overview
 
-Covers installation, quick start, projects, assets, validation, preview, encoding, batch processing, export, reports, settings, plugins, troubleshooting, and FAQ.
+Covers installation, quick start, projects, assets, validation, preview, encoding, batch processing, export, reports, settings, plugins, troubleshooting, and FAQ. V2.0 adds file logs and install reports for support handoff.
 
 ## Architecture
 
@@ -26,7 +26,11 @@ Configuration must remain explicit and versionable. Use YAML for rules, profiles
 
 ## Example
 
-Use this document as the reference when implementing or reviewing Troubleshooting changes.
+```bash
+mediaqc tools logs
+mediaqc --log-dir ./logs tools install-check --json
+mediaqc update check
+```
 
 ## Known Limitations
 
@@ -41,6 +45,8 @@ Expand this document when the subsystem receives a new module, public API, UI su
 - `README.md`
 - `PROJECT_CONSTITUTION.md`
 - `docs/01_Architecture/SystemOverview.md`
+- `mediaqc/diagnostics.py`
+- `mediaqc/updater.py`
 
 ## Revision History
 

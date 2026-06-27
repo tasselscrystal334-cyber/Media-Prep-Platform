@@ -6,7 +6,7 @@ Document the Installation responsibilities in the 13_UserGuide documentation are
 
 ## Overview
 
-Covers installation, quick start, projects, assets, validation, preview, encoding, batch processing, export, reports, settings, plugins, troubleshooting, and FAQ.
+Covers installation, quick start, projects, assets, validation, preview, encoding, batch processing, export, reports, settings, plugins, troubleshooting, and FAQ. V2.0 adds install checks and clearer first-run diagnostics.
 
 ## Architecture
 
@@ -26,7 +26,12 @@ Configuration must remain explicit and versionable. Use YAML for rules, profiles
 
 ## Example
 
-Use this document as the reference when implementing or reviewing Installation changes.
+```bash
+python -m pip install -e .
+mediaqc version
+mediaqc tools install-check
+mediaqc doctor
+```
 
 ## Known Limitations
 
@@ -41,6 +46,7 @@ Expand this document when the subsystem receives a new module, public API, UI su
 - `README.md`
 - `PROJECT_CONSTITUTION.md`
 - `docs/01_Architecture/SystemOverview.md`
+- `mediaqc/diagnostics.py`
 
 ## Revision History
 
