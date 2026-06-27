@@ -1,4 +1,4 @@
-"""Live event workflow extensions for MediaQC."""
+"""Live event workflow extensions for Loom."""
 
 from __future__ import annotations
 

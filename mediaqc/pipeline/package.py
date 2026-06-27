@@ -71,7 +71,7 @@ def _workflow_notes(workflow: str) -> list[str]:
 def _package_readme(metadata: dict[str, Any]) -> str:
     return "\n".join(
         [
-            "MediaPrep Studio Project Package",
+            "Loom Project Package",
             "",
             f"Project: {metadata['project_name']}",
             f"Profile: {metadata['profile']}",

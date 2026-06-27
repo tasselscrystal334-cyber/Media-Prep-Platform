@@ -10,7 +10,7 @@ Typora is optional. It can improve local Markdown authoring, but documents must 
 
 ## Architecture
 
-This document aligns with the MediaPrep Studio layered architecture: presentation, application, services, core, infrastructure, codec engine, media engine, and hardware integration.
+This document aligns with the Loom layered architecture: presentation, application, services, core, infrastructure, codec engine, media engine, and hardware integration.
 
 ## Workflow
 

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Define the commercial documentation area for MediaPrep Studio Enterprise Edition.
+Define the commercial documentation area for Loom Enterprise Edition.
 
 ## Overview
 

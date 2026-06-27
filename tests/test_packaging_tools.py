@@ -38,11 +38,11 @@ def test_make_release_generates_assets(tmp_path: Path) -> None:
     dist = tmp_path / "dist"
     output = tmp_path / "dist_release"
     cli = dist / "mediaqc-cli"
-    gui = dist / "mediaqc-gui"
+    gui = dist / "Loom"
     cli.mkdir(parents=True)
     gui.mkdir(parents=True)
     (cli / "mediaqc").write_text("cli", encoding="utf-8")
-    (gui / "mediaqc-gui").write_text("gui", encoding="utf-8")
+    (gui / "Loom").write_text("gui", encoding="utf-8")
 
     completed = subprocess.run(
         [
@@ -62,6 +62,7 @@ def test_make_release_generates_assets(tmp_path: Path) -> None:
 
     assert completed.returncode == 0, completed.stderr
     assert any(path.name.startswith("mediaqc-cli-") for path in output.glob("*.zip"))
-    assert any(path.name.startswith("mediaqc-gui-") for path in output.glob("*.zip"))
+    assert any(path.name.startswith("Loom-") for path in output.glob("*.zip"))
     assert (output / "SHA256SUMS.txt").read_text(encoding="utf-8")
     assert "CLI entry: `mediaqc`" in (output / "release_notes.md").read_text(encoding="utf-8")
+    assert "GUI app: `Loom`" in (output / "release_notes.md").read_text(encoding="utf-8")

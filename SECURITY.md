@@ -6,11 +6,11 @@ Define how security issues, dependency risks, media-file risks, and disclosure a
 
 ## Overview
 
-MediaPrep Studio processes untrusted media files and project archives. Contributors must treat parsing, probing, preview, and plugin execution as security-sensitive surfaces.
+Loom processes untrusted media files and project archives. Contributors must treat parsing, probing, preview, and plugin execution as security-sensitive surfaces.
 
 ## Architecture
 
-This document aligns with the MediaPrep Studio layered architecture: presentation, application, services, core, infrastructure, codec engine, media engine, and hardware integration.
+This document aligns with the Loom layered architecture: presentation, application, services, core, infrastructure, codec engine, media engine, and hardware integration.
 
 ## Workflow
 

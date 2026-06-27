@@ -72,7 +72,7 @@ def create_enterprise_app(
     app = FastAPI(
         title="MediaPrep Enterprise API",
         version=__version__,
-        description="Enterprise Media Asset Management API for MediaPrep Studio.",
+        description="Enterprise Media Asset Management API for Loom.",
     )
 
     def current_user(authorization: str | None = Header(default=None)) -> User:

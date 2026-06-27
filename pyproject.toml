@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "mediaqc"
 version = "1.0.0"
-description = "Cross-platform media QC command line tool."
+description = "Loom cross-platform media QC and preparation tool."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -40,12 +40,14 @@ release = [
 [project.scripts]
 mediaqc = "mediaqc.cli:app"
 mediaqc-gui = "mediaqc.gui.app:main"
+loom = "mediaqc.cli:app"
+loom-gui = "mediaqc.gui.app:main"
 
 [tool.setuptools.packages.find]
 include = ["mediaqc*"]
 
 [tool.setuptools.package-data]
-mediaqc = ["templates/*.html.j2", "dashboard_templates/*.html"]
+mediaqc = ["templates/*.html.j2", "dashboard_templates/*.html", "assets/*.svg"]
 
 [tool.setuptools.data-files]
 profiles = [

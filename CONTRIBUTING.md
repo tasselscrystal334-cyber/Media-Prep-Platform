@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Define how humans and AI contributors safely change MediaPrep Studio.
+Define how humans and AI contributors safely change Loom.
 
 ## Overview
 
@@ -10,7 +10,7 @@ Every change must preserve architecture, tests, and documentation. The GitHub re
 
 ## Architecture
 
-This document aligns with the MediaPrep Studio layered architecture: presentation, application, services, core, infrastructure, codec engine, media engine, and hardware integration.
+This document aligns with the Loom layered architecture: presentation, application, services, core, infrastructure, codec engine, media engine, and hardware integration.
 
 ## Workflow
 

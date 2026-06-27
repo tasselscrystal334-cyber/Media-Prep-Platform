@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Record the result of the MediaPrep Studio documentation completion pass.
+Record the result of the Loom documentation completion pass.
 
 ## Overview
 
@@ -10,7 +10,7 @@ This file lists the broad outcome of the repository scan and documentation updat
 
 ## Architecture
 
-The repository now keeps old Level 1 overview documents and adds the MediaPrep Studio documentation system under `docs/00_Project` through `docs/17_Specifications`.
+The repository now keeps old Level 1 overview documents and adds the Loom documentation system under `docs/00_Project` through `docs/17_Specifications`.
 
 ## Workflow
 
@@ -32,7 +32,7 @@ Created and updated files are available through Git history for commit review.
 
 - Root governance and repository files: `PROJECT_CONSTITUTION.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, `ruff.toml`, `pytest.ini`, `.github/pull_request_template.md`.
 - Documentation index: `docs/README.md`.
-- New MediaPrep Studio documentation tree: `docs/00_Project/` through `docs/17_Specifications/`.
+- New Loom documentation tree: `docs/00_Project/` through `docs/17_Specifications/`.
 - New support folders: `tools/` and `resources/`.
 
 ## Updated

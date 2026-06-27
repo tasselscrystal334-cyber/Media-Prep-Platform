@@ -12,7 +12,7 @@ Encoding support is optional and must use official routes only: Adobe Media Enco
 ## Architecture
 
 Codec profile analysis records codec, pixel format, width, height, FPS, and bit rate for NotchLC media.
-Adobe plugin workflows are represented as watch-folder preparation in `mediaqc/processing/adobe_ame.py`. MediaPrep Studio does not load or inspect Adobe plugin binaries.
+Adobe plugin workflows are represented as watch-folder preparation in `mediaqc/processing/adobe_ame.py`. Loom does not load or inspect Adobe plugin binaries.
 
 ## Workflow
 

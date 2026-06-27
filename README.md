@@ -1,8 +1,8 @@
-# MediaPrep Studio
+# Loom
 
 ## Project Introduction
 
-MediaPrep Studio is a professional media preparation and quality-control platform for live events, XR, broadcast, exhibitions, digital venues, and media-server workflows. The current implementation exposes the `mediaqc` command-line tool and prepares the repository for a future desktop studio, dashboard, plugin SDK, and enterprise deployment model.
+Loom is a professional media preparation and quality-control platform for live events, XR, broadcast, exhibitions, digital venues, and media-server workflows. The current implementation exposes the `mediaqc` command-line tool and prepares the repository for a future desktop studio, dashboard, plugin SDK, and enterprise deployment model.
 
 ## Core Features
 
@@ -12,7 +12,7 @@ MediaPrep Studio is a professional media preparation and quality-control platfor
 - Modular validation engine with YAML rules and project profiles.
 - Live event checks for output specs, LED canvas layouts, codec risk, manifests, and integrity verification.
 - FFmpeg/FFplay environment checks, preview playback, transcode presets, subtitles, logo overlays, and batch job reports.
-- PySide6 desktop GUI with dark theme, project/rule/history panels, scan queue, preview/log panes, and JSON/CSV/HTML/PDF export.
+- PySide6 desktop GUI named Loom with splash/welcome cover, light engineering theme, project/rule/history panels, scan queue, preview/log panes, and JSON/CSV/HTML/PDF export.
 - Media Pipeline for mounted NAS/SMB/AFP/NFS workflows, SHA256 sync, FFprobe/MediaInfo metadata, transfer reports, compare reports, and project packages.
 - Enterprise Media Asset Management foundation for the commercial edition, including users, roles, projects, assets, REST API, GraphQL entry point, webhooks, notification adapters, and Docker Compose services for PostgreSQL, Redis, RabbitMQ, and MinIO.
 - JSON, CSV, and HTML reporting.
@@ -30,7 +30,7 @@ tests/                Automated tests
 examples/             Future examples and sample projects
 assets/               Documentation and UI assets
 scripts/              Utility scripts
-tools/                Development and documentation tools
+tools/                Optional bundled external tools such as FFmpeg, FFprobe, FFplay, and MediaInfo
 resources/            Future packaged resources
 .github/              GitHub issue, PR, and workflow metadata
 ```
@@ -51,7 +51,7 @@ mediaqc tools install-check
 
 ## Editions And Licensing
 
-MediaPrep Studio uses a dual-edition model:
+Loom uses a dual-edition model:
 
 - Community Edition is licensed under Apache License 2.0 and includes FFmpeg integration, FFprobe metadata extraction, SHA256 verification, media validation, and batch transcoding.
 - Enterprise Edition is licensed under a commercial license and includes multi-user permissions, LDAP/AD, audit logs, NAS cluster workflows, the web management dashboard, automatic content distribution, and Render Farm management.
@@ -69,10 +69,14 @@ Install the optional GUI dependency and launch the desktop app:
 ```bash
 python -m pip install "mediaqc[gui]"
 mediaqc gui
+# or
+loom-gui
 ```
 
-The V1.0 GUI provides a dark PySide6 workspace with:
+The V1.0 GUI provides a light PySide6 workspace with:
 
+- Loom splash and welcome cover with version, icon, New/Open/Recent entry points.
+- Menu bar sections for Loom, File, Edit, View, Presets, Window, and Help.
 - Left navigation for Projects, Rules, and History.
 - Center scan workspace with drag-and-drop, batch queue, progress, and cancel request.
 - Right Preview and Logs tabs.
@@ -81,7 +85,7 @@ The V1.0 GUI provides a dark PySide6 workspace with:
 
 ## Media Pipeline
 
-MediaPrep Studio treats NAS protocols such as SMB, AFP, and NFS as mounted filesystem paths. Mount the share with the operating system first, then run pipeline commands against the mounted path.
+Loom treats NAS protocols such as SMB, AFP, and NFS as mounted filesystem paths. Mount the share with the operating system first, then run pipeline commands against the mounted path.
 
 ```bash
 mediaqc pipeline sync ./Media --destination /Volumes/ShowNAS/Media --profile disguise --output ./reports
@@ -93,7 +97,7 @@ Pipeline commands automatically calculate SHA256, run FFprobe, optionally collec
 
 ## Enterprise MAM
 
-Enterprise MAM capabilities are part of MediaPrep Studio Enterprise Edition under a commercial license. Start the V2.0 enterprise API locally for licensed enterprise development and evaluation:
+Enterprise MAM capabilities are part of Loom Enterprise Edition under a commercial license. Start the V2.0 enterprise API locally for licensed enterprise development and evaluation:
 
 ```bash
 mediaqc enterprise-api --host 127.0.0.1 --port 8080
@@ -129,7 +133,7 @@ Supported notification adapters:
 
 ## Packaging And Release
 
-MediaQC can be built as cross-platform CLI and desktop GUI release bundles with PyInstaller:
+Loom can be built as cross-platform CLI and desktop GUI release bundles with PyInstaller:
 
 ```bash
 python -m pip install -e ".[release]"
@@ -138,9 +142,9 @@ bash packaging/scripts/build_linux.sh
 powershell -ExecutionPolicy Bypass -File packaging/scripts/build_windows.ps1
 ```
 
-Release artifacts are written to `dist_release/` and include zipped CLI/GUI bundles, Docker packaging assets, `SHA256SUMS.txt`, and `release_notes.md`. GitHub Actions builds release assets from `.github/workflows/release.yml` when a `v*` tag is pushed.
+Release artifacts are written to `dist_release/` and include zipped CLI bundles, a desktop GUI bundle named like `Loom-1.0.0-macos.zip`, Docker packaging assets, `SHA256SUMS.txt`, and `release_notes.md`. GitHub Actions builds release assets from `.github/workflows/release.yml` when a `v*` tag is pushed.
 
-FFmpeg can be provided externally on `PATH`, pointed to with `MEDIAQC_FFMPEG_PATH` / `MEDIAQC_FFMPEG_DIR`, or bundled in a `tools/` folder beside the executable. `mediaqc tools doctor` shows the exact FFmpeg, FFprobe, and FFplay paths currently in use.
+FFmpeg can be provided externally on `PATH`, pointed to with `MEDIAQC_FFMPEG_PATH` / `MEDIAQC_FFMPEG_DIR`, or bundled in a `tools/` folder beside the executable. The `tools/` folder may also hold FFprobe, FFplay, MediaInfo, legally obtained official NotchLC tools, or vendor-specific verification commands. `mediaqc tools doctor` shows the exact FFmpeg, FFprobe, and FFplay paths currently in use.
 
 ## Documentation Entry Points
 
@@ -220,7 +224,7 @@ NotchLC decode/probe support is separate from NotchLC encoding support. Encoding
 - `adobe_media_encoder` workflow for preparing Adobe Media Encoder Watch Folders.
 - `custom_command` backend for user-defined command templates.
 
-MediaPrep Studio does not reverse engineer, decompile, patch, recompile, or directly load any NotchLC Adobe plugin binary. NotchLC encoding depends on official Adobe Media Encoder, Premiere, After Effects, or official NotchLC SDK/tool availability.
+Loom does not reverse engineer, decompile, patch, recompile, or directly load any NotchLC Adobe plugin binary. NotchLC encoding depends on official Adobe Media Encoder, Premiere, After Effects, or official NotchLC SDK/tool availability.
 
 Prepare an official AME Watch Folder workflow:
 
@@ -230,7 +234,7 @@ mediaqc notchlc prepare ./Media --watch-folder ./AME_Watch --output ./Encoded_No
 
 The command writes `ame_jobs.json`, `ame_jobs.csv`, and `README_AME_NOTCHLC.txt`, then asks the operator to select an official NotchLC preset inside Adobe Media Encoder.
 
-If the NotchLC encoder backend is unavailable, MediaPrep Studio reports a clear error and does not crash.
+If the NotchLC encoder backend is unavailable, Loom reports a clear error and does not crash.
 
 ## Subtitles
 
@@ -260,10 +264,10 @@ Logo overlay uses FFmpeg filter graphs and supports PNG alpha, opacity, position
 
 ## License
 
-MediaPrep Studio Community Edition is licensed under Apache License 2.0.
+Loom Community Edition is licensed under Apache License 2.0.
 
-MediaPrep Studio Enterprise Edition is distributed under a commercial license for capabilities such as multi-user permissions, LDAP/AD, audit logs, NAS cluster workflows, web management, automatic content distribution, and Render Farm management. See `docs/00_Project/Editions.md` and `docs/15_Commercial/Licensing.md`.
+Loom Enterprise Edition is distributed under a commercial license for capabilities such as multi-user permissions, LDAP/AD, audit logs, NAS cluster workflows, web management, automatic content distribution, and Render Farm management. See `docs/00_Project/Editions.md` and `docs/15_Commercial/Licensing.md`.
 
 ## Legacy Level 1 Overview
 
-Earlier documentation may refer to the implementation as MediaPrepTool or Media QC Tool. Those files are preserved as Level 1 overview documents while the repository evolves toward the MediaPrep Studio product structure.
+Earlier documentation may refer to the implementation as MediaPrepTool or Media QC Tool. Those files are preserved as Level 1 overview documents while the repository evolves toward the Loom product structure.

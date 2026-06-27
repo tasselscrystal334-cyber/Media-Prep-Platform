@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Define the durable specification for the Workspace Spec domain object in MediaPrep Studio.
+Define the durable specification for the Workspace Spec domain object in Loom.
 
 ## Scope
 

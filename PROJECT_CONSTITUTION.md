@@ -2,11 +2,11 @@
 
 ## Purpose
 
-Define the highest-level rules for MediaPrep Studio engineering, documentation, testing, AI collaboration, and commercial readiness.
+Define the highest-level rules for Loom engineering, documentation, testing, AI collaboration, and commercial readiness.
 
 ## Overview
 
-MediaPrep Studio is a professional media preparation platform for live events, XR, broadcast, exhibitions, digital venues, and media-server workflows. The constitution is the final authority when feature speed conflicts with maintainability.
+Loom is a professional media preparation platform for live events, XR, broadcast, exhibitions, digital venues, and media-server workflows. The constitution is the final authority when feature speed conflicts with maintainability.
 
 ## Architecture
 

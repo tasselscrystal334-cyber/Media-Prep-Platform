@@ -217,7 +217,7 @@ def _status(value: Any) -> str:
 def _pdf_lines(report: dict[str, Any]) -> list[str]:
     summary = report.get("summary") or {}
     lines = [
-        "MediaPrep Studio QC Report",
+        "Loom QC Report",
         f"Project: {report.get('project_name') or report.get('project_path', '-')}",
         f"Generated: {report.get('generated_at', '-')}",
         f"Total Files: {report.get('total_files', 0)}",

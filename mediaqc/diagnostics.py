@@ -1,4 +1,4 @@
-"""Installation checks and local diagnostics for MediaQC."""
+"""Installation checks and local diagnostics for Loom."""
 
 from __future__ import annotations
 
@@ -7,6 +7,7 @@ import logging
 import os
 import platform
 import sys
+import tempfile
 import traceback
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -14,6 +15,7 @@ from pathlib import Path
 from typing import Any
 
 from . import __version__
+from .branding import PRODUCT_NAME
 from .processing.ffmpeg_runner import build_doctor_report
 
 
@@ -30,15 +32,14 @@ def default_log_dir() -> Path:
         return Path(configured).expanduser()
     if sys.platform.startswith("win"):
         base = Path(os.getenv("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
-        return base / "MediaQC" / "logs"
+        return base / PRODUCT_NAME / "logs"
     if sys.platform == "darwin":
-        return Path.home() / "Library" / "Logs" / "MediaQC"
+        return Path.home() / "Library" / "Logs" / PRODUCT_NAME
     return Path(os.getenv("XDG_STATE_HOME", Path.home() / ".local" / "state")) / "mediaqc" / "logs"
 
 
 def configure_logging(log_dir: Path | None = None, debug: bool = False) -> Path:
-    directory = Path(log_dir) if log_dir else default_log_dir()
-    directory.mkdir(parents=True, exist_ok=True)
+    directory = _ensure_log_dir(Path(log_dir) if log_dir else default_log_dir())
     log_path = directory / "mediaqc.log"
     logger = logging.getLogger(LOGGER_NAME)
     logger.setLevel(logging.DEBUG if debug else logging.INFO)
@@ -46,13 +47,12 @@ def configure_logging(log_dir: Path | None = None, debug: bool = False) -> Path:
         handler = logging.FileHandler(log_path, encoding="utf-8")
         handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s"))
         logger.addHandler(handler)
-    logger.info("MediaQC logging initialized")
+    logger.info("%s logging initialized", PRODUCT_NAME)
     return log_path
 
 
 def write_exception_log(exc: BaseException, log_dir: Path | None = None, context: dict[str, Any] | None = None) -> Path:
-    directory = Path(log_dir) if log_dir else default_log_dir()
-    directory.mkdir(parents=True, exist_ok=True)
+    directory = _ensure_log_dir(Path(log_dir) if log_dir else default_log_dir())
     path = directory / f"error-{datetime.now(UTC).strftime('%Y%m%d-%H%M%S')}.log"
     payload = {
         "generated_at": utc_timestamp(),
@@ -65,6 +65,16 @@ def write_exception_log(exc: BaseException, log_dir: Path | None = None, context
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
     logging.getLogger(LOGGER_NAME).exception("Unhandled error logged to %s", path)
     return path
+
+
+def _ensure_log_dir(directory: Path) -> Path:
+    try:
+        directory.mkdir(parents=True, exist_ok=True)
+        return directory
+    except OSError:
+        fallback = Path(tempfile.gettempdir()) / "Loom" / "logs"
+        fallback.mkdir(parents=True, exist_ok=True)
+        return fallback
 
 
 @dataclass(slots=True)
@@ -122,7 +132,7 @@ def check_python_version() -> InstallCheck:
 
 
 def check_package_version() -> InstallCheck:
-    return InstallCheck(name="mediaqc", status="PASS", message=f"MediaQC {__version__}", details={"version": __version__})
+    return InstallCheck(name="mediaqc", status="PASS", message=f"{PRODUCT_NAME} {__version__}", details={"version": __version__})
 
 
 def check_write_access(path: Path) -> InstallCheck:

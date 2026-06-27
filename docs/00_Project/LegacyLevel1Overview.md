@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Preserve the previous Level 1 overview content while the repository adopts the MediaPrep Studio documentation structure.
+Preserve the previous Level 1 overview content while the repository adopts the Loom documentation structure.
 
 ## Overview
 
@@ -73,7 +73,7 @@ mediaqc duplicates --database ./reports/media.db
 
 - EDID support currently validates project output specs, not real GPU EDID data.
 - Dashboard assets use CDN-hosted Bootstrap, HTMX, and Chart.js.
-- The package name is `mediaqc`; repository-level documentation now uses the product name MediaPrep Studio.
+- The package name is `mediaqc`; repository-level documentation now uses the product name Loom.
 
 ## Future Improvements
 

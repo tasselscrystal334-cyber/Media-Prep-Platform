@@ -2,11 +2,11 @@
 
 ## Purpose
 
-Define the supported MediaPrep Studio product editions, licensing boundaries, and capability ownership for the current `1.0.0` release line.
+Define the supported Loom product editions, licensing boundaries, and capability ownership for the current `1.0.0` release line.
 
 ## Overview
 
-MediaPrep Studio uses a dual-edition model.
+Loom uses a dual-edition model.
 
 Community Edition is licensed under Apache License 2.0. It provides the operator-facing media preparation features needed for local and project-based workflows:
 

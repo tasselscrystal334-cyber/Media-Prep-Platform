@@ -1,4 +1,4 @@
-"""Create release assets, checksums, and notes for MediaQC builds."""
+"""Create release assets, checksums, and notes for Loom builds."""
 
 from __future__ import annotations
 
@@ -23,22 +23,26 @@ def main() -> int:
 
     output_dir.mkdir(parents=True, exist_ok=True)
     assets = []
-    for bundle_name in ("mediaqc-cli", "mediaqc-gui"):
+    written_archives: set[Path] = set()
+    for bundle_name, archive_prefix in (("mediaqc-cli", "mediaqc-cli"), ("Loom", "Loom"), ("mediaqc-gui", "Loom")):
         bundle_path = dist_dir / bundle_name
         if bundle_path.exists():
-            archive = output_dir / f"{bundle_name}-{version}-{args.platform}.zip"
+            archive = output_dir / f"{archive_prefix}-{version}-{args.platform}.zip"
+            if archive in written_archives:
+                continue
             zip_directory(bundle_path, archive)
             assets.append(archive)
+            written_archives.add(archive)
 
     dockerfile = ROOT / "packaging" / "docker" / "Dockerfile"
     if dockerfile.exists():
-        docker_context = output_dir / f"mediaqc-docker-{version}"
+        docker_context = output_dir / f"loom-docker-{version}"
         if docker_context.exists():
             shutil.rmtree(docker_context)
         docker_context.mkdir(parents=True)
         shutil.copy2(dockerfile, docker_context / "Dockerfile")
         shutil.copy2(ROOT / "packaging" / "docker" / "docker-compose.yml", docker_context / "docker-compose.yml")
-        archive = output_dir / f"mediaqc-docker-{version}-{args.platform}.zip"
+        archive = output_dir / f"loom-docker-{version}-{args.platform}.zip"
         zip_directory(docker_context, archive)
         assets.append(archive)
 
@@ -87,7 +91,7 @@ def write_release_notes(destination: Path, version: str, platform: str, assets: 
     destination.write_text(
         "\n".join(
             [
-                f"# MediaQC {version} Release",
+                f"# Loom {version} Release",
                 "",
                 f"- Platform: `{platform}`",
                 f"- Generated at: `{generated_at}`",
@@ -100,7 +104,7 @@ def write_release_notes(destination: Path, version: str, platform: str, assets: 
                 "## Notes",
                 "",
                 "- CLI entry: `mediaqc`.",
-                "- GUI entry: `mediaqc-gui`.",
+                "- GUI app: `Loom`.",
                 "- FFmpeg tools can be external via PATH or bundled in a `tools/` folder beside the executable.",
                 "- Verify downloads with `SHA256SUMS.txt`.",
                 "",

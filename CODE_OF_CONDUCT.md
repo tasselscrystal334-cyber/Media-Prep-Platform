@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Set collaboration expectations for MediaPrep Studio contributors and maintainers.
+Set collaboration expectations for Loom contributors and maintainers.
 
 ## Overview
 
@@ -10,7 +10,7 @@ The project expects professional, respectful, inclusive, and safety-minded colla
 
 ## Architecture
 
-This document aligns with the MediaPrep Studio layered architecture: presentation, application, services, core, infrastructure, codec engine, media engine, and hardware integration.
+This document aligns with the Loom layered architecture: presentation, application, services, core, infrastructure, codec engine, media engine, and hardware integration.
 
 ## Workflow
 

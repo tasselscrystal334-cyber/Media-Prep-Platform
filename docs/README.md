@@ -1,4 +1,4 @@
-# MediaPrep Studio Documentation
+# Loom Documentation
 
 ## Purpose
 
@@ -10,7 +10,7 @@ Documentation is organized by project, architecture, development, codecs, pipeli
 
 ## Architecture
 
-This document aligns with the MediaPrep Studio layered architecture: presentation, application, services, core, infrastructure, codec engine, media engine, and hardware integration.
+This document aligns with the Loom layered architecture: presentation, application, services, core, infrastructure, codec engine, media engine, and hardware integration.
 
 ## Workflow
 

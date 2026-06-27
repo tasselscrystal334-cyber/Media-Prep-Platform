@@ -30,7 +30,7 @@ Profiles may allow `hap`, `hap_alpha`, `hap_q`, and `hap_q_alpha`.
 
 ## Example
 
-HAP Alpha material should use alpha-capable variants. If the codec name suggests alpha but pixel format metadata does not confirm alpha, MediaPrep Studio reports WARN instead of FAIL.
+HAP Alpha material should use alpha-capable variants. If the codec name suggests alpha but pixel format metadata does not confirm alpha, Loom reports WARN instead of FAIL.
 
 ## Known Limitations
 

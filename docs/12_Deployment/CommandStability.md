@@ -6,7 +6,7 @@ Define the stable command surface for operators and release packages.
 
 ## Overview
 
-MediaQC keeps existing commands stable and adds aliases only when they reduce operator friction. V2.0 adds root-level `mediaqc doctor`, `mediaqc version`, `mediaqc tools install-check`, `mediaqc tools logs`, and `mediaqc update check`.
+Loom keeps existing commands stable and adds aliases only when they reduce operator friction. The stable CLI remains `mediaqc`, with `loom` available as a product-name alias. V2.0 adds root-level `mediaqc doctor`, `mediaqc version`, `mediaqc tools install-check`, `mediaqc tools logs`, and `mediaqc update check`.
 
 ## Architecture
 

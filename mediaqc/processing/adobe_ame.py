@@ -27,7 +27,7 @@ AME_JOB_FIELDS = [
 OFFICIAL_NOTCHLC_POLICY = (
     "NotchLC encoding is supported only through official Adobe Media Encoder, "
     "Adobe Premiere, Adobe After Effects, or official NotchLC SDK/tool workflows. "
-    "MediaPrep Studio does not load, patch, reverse engineer, decompile, or recompile Adobe plugins."
+    "Loom does not load, patch, reverse engineer, decompile, or recompile Adobe plugins."
 )
 
 
@@ -159,7 +159,7 @@ def write_ame_readme(watch_folder: Path, output_dir: Path) -> Path:
     path.write_text(
         "\n".join(
             [
-                "MediaPrep Studio - Adobe Media Encoder NotchLC Watch Folder",
+                "Loom - Adobe Media Encoder NotchLC Watch Folder",
                 "",
                 OFFICIAL_NOTCHLC_POLICY,
                 "",
@@ -169,7 +169,7 @@ def write_ame_readme(watch_folder: Path, output_dir: Path) -> Path:
                 "3. Choose an official NotchLC preset provided by the legal Adobe plugin or official toolchain.",
                 f"4. Set the output folder to: {Path(output_dir).resolve()}",
                 "5. Start the AME queue and wait for encoded files to appear.",
-                "6. Run MediaPrep Studio QC, ffprobe, SHA256, and manifest generation on the output folder.",
+                "6. Run Loom QC, ffprobe, SHA256, and manifest generation on the output folder.",
                 "",
                 "This workflow does not call, load, inspect, patch, reverse engineer, decompile, or recompile any Adobe plugin binary.",
             ]

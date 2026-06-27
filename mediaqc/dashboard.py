@@ -1,4 +1,4 @@
-"""FastAPI dashboard for MediaQC."""
+"""FastAPI dashboard for Loom."""
 
 from __future__ import annotations
 
@@ -10,13 +10,14 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 from .database import MediaDatabase
+from .branding import PRODUCT_NAME
 
 
 def create_app(database_path: Path = Path("./reports/media.db")) -> FastAPI:
     app = FastAPI(
-        title="MediaQC Dashboard",
+        title=f"{PRODUCT_NAME} Dashboard",
         version="0.9.0",
-        description="Dashboard and REST API for MediaQC SQLite reports.",
+        description=f"Dashboard and REST API for {PRODUCT_NAME} SQLite reports.",
     )
     templates = Jinja2Templates(directory=str(Path(__file__).parent / "dashboard_templates"))
     db_path = Path(database_path)

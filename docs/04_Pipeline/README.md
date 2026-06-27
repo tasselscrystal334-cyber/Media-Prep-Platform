@@ -34,7 +34,7 @@ mediaqc pipeline package ./Media --profile notch --output ./packages
 
 ## Known Limitations
 
-SMB, AFP, and NFS are handled as mounted paths. MediaPrep Studio does not mount remote shares itself in V1.5.
+SMB, AFP, and NFS are handled as mounted paths. Loom does not mount remote shares itself in V1.5.
 
 ## Future Improvements
 

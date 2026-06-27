@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Define the long-term product direction for MediaPrep Studio.
+Define the long-term product direction for Loom.
 
 ## Version Plan
 

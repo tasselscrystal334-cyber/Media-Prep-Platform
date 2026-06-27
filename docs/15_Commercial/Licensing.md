@@ -2,11 +2,11 @@
 
 ## Purpose
 
-Document MediaPrep Studio licensing boundaries for Community Edition and Enterprise Edition.
+Document Loom licensing boundaries for Community Edition and Enterprise Edition.
 
 ## Overview
 
-MediaPrep Studio Community Edition is licensed under Apache License 2.0. Community Edition includes:
+Loom Community Edition is licensed under Apache License 2.0. Community Edition includes:
 
 - FFmpeg integration
 - FFprobe metadata extraction
@@ -14,7 +14,7 @@ MediaPrep Studio Community Edition is licensed under Apache License 2.0. Communi
 - Media validation
 - Batch transcoding
 
-MediaPrep Studio Enterprise Edition is licensed under a commercial license. Enterprise Edition includes:
+Loom Enterprise Edition is licensed under a commercial license. Enterprise Edition includes:
 
 - Multi-user permissions
 - LDAP/AD integration

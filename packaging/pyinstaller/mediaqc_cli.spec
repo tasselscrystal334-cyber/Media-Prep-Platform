@@ -16,6 +16,7 @@ def collect_tree(source: str, target: str):
 datas = []
 datas += collect_tree("config", "config")
 datas += collect_tree("profiles", "profiles")
+datas += collect_tree("mediaqc/assets", "mediaqc/assets")
 datas += collect_tree("mediaqc/templates", "mediaqc/templates")
 datas += collect_tree("mediaqc/dashboard_templates", "mediaqc/dashboard_templates")
 datas += collect_tree("tools", "tools")

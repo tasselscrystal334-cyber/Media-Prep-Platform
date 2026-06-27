@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Index the durable data and contract specifications for MediaPrep Studio.
+Index the durable data and contract specifications for Loom.
 
 ## Overview
 
@@ -10,7 +10,7 @@ Specification documents define data models, fields, JSON examples, SQLite mappin
 
 ## Architecture
 
-This document aligns with the MediaPrep Studio layered architecture: presentation, application, services, core, infrastructure, codec engine, media engine, and hardware integration.
+This document aligns with the Loom layered architecture: presentation, application, services, core, infrastructure, codec engine, media engine, and hardware integration.
 
 ## Workflow
 

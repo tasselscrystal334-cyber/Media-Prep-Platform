@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Loom icon">
+  <defs>
+    <linearGradient id="loom-bg" x1="32" y1="28" x2="224" y2="228" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f8fafc"/>
+      <stop offset="1" stop-color="#d7dee8"/>
+    </linearGradient>
+    <linearGradient id="loom-ribbon" x1="58" y1="69" x2="201" y2="187" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2468d8"/>
+      <stop offset="0.55" stop-color="#1b9aaa"/>
+      <stop offset="1" stop-color="#111827"/>
+    </linearGradient>
+  </defs>
+  <rect x="20" y="20" width="216" height="216" rx="46" fill="url(#loom-bg)"/>
+  <rect x="20" y="20" width="216" height="216" rx="46" fill="none" stroke="#b8c2d1" stroke-width="4"/>
+  <path d="M72 70h34v99h79v31H72z" fill="#111827"/>
+  <path d="M116 70h33v70h52v31h-85z" fill="url(#loom-ribbon)" opacity="0.96"/>
+  <circle cx="179" cy="84" r="13" fill="#1b9aaa"/>
+</svg>

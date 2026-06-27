@@ -1,4 +1,4 @@
-"""PyInstaller entry point for the MediaQC GUI."""
+"""PyInstaller entry point for the Loom GUI."""
 
 from mediaqc.gui.app import main
 

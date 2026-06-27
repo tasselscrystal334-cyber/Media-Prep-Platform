@@ -6,8 +6,6 @@ import threading
 from pathlib import Path
 from typing import Any
 
-from mediaqc.report import write_pdf_report
-
 
 class ScanWorker:
     """Non-Qt worker logic used by the Qt thread wrapper and tests."""
@@ -42,7 +40,7 @@ class ScanWorker:
         )
         pdf_path = None
         if self.pdf:
-            from mediaqc.report import build_report
+            from mediaqc.report import build_report, write_pdf_report
 
             report = build_report(self.project_path, files)
             pdf_path = write_pdf_report(report, self.output_path)

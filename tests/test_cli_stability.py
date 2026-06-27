@@ -24,7 +24,7 @@ def test_root_doctor_alias() -> None:
     result = run_cli("doctor")
 
     assert result.returncode == 0
-    assert "MediaQC Tools Doctor" in result.stdout
+    assert "Loom Tools Doctor" in result.stdout
 
 
 def test_install_check_json() -> None:

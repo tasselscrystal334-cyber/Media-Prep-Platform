@@ -1,4 +1,4 @@
-"""PySide6 desktop GUI for MediaPrep Studio."""
+"""PySide6 desktop GUI for Loom."""
 
 from __future__ import annotations
 

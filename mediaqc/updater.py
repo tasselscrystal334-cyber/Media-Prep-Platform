@@ -1,4 +1,4 @@
-"""Update check helpers for packaged MediaQC releases."""
+"""Update check helpers for packaged Loom releases."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from . import __version__
+from .branding import PRODUCT_NAME
 
 
 DEFAULT_RELEASE_API = "https://api.github.com/repos/tasselscrystal334-cyber/Media-Prep-Platform/releases/latest"
@@ -53,7 +54,7 @@ def check_for_updates(api_url: str = DEFAULT_RELEASE_API, timeout: int = 5) -> U
         latest_version=latest or None,
         update_available=available,
         release_url=payload.get("html_url"),
-        message="Update available." if available else "MediaQC is up to date.",
+        message="Update available." if available else f"{PRODUCT_NAME} is up to date.",
     )
 
 

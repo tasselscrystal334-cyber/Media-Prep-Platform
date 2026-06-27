@@ -6,7 +6,7 @@ Provide a compact context block that can be placed into Codex Background Informa
 
 ## Overview
 
-MediaPrep Studio is a professional media preparation and QC platform for live events, XR, broadcast, exhibitions, digital venues, and media-server workflows. The current Python package is `mediaqc` and uses Typer, Rich, FFmpeg/FFprobe, SQLite, YAML, Jinja2, watchdog, FastAPI, and pytest.
+Loom is a professional media preparation and QC platform for live events, XR, broadcast, exhibitions, digital venues, and media-server workflows. The current Python package is `mediaqc` and uses Typer, Rich, FFmpeg/FFprobe, SQLite, YAML, Jinja2, watchdog, FastAPI, and pytest.
 
 ## Architecture
 

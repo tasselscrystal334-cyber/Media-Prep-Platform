@@ -13,6 +13,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 
 from . import __version__
+from .branding import PRODUCT_NAME
 from .database import MediaDatabase, utc_now
 from .deep_analysis import FFmpegNotFoundError, analyze_media
 from .diagnostics import build_install_report, configure_logging, default_log_dir
@@ -50,11 +51,11 @@ from .rules import ProjectRules, evaluate_rules, load_rules
 from .scanner import SUPPORTED_EXTENSIONS, scan_media_files
 from .updater import DEFAULT_RELEASE_API, check_for_updates
 
-app = typer.Typer(help="Media QC Tool for show, LED, Millumin, Disguise, and TD workflows.")
+app = typer.Typer(help=f"{PRODUCT_NAME} media QC tool for show, LED, Millumin, Disguise, and TD workflows.")
 tools_app = typer.Typer(help="Environment and diagnostic tools.")
 notchlc_app = typer.Typer(help="Official NotchLC workflow helpers.")
 pipeline_app = typer.Typer(help="NAS sync, compare, and project package pipeline.")
-update_app = typer.Typer(help="Update checks for packaged MediaQC releases.")
+update_app = typer.Typer(help=f"Update checks for packaged {PRODUCT_NAME} releases.")
 app.add_typer(tools_app, name="tools")
 app.add_typer(notchlc_app, name="notchlc")
 app.add_typer(pipeline_app, name="pipeline")
@@ -64,7 +65,7 @@ console = Console()
 
 @app.callback()
 def main(
-    log_dir: Path | None = typer.Option(None, "--log-dir", help="Directory for MediaQC logs."),
+    log_dir: Path | None = typer.Option(None, "--log-dir", help=f"Directory for {PRODUCT_NAME} logs."),
     debug: bool = typer.Option(False, "--debug", help="Enable verbose file logging."),
 ) -> None:
     """Media QC Tool."""
@@ -74,7 +75,7 @@ def main(
 
 @app.command("version")
 def version_command() -> None:
-    """Print the installed MediaQC version."""
+    """Print the installed Loom version."""
 
     console.print(__version__)
 
@@ -90,7 +91,7 @@ def doctor_alias() -> None:
 def editions_command() -> None:
     """Show Community and Enterprise edition licensing boundaries."""
 
-    table = Table(title="MediaPrep Studio Editions")
+    table = Table(title=f"{PRODUCT_NAME} Editions")
     table.add_column("Edition", style="bold")
     table.add_column("License")
     table.add_column("Included Capabilities")
@@ -104,7 +105,7 @@ def tools_doctor() -> None:
     """Check FFmpeg, FFprobe, FFplay, encoder, and filter availability."""
 
     report = build_doctor_report()
-    table = Table(title="MediaQC Tools Doctor")
+    table = Table(title=f"{PRODUCT_NAME} Tools Doctor")
     table.add_column("Check")
     table.add_column("Value")
     values = report.to_dict()
@@ -129,7 +130,7 @@ def tools_install_check(
     if json_output:
         console.print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
         return
-    table = Table(title="MediaQC Install Check")
+    table = Table(title=f"{PRODUCT_NAME} Install Check")
     table.add_column("Check")
     table.add_column("Status")
     table.add_column("Message")
@@ -144,7 +145,7 @@ def tools_install_check(
 
 @tools_app.command("logs")
 def tools_logs() -> None:
-    """Show the current MediaQC log directory."""
+    """Show the current Loom log directory."""
 
     log_path = configure_logging()
     console.print(f"[green]Log file:[/green] {log_path}")
@@ -157,7 +158,7 @@ def update_check(
     timeout: int = typer.Option(5, "--timeout", min=1, help="Network timeout in seconds."),
     json_output: bool = typer.Option(False, "--json", help="Print update check result as JSON."),
 ) -> None:
-    """Check whether a newer MediaQC release is available."""
+    """Check whether a newer Loom release is available."""
 
     import json
 
@@ -1227,7 +1228,7 @@ def _watch_table(state: dict[str, object], lock: threading.Lock) -> Table:
         last_scan = str(state["last_scan"])
         total = str(state["total"])
         db_path = str(state["db"])
-    table = Table(title="MediaQC Watch")
+    table = Table(title=f"{PRODUCT_NAME} Watch")
     table.add_column("Field")
     table.add_column("Value")
     table.add_row("Last Event", last_event)
