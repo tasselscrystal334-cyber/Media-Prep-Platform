@@ -83,11 +83,25 @@ jobs:
         run: |
           find release_assets -name release_notes.md -print -exec cat {} \; > release_assets/release_notes.md
 
+      - name: Generate combined checksums
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib
+
+          root = Path("release_assets")
+          rows = []
+          for path in sorted(root.rglob("*.zip")):
+              digest = hashlib.sha256(path.read_bytes()).hexdigest()
+              rows.append(f"{digest}  {path.name}")
+          (root / "SHA256SUMS.txt").write_text("\n".join(rows) + "\n", encoding="utf-8")
+          PY
+
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.RELEASE_TAG }}
           files: |
             release_assets/**/*.zip
-            release_assets/**/SHA256SUMS.txt
+            release_assets/SHA256SUMS.txt
           body_path: release_assets/release_notes.md
