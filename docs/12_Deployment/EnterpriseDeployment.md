@@ -47,6 +47,7 @@ Expand this document when the subsystem receives a new module, public API, UI su
 - `docker-compose.yml`
 - `Dockerfile`
 - `.env.example`
+- `docs/12_Deployment/PackagingRelease.md`
 
 ## Revision History
 

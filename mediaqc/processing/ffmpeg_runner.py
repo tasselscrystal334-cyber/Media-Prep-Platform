@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -50,6 +52,10 @@ class DoctorReport:
     ffmpeg_path: str | None = None
     ffprobe_path: str | None = None
     ffplay_path: str | None = None
+    ffmpeg_source: str | None = None
+    ffprobe_source: str | None = None
+    ffplay_source: str | None = None
+    bundled_tools_dir: str | None = None
     ffmpeg_version: str | None = None
     encoders_count: int = 0
     decoders_count: int = 0
@@ -69,6 +75,10 @@ class DoctorReport:
             "ffmpeg_path": self.ffmpeg_path,
             "ffprobe_path": self.ffprobe_path,
             "ffplay_path": self.ffplay_path,
+            "ffmpeg_source": self.ffmpeg_source,
+            "ffprobe_source": self.ffprobe_source,
+            "ffplay_source": self.ffplay_source,
+            "bundled_tools_dir": self.bundled_tools_dir,
             "ffmpeg_version": self.ffmpeg_version,
             "encoders_count": self.encoders_count,
             "decoders_count": self.decoders_count,
@@ -86,26 +96,92 @@ class DoctorReport:
 
 
 def check_ffmpeg_available() -> str:
-    executable = shutil.which("ffmpeg")
-    if executable is None:
+    executable = resolve_tool_path("ffmpeg")
+    if executable.path is None:
         raise FFmpegNotFoundError("ffmpeg was not found. Install FFmpeg and make sure ffmpeg is on PATH.")
-    return executable
+    return executable.path
 
 
 def check_ffprobe_available() -> str:
-    executable = shutil.which("ffprobe")
-    if executable is None:
+    executable = resolve_tool_path("ffprobe")
+    if executable.path is None:
         raise FFprobeNotFoundError("ffprobe was not found. Install FFmpeg and make sure ffprobe is on PATH.")
-    return executable
+    return executable.path
 
 
 def check_ffplay_available() -> str:
-    executable = shutil.which("ffplay")
-    if executable is None:
+    executable = resolve_tool_path("ffplay")
+    if executable.path is None:
         raise FFplayNotFoundError(
             "ffplay was not found. Install a full FFmpeg package and make sure ffplay is on PATH."
         )
-    return executable
+    return executable.path
+
+
+@dataclass(slots=True)
+class ToolResolution:
+    name: str
+    path: str | None
+    source: str
+
+
+def resolve_tool_path(name: str) -> ToolResolution:
+    """Resolve ffmpeg-family tools from env, bundled folders, then PATH."""
+
+    env_key = f"MEDIAQC_{name.upper()}_PATH"
+    explicit_path = os.getenv(env_key)
+    if explicit_path:
+        path = Path(explicit_path).expanduser()
+        if _is_executable_file(path):
+            return ToolResolution(name=name, path=str(path), source=env_key)
+
+    for directory, source in _candidate_tool_dirs():
+        candidate = _tool_candidate(directory, name)
+        if _is_executable_file(candidate):
+            return ToolResolution(name=name, path=str(candidate), source=source)
+
+    path_from_env = shutil.which(name)
+    if path_from_env:
+        return ToolResolution(name=name, path=path_from_env, source="PATH")
+    return ToolResolution(name=name, path=None, source="not_found")
+
+
+def get_bundled_tools_dir() -> Path | None:
+    for directory, _source in _candidate_tool_dirs():
+        if any(_is_executable_file(_tool_candidate(directory, name)) for name in ("ffmpeg", "ffprobe", "ffplay")):
+            return directory
+    return None
+
+
+def _candidate_tool_dirs() -> list[tuple[Path, str]]:
+    dirs: list[tuple[Path, str]] = []
+    env_dir = os.getenv("MEDIAQC_FFMPEG_DIR")
+    if env_dir:
+        dirs.append((Path(env_dir).expanduser(), "MEDIAQC_FFMPEG_DIR"))
+
+    meipass = getattr(sys, "_MEIPASS", None)
+    if meipass:
+        base = Path(str(meipass))
+        dirs.extend([(base / "tools", "PyInstaller bundle"), (base / "ffmpeg", "PyInstaller bundle")])
+
+    executable_dir = Path(sys.executable).resolve().parent
+    dirs.extend(
+        [
+            (executable_dir / "tools", "bundled tools"),
+            (executable_dir.parent / "tools", "bundled tools"),
+            (Path.cwd() / "tools", "working directory tools"),
+        ]
+    )
+    return dirs
+
+
+def _tool_candidate(directory: Path, name: str) -> Path:
+    exe_name = f"{name}.exe" if sys.platform.startswith("win") else name
+    return directory / exe_name
+
+
+def _is_executable_file(path: Path) -> bool:
+    return path.is_file() and os.access(path, os.X_OK)
 
 
 def run_ffmpeg(args: list[str], log_path: Path | None = None, dry_run: bool = False) -> CommandResult:
@@ -191,18 +267,32 @@ def build_doctor_report() -> DoctorReport:
 
     report = DoctorReport()
     try:
-        report.ffmpeg_path = check_ffmpeg_available()
+        ffmpeg = resolve_tool_path("ffmpeg")
+        report.ffmpeg_path = ffmpeg.path
+        report.ffmpeg_source = ffmpeg.source
+        if ffmpeg.path is None:
+            raise FFmpegNotFoundError("ffmpeg was not found. Install FFmpeg and make sure ffmpeg is on PATH.")
         report.ffmpeg_version = get_ffmpeg_version()
     except FFmpegNotFoundError as exc:
         report.errors.append(str(exc))
     try:
-        report.ffprobe_path = check_ffprobe_available()
+        ffprobe = resolve_tool_path("ffprobe")
+        report.ffprobe_path = ffprobe.path
+        report.ffprobe_source = ffprobe.source
+        if ffprobe.path is None:
+            raise FFprobeNotFoundError("ffprobe was not found. Install FFmpeg and make sure ffprobe is on PATH.")
     except FFprobeNotFoundError as exc:
         report.errors.append(str(exc))
     try:
-        report.ffplay_path = check_ffplay_available()
+        ffplay = resolve_tool_path("ffplay")
+        report.ffplay_path = ffplay.path
+        report.ffplay_source = ffplay.source
+        if ffplay.path is None:
+            raise FFplayNotFoundError("ffplay was not found. Install a full FFmpeg package and make sure ffplay is on PATH.")
     except FFplayNotFoundError as exc:
         report.errors.append(str(exc))
+    bundled_tools = get_bundled_tools_dir()
+    report.bundled_tools_dir = str(bundled_tools) if bundled_tools else None
 
     if report.ffmpeg_path:
         encoders = get_available_encoders()

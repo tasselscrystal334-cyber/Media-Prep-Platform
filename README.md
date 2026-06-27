@@ -111,6 +111,21 @@ Supported notification adapters:
 - Microsoft Teams
 - Email
 
+## Packaging And Release
+
+MediaQC can be built as cross-platform CLI and desktop GUI release bundles with PyInstaller:
+
+```bash
+python -m pip install -e ".[release]"
+bash packaging/scripts/build_macos.sh
+bash packaging/scripts/build_linux.sh
+powershell -ExecutionPolicy Bypass -File packaging/scripts/build_windows.ps1
+```
+
+Release artifacts are written to `dist_release/` and include zipped CLI/GUI bundles, Docker packaging assets, `SHA256SUMS.txt`, and `release_notes.md`. GitHub Actions builds release assets from `.github/workflows/release.yml` when a `v*` tag is pushed.
+
+FFmpeg can be provided externally on `PATH`, pointed to with `MEDIAQC_FFMPEG_PATH` / `MEDIAQC_FFMPEG_DIR`, or bundled in a `tools/` folder beside the executable. `mediaqc tools doctor` shows the exact FFmpeg, FFprobe, and FFplay paths currently in use.
+
 ## Documentation Entry Points
 
 - Project overview: `docs/00_Project/README.md`

@@ -21,3 +21,11 @@ def launch_gui() -> int:
     window.resize(1320, 820)
     window.show()
     return app.exec()
+
+
+def main() -> None:
+    raise SystemExit(launch_gui())
+
+
+if __name__ == "__main__":
+    main()

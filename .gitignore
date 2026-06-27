@@ -6,3 +6,6 @@ __pycache__/
 reports/
 *.db
 .DS_Store
+build/
+dist/
+dist_release/

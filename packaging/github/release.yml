@@ -1,0 +1,84 @@
+name: Build Release Assets
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    name: Build ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+            script: bash packaging/scripts/build_linux.sh
+          - os: macos-latest
+            platform: macos
+            script: bash packaging/scripts/build_macos.sh
+          - os: windows-latest
+            platform: windows
+            script: powershell -ExecutionPolicy Bypass -File packaging/scripts/build_windows.ps1
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Build assets
+        run: ${{ matrix.script }}
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mediaqc-${{ matrix.platform }}-release
+          path: dist_release/*
+
+  docker:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: packaging/docker/Dockerfile
+          push: false
+          tags: mediaqc-enterprise:${{ github.ref_name }}
+
+  release:
+    name: Publish GitHub Release
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [build, docker]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: release_assets
+
+      - name: Merge release notes
+        run: |
+          find release_assets -name release_notes.md -print -exec cat {} \; > release_assets/release_notes.md
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release_assets/**/*.zip
+            release_assets/**/SHA256SUMS.txt
+          body_path: release_assets/release_notes.md

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import shutil
 import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -99,12 +98,15 @@ def analyze_media(path: Path, ffprobe: dict[str, Any] | None = None) -> DecodeRe
 
 
 def ensure_ffmpeg_available() -> str:
-    executable = shutil.which("ffmpeg")
-    if executable is None:
+    from .processing.ffmpeg_runner import FFmpegNotFoundError as ProcessingFFmpegNotFoundError
+    from .processing.ffmpeg_runner import check_ffmpeg_available
+
+    try:
+        return check_ffmpeg_available()
+    except ProcessingFFmpegNotFoundError as exc:
         raise FFmpegNotFoundError(
             "ffmpeg was not found. Install FFmpeg and make sure ffmpeg is on PATH."
-        )
-    return executable
+        ) from exc
 
 
 def _run_decode_check(ffmpeg: str, path: Path) -> subprocess.CompletedProcess[str]:
@@ -130,9 +132,12 @@ def _run_decode_check(ffmpeg: str, path: Path) -> subprocess.CompletedProcess[st
 
 
 def _probe_frames_and_packets(path: Path) -> dict[str, Any]:
-    ffprobe = shutil.which("ffprobe")
-    if ffprobe is None:
-        raise RuntimeError("ffprobe was not found while collecting deep metrics.")
+    from .processing.ffmpeg_runner import FFprobeNotFoundError, check_ffprobe_available
+
+    try:
+        ffprobe = check_ffprobe_available()
+    except FFprobeNotFoundError as exc:
+        raise RuntimeError("ffprobe was not found while collecting deep metrics.") from exc
 
     command = [
         ffprobe,

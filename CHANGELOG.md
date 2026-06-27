@@ -17,6 +17,7 @@ The format follows Keep a Changelog and the project aims to follow Semantic Vers
 - V1.0 PySide6 desktop GUI with dark theme, Projects/Rules/History navigation, drag-and-drop scan queue, threaded scanning, progress, cancellation request, logs, preview pane, and JSON/CSV/HTML/PDF export.
 - V1.5 Media Pipeline for NAS/SMB/AFP/NFS mounted sync, SHA256 transfer reports, FFprobe/optional MediaInfo metadata, compare reports, and project packages for Millumin, Disguise, Pixera, TouchDesigner, and Notch workflows.
 - V2.0 enterprise MAM foundation with users, permissions, project management, REST/OpenAPI, GraphQL entry point, webhooks, notifications, storage adapters, Docker Compose, PostgreSQL, Redis, Celery, RabbitMQ, and MinIO configuration.
+- V2.0 packaging and release system with PyInstaller CLI/GUI specs, platform build scripts, Docker packaging files, GitHub Actions release workflow, bundled FFmpeg path detection, `mediaqc-gui` entry point, SHA256SUMS generation, and release notes generation.
 
 ### Changed
 

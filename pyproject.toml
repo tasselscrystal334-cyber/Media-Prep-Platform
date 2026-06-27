@@ -33,9 +33,13 @@ enterprise = [
     "boto3>=1.34.0",
     "minio>=7.2.0",
 ]
+release = [
+    "pyinstaller>=6.10.0",
+]
 
 [project.scripts]
 mediaqc = "mediaqc.cli:app"
+mediaqc-gui = "mediaqc.gui.app:main"
 
 [tool.setuptools.packages.find]
 include = ["mediaqc*"]

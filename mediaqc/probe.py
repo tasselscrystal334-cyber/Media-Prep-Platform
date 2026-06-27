@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import shutil
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -16,12 +15,15 @@ class FFprobeNotFoundError(RuntimeError):
 def ensure_ffprobe_available() -> str:
     """Return the ffprobe executable path, or raise a clear error."""
 
-    executable = shutil.which("ffprobe")
-    if executable is None:
+    from .processing.ffmpeg_runner import FFprobeNotFoundError as ProcessingFFprobeNotFoundError
+    from .processing.ffmpeg_runner import check_ffprobe_available
+
+    try:
+        return check_ffprobe_available()
+    except ProcessingFFprobeNotFoundError as exc:
         raise FFprobeNotFoundError(
             "ffprobe was not found. Install FFmpeg and make sure ffprobe is on PATH."
-        )
-    return executable
+        ) from exc
 
 
 def probe_media(path: Path) -> dict[str, Any]:
