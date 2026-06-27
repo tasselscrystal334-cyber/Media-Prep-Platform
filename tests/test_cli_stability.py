@@ -1,6 +1,8 @@
 import subprocess
 import sys
 
+from mediaqc import __version__
+
 
 def run_cli(*args: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
@@ -15,7 +17,7 @@ def test_version_command() -> None:
     result = run_cli("version")
 
     assert result.returncode == 0
-    assert "2.0.0" in result.stdout
+    assert __version__ in result.stdout
 
 
 def test_root_doctor_alias() -> None:

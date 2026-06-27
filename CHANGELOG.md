@@ -26,7 +26,7 @@ The format follows Keep a Changelog and the project aims to follow Semantic Vers
 - Manifest `fps` values are normalized to numeric values for delivery manifests.
 - HAP Alpha checks now warn when alpha is requested by codec name but not confirmed by pixel format metadata.
 - HTML report template can display a Processing Summary when processing job data is provided.
-- Package version updated to `2.0.0`.
+- Package version updated to `1.0.0` for the first public release line.
 
 ## [0.95.0] - 2026-06-26
 

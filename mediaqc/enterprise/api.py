@@ -8,6 +8,7 @@ from fastapi import Depends, FastAPI, Header, HTTPException, status
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 
+from .. import __version__
 from .auth import create_token, decode_token, has_permission, verify_password
 from .config import EnterpriseSettings, load_settings
 from .graphql import execute_graphql
@@ -70,7 +71,7 @@ def create_enterprise_app(
     app_settings = settings or load_settings()
     app = FastAPI(
         title="MediaPrep Enterprise API",
-        version="2.0.0",
+        version=__version__,
         description="Enterprise Media Asset Management API for MediaPrep Studio.",
     )
 

@@ -22,7 +22,7 @@ datas += collect_tree("tools", "tools")
 
 
 a = Analysis(
-    [str(ROOT / "mediaqc" / "gui" / "app.py")],
+    [str(ROOT / "packaging" / "pyinstaller" / "entrypoints" / "mediaqc_gui.py")],
     pathex=[str(ROOT)],
     binaries=[],
     datas=datas,

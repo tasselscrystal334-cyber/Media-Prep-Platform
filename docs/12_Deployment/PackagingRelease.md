@@ -55,6 +55,8 @@ Add code signing, notarization, Windows installer generation, package manager pu
 
 - `packaging/pyinstaller/mediaqc_cli.spec`
 - `packaging/pyinstaller/mediaqc_gui.spec`
+- `packaging/pyinstaller/entrypoints/mediaqc_cli.py`
+- `packaging/pyinstaller/entrypoints/mediaqc_gui.py`
 - `packaging/scripts/make_release.py`
 - `mediaqc/processing/ffmpeg_runner.py`
 - `.github/workflows/release.yml`
