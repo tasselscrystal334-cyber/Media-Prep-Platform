@@ -19,6 +19,7 @@ The format follows Keep a Changelog and the project aims to follow Semantic Vers
 - V2.0 enterprise MAM foundation with users, permissions, project management, REST/OpenAPI, GraphQL entry point, webhooks, notifications, storage adapters, Docker Compose, PostgreSQL, Redis, Celery, RabbitMQ, and MinIO configuration.
 - V2.0 packaging and release system with PyInstaller CLI/GUI specs, platform build scripts, Docker packaging files, GitHub Actions release workflow, bundled FFmpeg path detection, `mediaqc-gui` entry point, SHA256SUMS generation, and release notes generation.
 - V2.0 stability pass with root command aliases, install health checks, file log discovery, update checks, support diagnostics, and a copyable LED example project.
+- Community/Enterprise edition matrix with Apache License 2.0 Community capabilities and commercial Enterprise capabilities exposed through `mediaqc editions`.
 
 ### Changed
 

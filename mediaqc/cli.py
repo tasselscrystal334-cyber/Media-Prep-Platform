@@ -16,6 +16,7 @@ from . import __version__
 from .database import MediaDatabase, utc_now
 from .deep_analysis import FFmpegNotFoundError, analyze_media
 from .diagnostics import build_install_report, configure_logging, default_log_dir
+from .editions import get_edition_matrix
 from .hash_check import calculate_sha256
 from .live_event.canvas import check_media_canvas, load_canvas_spec, summarize_canvas, validate_canvas_spec
 from .live_event.codec_profiles import analyze_codec_profile, summarize_codec_profiles
@@ -83,6 +84,19 @@ def doctor_alias() -> None:
     """Run the tools doctor from the root command."""
 
     tools_doctor()
+
+
+@app.command("editions")
+def editions_command() -> None:
+    """Show Community and Enterprise edition licensing boundaries."""
+
+    table = Table(title="MediaPrep Studio Editions")
+    table.add_column("Edition", style="bold")
+    table.add_column("License")
+    table.add_column("Included Capabilities")
+    for edition in get_edition_matrix():
+        table.add_row(edition.name, edition.license_name, "\n".join(edition.features))
+    console.print(table)
 
 
 @tools_app.command("doctor")

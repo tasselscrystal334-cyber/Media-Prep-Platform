@@ -13,8 +13,8 @@ MediaPrep Studio is a professional media preparation and quality-control platfor
 - Live event checks for output specs, LED canvas layouts, codec risk, manifests, and integrity verification.
 - FFmpeg/FFplay environment checks, preview playback, transcode presets, subtitles, logo overlays, and batch job reports.
 - PySide6 desktop GUI with dark theme, project/rule/history panels, scan queue, preview/log panes, and JSON/CSV/HTML/PDF export.
-- Media Pipeline for NAS/SMB/AFP/NFS-mounted workflows, SHA256 sync, FFprobe/MediaInfo metadata, transfer reports, compare reports, and project packages.
-- Enterprise Media Asset Management foundation with users, roles, projects, assets, REST API, GraphQL entry point, webhooks, notification adapters, and Docker Compose services for PostgreSQL, Redis, RabbitMQ, and MinIO.
+- Media Pipeline for mounted NAS/SMB/AFP/NFS workflows, SHA256 sync, FFprobe/MediaInfo metadata, transfer reports, compare reports, and project packages.
+- Enterprise Media Asset Management foundation for the commercial edition, including users, roles, projects, assets, REST API, GraphQL entry point, webhooks, notification adapters, and Docker Compose services for PostgreSQL, Redis, RabbitMQ, and MinIO.
 - JSON, CSV, and HTML reporting.
 - FastAPI dashboard with REST API foundations.
 
@@ -44,8 +44,22 @@ python -m pip install -r requirements.txt
 python -m pip install -e .
 mediaqc scan ./Media --profile disguise --output ./reports --html
 mediaqc version
+mediaqc editions
 mediaqc tools doctor
 mediaqc tools install-check
+```
+
+## Editions And Licensing
+
+MediaPrep Studio uses a dual-edition model:
+
+- Community Edition is licensed under Apache License 2.0 and includes FFmpeg integration, FFprobe metadata extraction, SHA256 verification, media validation, and batch transcoding.
+- Enterprise Edition is licensed under a commercial license and includes multi-user permissions, LDAP/AD, audit logs, NAS cluster workflows, the web management dashboard, automatic content distribution, and Render Farm management.
+
+Check the current edition matrix from the CLI:
+
+```bash
+mediaqc editions
 ```
 
 ## Desktop GUI
@@ -79,7 +93,7 @@ Pipeline commands automatically calculate SHA256, run FFprobe, optionally collec
 
 ## Enterprise MAM
 
-Start the V2.0 enterprise API locally:
+Enterprise MAM capabilities are part of MediaPrep Studio Enterprise Edition under a commercial license. Start the V2.0 enterprise API locally for licensed enterprise development and evaluation:
 
 ```bash
 mediaqc enterprise-api --host 127.0.0.1 --port 8080
@@ -246,7 +260,9 @@ Logo overlay uses FFmpeg filter graphs and supports PNG alpha, opacity, position
 
 ## License
 
-This repository currently uses the Apache License 2.0. Commercial licensing and enterprise activation plans are documented separately under `docs/15_Commercial/`.
+MediaPrep Studio Community Edition is licensed under Apache License 2.0.
+
+MediaPrep Studio Enterprise Edition is distributed under a commercial license for capabilities such as multi-user permissions, LDAP/AD, audit logs, NAS cluster workflows, web management, automatic content distribution, and Render Farm management. See `docs/00_Project/Editions.md` and `docs/15_Commercial/Licensing.md`.
 
 ## Legacy Level 1 Overview
 

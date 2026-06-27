@@ -6,7 +6,7 @@ Document the README responsibilities in the 00_Project documentation area.
 
 ## Overview
 
-Covers project mission, vision, target users, target industries, supported software ecosystems, supported platforms, engineering principles, glossary, and product roadmap.
+Covers project mission, vision, target users, target industries, supported software ecosystems, supported platforms, engineering principles, glossary, product editions, and product roadmap.
 
 ## Architecture
 
@@ -40,9 +40,10 @@ Expand this document when the subsystem receives a new module, public API, UI su
 
 - `README.md`
 - `PROJECT_CONSTITUTION.md`
+- `docs/00_Project/Editions.md`
 - `docs/01_Architecture/SystemOverview.md`
 
 ## Revision History
 
-- Documentation version: 1.0
+- Documentation version: 1.1
 - Last updated: 2026-06-27

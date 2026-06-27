@@ -2,11 +2,13 @@
 
 ## Purpose
 
-Document the README responsibilities in the 15_Commercial documentation area.
+Define the commercial documentation area for MediaPrep Studio Enterprise Edition.
 
 ## Overview
 
-Covers commercial licensing, offline activation, enterprise deployment, crash reporting, auto update, plugin marketplace, license server, pricing, and commercial roadmap.
+Covers commercial licensing, offline activation, enterprise deployment, crash reporting, auto update, plugin marketplace, license server, pricing, commercial roadmap, and the Enterprise Edition feature boundary.
+
+Community Edition is licensed under Apache License 2.0. Enterprise Edition is licensed under a commercial license and covers multi-user permissions, LDAP/AD, audit logs, NAS cluster workflows, the web management dashboard, automatic content distribution, and Render Farm management.
 
 ## Architecture
 
@@ -26,7 +28,7 @@ Configuration must remain explicit and versionable. Use YAML for rules, profiles
 
 ## Example
 
-Use this document as the reference when implementing or reviewing README changes.
+Use `mediaqc editions` and `docs/00_Project/Editions.md` as the first reference when implementing or reviewing edition-specific behavior.
 
 ## Known Limitations
 
@@ -40,9 +42,11 @@ Expand this document when the subsystem receives a new module, public API, UI su
 
 - `README.md`
 - `PROJECT_CONSTITUTION.md`
+- `docs/00_Project/Editions.md`
 - `docs/01_Architecture/SystemOverview.md`
+- `docs/15_Commercial/Licensing.md`
 
 ## Revision History
 
-- Documentation version: 1.0
+- Documentation version: 1.1
 - Last updated: 2026-06-27
