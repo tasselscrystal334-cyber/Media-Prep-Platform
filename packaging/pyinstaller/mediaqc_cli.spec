@@ -62,5 +62,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name="mediaqc-cli",
+    name="loom-cli",
 )

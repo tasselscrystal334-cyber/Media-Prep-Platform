@@ -268,6 +268,6 @@ Loom Community Edition is licensed under Apache License 2.0.
 
 Loom Enterprise Edition is distributed under a commercial license for capabilities such as multi-user permissions, LDAP/AD, audit logs, NAS cluster workflows, web management, automatic content distribution, and Render Farm management. See `docs/00_Project/Editions.md` and `docs/15_Commercial/Licensing.md`.
 
-## Legacy Level 1 Overview
+## Legacy Notes
 
-Earlier documentation may refer to the implementation as MediaPrepTool or Media QC Tool. Those files are preserved as Level 1 overview documents while the repository evolves toward the Loom product structure.
+The stable Python package and CLI command remain `mediaqc` for script compatibility. User-facing product documentation, GUI surfaces, and release downloads use the Loom name.

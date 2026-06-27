@@ -39,7 +39,6 @@ release = [
 
 [project.scripts]
 mediaqc = "mediaqc.cli:app"
-mediaqc-gui = "mediaqc.gui.app:main"
 loom = "mediaqc.cli:app"
 loom-gui = "mediaqc.gui.app:main"
 

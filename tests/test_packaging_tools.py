@@ -37,7 +37,7 @@ def test_resolve_tool_path_uses_bundled_directory(monkeypatch, tmp_path: Path) -
 def test_make_release_generates_assets(tmp_path: Path) -> None:
     dist = tmp_path / "dist"
     output = tmp_path / "dist_release"
-    cli = dist / "mediaqc-cli"
+    cli = dist / "loom-cli"
     gui = dist / "Loom"
     cli.mkdir(parents=True)
     gui.mkdir(parents=True)
@@ -61,7 +61,7 @@ def test_make_release_generates_assets(tmp_path: Path) -> None:
     )
 
     assert completed.returncode == 0, completed.stderr
-    assert any(path.name.startswith("mediaqc-cli-") for path in output.glob("*.zip"))
+    assert any(path.name.startswith("loom-cli-") for path in output.glob("*.zip"))
     assert any(path.name.startswith("Loom-") for path in output.glob("*.zip"))
     assert (output / "SHA256SUMS.txt").read_text(encoding="utf-8")
     assert "CLI entry: `mediaqc`" in (output / "release_notes.md").read_text(encoding="utf-8")

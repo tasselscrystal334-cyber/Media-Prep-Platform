@@ -14,7 +14,7 @@ Packaging files live under `packaging/`. PyInstaller specs build the `mediaqc` C
 
 ## Workflow
 
-Developers install with `pip install -e .`, run tests, build platform bundles with the scripts in `packaging/scripts/`, and publish release assets from `dist_release/`. Release scripts generate archives, `SHA256SUMS.txt`, and `release_notes.md`. GUI downloads use the product name, for example `Loom-1.0.0-macos.zip`, without a `gui` suffix.
+Developers install with `pip install -e .`, run tests, build platform bundles with the scripts in `packaging/scripts/`, and publish release assets from `dist_release/`. Release scripts generate archives, `SHA256SUMS.txt`, and `release_notes.md`. Download assets use Loom branding: `loom-cli-1.0.0-macos.zip`, `Loom-1.0.0-macos.zip`, and `loom-docker-1.0.0-macos.zip`.
 
 ## Dependencies
 

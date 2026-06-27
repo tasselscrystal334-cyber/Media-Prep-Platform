@@ -35,7 +35,7 @@ The format follows Keep a Changelog and the project aims to follow Semantic Vers
 
 ### Added
 
-- Live Event Media QC extension with output spec checks, canvas validation, codec risk profiles, manifest generation, and integrity verification.
+- Live Event Loom QC extension with output spec checks, canvas validation, codec risk profiles, manifest generation, and integrity verification.
 - FastAPI dashboard and REST API foundation.
 - SQLite hash cache, history, and duplicate search.
 - Watch mode, project profiles, validation engine, FFmpeg deep analysis, and HTML reporting.

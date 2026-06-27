@@ -1,3 +1,3 @@
-"""Media QC Tool package."""
+"""Loom media preparation and QC package."""
 
 __version__ = "1.0.0"

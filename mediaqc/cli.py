@@ -68,7 +68,7 @@ def main(
     log_dir: Path | None = typer.Option(None, "--log-dir", help=f"Directory for {PRODUCT_NAME} logs."),
     debug: bool = typer.Option(False, "--debug", help="Enable verbose file logging."),
 ) -> None:
-    """Media QC Tool."""
+    """Loom media preparation and QC tool."""
 
     configure_logging(log_dir, debug=debug)
 
@@ -783,7 +783,7 @@ def db_info(
     with MediaDatabase(database) as db:
         counts = db.database_counts()
 
-    table = Table(title=f"Media QC Database: {database}")
+    table = Table(title=f"{PRODUCT_NAME} Database: {database}")
     table.add_column("Table")
     table.add_column("Rows", justify="right")
     for name, count in counts.items():
@@ -996,7 +996,7 @@ def _print_summary(
 ) -> None:
     summary = build_summary(files)
 
-    table = Table(title="Media QC Summary")
+    table = Table(title=f"{PRODUCT_NAME} QC Summary")
     table.add_column("Total", justify="right")
     table.add_column("PASS", justify="right", style="green")
     table.add_column("FAIL", justify="right", style="red")

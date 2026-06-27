@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Provide a copyable example project for live-event MediaQC scans.
+Provide a copyable example project for live-event Loom scans.
 
 ## Overview
 
@@ -29,7 +29,7 @@ mediaqc verify examples/LED_Show_6400x2000/Media --manifest examples/LED_Show_64
 
 ## Dependencies
 
-- MediaQC CLI
+- Loom CLI (`mediaqc` command)
 - FFmpeg with ffprobe
 - Media files copied into `Media/`
 

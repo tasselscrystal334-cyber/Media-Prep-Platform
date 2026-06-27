@@ -6,7 +6,7 @@ Preserve the previous Level 1 overview content while the repository adopts the L
 
 ## Overview
 
-Earlier documentation used the product names MediaPrepTool and Media QC Tool. Those names describe the current `mediaqc` command-line implementation and remain useful for understanding the first working product slice.
+Earlier drafts used pre-Loom working names. Those names describe the current `mediaqc` command-line implementation and remain useful only for understanding the first working product slice.
 
 ## Architecture
 

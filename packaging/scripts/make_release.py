@@ -24,7 +24,7 @@ def main() -> int:
     output_dir.mkdir(parents=True, exist_ok=True)
     assets = []
     written_archives: set[Path] = set()
-    for bundle_name, archive_prefix in (("mediaqc-cli", "mediaqc-cli"), ("Loom", "Loom"), ("mediaqc-gui", "Loom")):
+    for bundle_name, archive_prefix in (("loom-cli", "loom-cli"), ("Loom", "Loom")):
         bundle_path = dist_dir / bundle_name
         if bundle_path.exists():
             archive = output_dir / f"{archive_prefix}-{version}-{args.platform}.zip"

@@ -40,7 +40,7 @@ python -m pip install -e ".[gui]"
 loom-gui
 ```
 
-Packaged releases should expose the desktop application as `Loom`, not `mediaqc-gui`.
+Packaged releases should expose the desktop application as `Loom`, without a GUI suffix in the download name.
 
 ## Known Limitations
 
