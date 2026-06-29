@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QListWidget,
     QMainWindow,
+    QMenu,
     QPushButton,
     QProgressBar,
     QSizePolicy,
@@ -40,6 +41,7 @@ from PySide6.QtWidgets import (
 
 from .queue import GuiTask, GuiTaskQueue
 from .results import read_csv_preview
+from .source_preview import is_preview_media_file, list_preview_media_files
 from .workers import ScanWorker
 
 
@@ -106,6 +108,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(PRODUCT_NAME)
         self.setWindowIcon(QIcon(str(icon_path())))
         self.setMinimumSize(1120, 720)
+        self.menuBar().setNativeMenuBar(False)
         self.queue = GuiTaskQueue()
         self.current_thread: QtScanThread | None = None
         self.tool_install_thread: ToolInstallThread | None = None
@@ -344,8 +347,16 @@ class MainWindow(QMainWindow):
             button.clicked.connect(callback)
             layout.addWidget(button)
         layout.addStretch(1)
+        presets_button = QPushButton("Presets")
+        presets_button.setObjectName("ToolbarButton")
+        presets_menu = QMenu(presets_button)
+        for name in ["LED 4K", "LED 8K", "Disguise", "Millumin", "TouchDesigner", "Notch"]:
+            action = presets_menu.addAction(name)
+            action.triggered.connect(lambda checked=False, value=name: self._select_preset(value))
+        presets_button.setMenu(presets_menu)
+        layout.addWidget(presets_button)
+
         for text, callback in [
-            ("Presets", lambda: self._select_preset("Disguise")),
             ("Preview", self._focus_preview),
             ("Queue", self._focus_queue),
             ("Activity", self._focus_logs),
@@ -468,15 +479,17 @@ class MainWindow(QMainWindow):
         return panel
 
     def _simple_tab(self, title: str, rows: list[str]) -> QWidget:
-        group = QGroupBox(title)
-        layout = QGridLayout(group)
+        panel = QWidget()
+        layout = QGridLayout(panel)
+        layout.setContentsMargins(28, 24, 28, 24)
+        layout.setVerticalSpacing(18)
         for index, label in enumerate(rows):
             layout.addWidget(QLabel(f"{label}:"), index, 0)
             field = QLineEdit("Auto")
             field.setReadOnly(True)
             layout.addWidget(field, index, 1)
         layout.setColumnStretch(1, 1)
-        return group
+        return panel
 
     def _right_panel(self) -> QWidget:
         tabs = QTabWidget()
@@ -581,15 +594,18 @@ class MainWindow(QMainWindow):
             return
         path = Path(path)
         if path.is_dir():
-            files = [item for item in sorted(path.iterdir(), key=lambda item: item.name.casefold()) if item.is_file()]
-            self.source_count_label.setText(f"{len(files)} top-level files")
+            files, total_files = list_preview_media_files(path)
+            self.source_count_label.setText(f"{total_files} top-level media files")
             preview_lines = [f"Source folder: {path}", "", "Files:"]
-            preview_lines.extend(f"- {item.name}" for item in files[:10])
-            if len(files) > 10:
-                preview_lines.append(f"... {len(files) - 10} more")
+            if files:
+                preview_lines.extend(f"- {item.name}" for item in files)
+            else:
+                preview_lines.append("No supported media files found.")
+            if total_files > len(files):
+                preview_lines.append(f"... {total_files - len(files)} more")
             self.source_preview.setText("\n".join(preview_lines))
         else:
-            self.source_count_label.setText("1 file" if path.exists() else "No source selected")
+            self.source_count_label.setText("1 media file" if is_preview_media_file(path) else "No supported media selected")
             self.source_preview.setText(f"Source file:\n{path}")
 
     def _start_scan(self) -> None:

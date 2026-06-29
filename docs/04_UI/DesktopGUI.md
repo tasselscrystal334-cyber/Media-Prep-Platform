@@ -6,21 +6,21 @@ Document the Loom desktop GUI structure, first-run experience, and packaging-fac
 
 ## Overview
 
-The desktop GUI is a PySide6 application named Loom. It opens with a light welcome cover that shows the product icon, version number, New/Open/Recent entry points, and a translucent glass-style panel over a light gray background. The main workspace uses a soft light, low-contrast gray and white engineering layout inspired by professional transcoding tools: a top source/action toolbar, source/title/preset/range controls, central parameter tabs, a scan queue, and a right-side source/output preview comparison area.
+The desktop GUI is a PySide6 application named Loom. It opens with a light welcome cover that shows the product icon, version number, New/Open/Recent entry points, and a translucent glass-style panel over a light gray background. The main workspace uses a soft light, low-contrast gray and white engineering layout inspired by professional transcoding tools: an in-window Loom menu bar, a responsive source/action toolbar, source/title/preset/range controls, central parameter tabs, a scan queue, and a right-side source/output preview comparison area.
 
 ## Architecture
 
 GUI code lives under `mediaqc/gui/`.
 
 - `app.py` creates the Qt application, sets Loom branding, shows the early splash screen, and opens the main window.
-- `main_window.py` owns menus, welcome cover, workspace layout, drag/drop project selection, scan queue, progress, cancellation, logs, and report opening.
+- `main_window.py` owns the in-window menu bar, welcome cover, workspace layout, drag/drop project selection, source preview filtering, scan queue, progress, cancellation, logs, and report opening.
 - `theme.py` defines the light stylesheet.
 - `workers.py` keeps scan execution off the main thread and lazily imports heavier scan/report modules after the operator starts a scan.
 - `mediaqc/assets/loom_icon.svg` provides the packaged icon asset.
 
 ## Workflow
 
-Operators open Loom, choose New, Open, or Recent, then scan one or more media folders. On first launch, Loom checks `ffmpeg`, `ffprobe`, and `ffplay`; if any are missing, the GUI prompts before installing them into `tools/plugins/ffmpeg`. Reports can be exported as JSON, CSV, HTML, and PDF. After a scan finishes, Loom shows a CSV-style result dialog with up to 10 file rows and excludes folders. Compression and transcode workflows use the right-side Source Preview and Output Preview panes for comparison. The menu bar exposes Loom, File, Edit, View, Presets, Window, and Help menus.
+Operators open Loom, choose New, Open, or Recent, then scan one or more media folders. On first launch, Loom checks `ffmpeg`, `ffprobe`, and `ffplay`; if any are missing, the GUI prompts before installing them into `tools/plugins/ffmpeg`. Reports can be exported as JSON, CSV, HTML, and PDF. After a scan finishes, Loom shows a CSV-style result dialog with up to 10 file rows and excludes folders. Compression and transcode workflows use the right-side Source Preview and Output Preview panes for comparison. Source previews show supported top-level media files and exclude `.DS_Store`, folders, and unsupported sidecar files. The in-window menu bar exposes Loom, File, Edit, View, Presets, Window, and Help menus, and the top workspace controls expose responsive Presets, Preview, Queue, and Activity actions.
 
 ## Dependencies
 
@@ -63,5 +63,5 @@ PyInstaller and macOS first-launch security checks can still add startup overhea
 
 ## Revision History
 
-- Documentation version: 1.2
+- Documentation version: 1.3
 - Last updated: 2026-06-29

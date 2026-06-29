@@ -12,7 +12,7 @@ Loom is a professional media preparation and quality-control platform for live e
 - Modular validation engine with YAML rules and project profiles.
 - Live event checks for output specs, LED canvas layouts, codec risk, manifests, and integrity verification.
 - FFmpeg/FFplay environment checks, preview playback, transcode presets, subtitles, logo overlays, and batch job reports.
-- PySide6 desktop GUI named Loom with splash/welcome cover, light engineering theme, project/rule/history panels, scan queue, preview/log panes, and JSON/CSV/HTML/PDF export.
+- PySide6 desktop GUI named Loom with splash/welcome cover, light engineering theme, source/action toolbar, parameter tabs, scan queue, source/output preview panes, and JSON/CSV/HTML/PDF export.
 - Media Pipeline for mounted NAS/SMB/AFP/NFS workflows, SHA256 sync, FFprobe/MediaInfo metadata, transfer reports, compare reports, and project packages.
 - Enterprise Media Asset Management foundation for the commercial edition, including users, roles, projects, assets, REST API, GraphQL entry point, webhooks, notification adapters, and Docker Compose services for PostgreSQL, Redis, RabbitMQ, and MinIO.
 - JSON, CSV, and HTML reporting.
@@ -77,10 +77,11 @@ The V1.0 GUI provides a light PySide6 workspace with:
 
 - Loom splash and welcome cover with version, icon, New/Open/Recent entry points.
 - Menu bar sections for Loom, File, Edit, View, Presets, Window, and Help.
-- HandBrake-style source/action toolbar, source title controls, preset/range controls, and output path controls.
+- In-window Loom menu bar for local Python launches and packaged app runs.
+- HandBrake-style source/action toolbar, responsive Presets/Preview/Queue/Activity controls, source title controls, preset/range controls, and output path controls.
 - Parameter tabs for Summary, Dimensions, Filters, Video, Audio, Subtitles, and Chapters.
 - Drag-and-drop scanning, batch queue, progress, and cancel request.
-- Source Preview and Output Preview comparison panes for compression and transcode workflows.
+- Source Preview and Output Preview comparison panes for compression and transcode workflows. Source previews show supported top-level media files and ignore `.DS_Store`, folders, and unsupported sidecar files.
 - Scan-complete CSV preview dialog showing up to 10 file rows and excluding folders.
 - Background scanning in a worker thread.
 - Automatic JSON, CSV, HTML, and PDF report export.

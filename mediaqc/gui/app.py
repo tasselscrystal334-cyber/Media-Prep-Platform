@@ -10,7 +10,7 @@ from mediaqc.branding import PRODUCT_NAME, icon_path
 
 def launch_gui() -> int:
     try:
-        from PySide6.QtCore import Qt
+        from PySide6.QtCore import QCoreApplication, Qt
         from PySide6.QtGui import QColor, QFont, QIcon, QPainter, QPixmap
         from PySide6.QtWidgets import QApplication
     except ImportError as exc:  # pragma: no cover - depends on optional GUI dependency.
@@ -19,6 +19,9 @@ def launch_gui() -> int:
     from .main_window import MainWindow
     from .theme import LIGHT_STYLESHEET
 
+    QCoreApplication.setApplicationName(PRODUCT_NAME)
+    QCoreApplication.setApplicationVersion(__version__)
+    QCoreApplication.setOrganizationName(PRODUCT_NAME)
     app = QApplication(sys.argv)
     app.setApplicationName(PRODUCT_NAME)
     app.setApplicationDisplayName(PRODUCT_NAME)

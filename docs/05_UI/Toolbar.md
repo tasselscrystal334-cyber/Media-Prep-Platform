@@ -6,43 +6,44 @@ Document the Toolbar responsibilities in the 05_UI documentation area.
 
 ## Overview
 
-Covers future PySide6 studio UI with a soft light professional transcoding workspace, source toolbar, parameter tabs, source/output preview comparison, batch queue, settings, themes, and shortcuts.
+Covers the top source/action toolbar in the Loom desktop GUI.
 
 ## Architecture
 
-This area must respect the layered architecture, avoid circular dependencies, and keep feature-specific behavior behind documented service, plugin, API, or configuration boundaries.
+`MainWindow` builds a light, HandBrake-style toolbar above the source controls. Primary actions include Open Source, Add Queue, Start, and Pause. Secondary actions include Presets, Preview, Queue, and Activity. Presets opens a profile menu; Preview focuses the source/output comparison tab; Queue focuses the task queue; Activity focuses the logs tab.
 
 ## Workflow
 
-Before changing related code, read this document and nearby architecture notes. After implementation, update this document, tests, examples, and changelog entries where needed.
+Operators choose a source, optionally add it to the queue, start scanning, and use Preview/Queue/Activity to move through the active workspace areas.
 
 ## Dependencies
 
-Relevant dependencies may include Python 3.11+, FFmpeg tooling, SQLite, FastAPI, Typer, Rich, Jinja2, PyYAML, watchdog, PySide6 for future desktop UI, and platform GPU APIs when applicable.
+Python 3.11+ and PySide6.
 
 ## Configuration
 
-Configuration must remain explicit and versionable. Use YAML for rules, profiles, output specs, canvas specs, presets, and future project settings unless an architecture document approves another format.
+Toolbar preset names mirror the built-in project profiles and remain backed by YAML profile files.
 
 ## Example
 
-Use this document as the reference when implementing or reviewing Toolbar changes.
+Run `loom-gui`, open a source folder, click Presets to verify the profile menu, click Preview to focus comparison panes, and click Activity to focus logs.
 
 ## Known Limitations
 
-This document describes the intended architecture and current command-line implementation. Desktop, cloud, and enterprise features may be staged behind roadmap milestones.
+Toolbar actions are currently text buttons. Native icon assets can be added later once the design system is stable.
 
 ## Future Improvements
 
-Expand this document when the subsystem receives a new module, public API, UI surface, or deployment contract.
+Add icons, keyboard shortcuts, and persistent toolbar state.
 
 ## Related Modules
 
 - `README.md`
-- `PROJECT_CONSTITUTION.md`
-- `docs/01_Architecture/SystemOverview.md`
+- `docs/04_UI/DesktopGUI.md`
+- `mediaqc/gui/main_window.py`
+- `mediaqc/gui/theme.py`
 
 ## Revision History
 
-- Documentation version: 1.0
+- Documentation version: 1.1
 - Last updated: 2026-06-29

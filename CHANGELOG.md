@@ -13,11 +13,13 @@ All notable Loom changes are documented here.
 - Preferences > Basic action for installing or repairing FFmpeg-family tools from the desktop GUI.
 - Scan-complete CSV preview dialog that shows up to 10 file rows and excludes folders.
 - `scripts/local_live_update.sh` for local editable install, test, tools doctor, and optional GUI launch without downloading GitHub release assets.
+- GUI source previews now ignore `.DS_Store`, folders, and unsupported non-media files.
 
 ### Changed
 
 - Desktop GUI palette now uses a softer light, low-contrast theme.
 - Desktop GUI layout now uses a professional transcoding-tool structure with a top action toolbar, source controls, parameter tabs, queue, and source/output preview comparison panes.
+- Desktop GUI uses an in-window Loom menu bar during local Python launches so menus remain correctly branded and responsive.
 - Documentation and generated build/report artifacts have been cleaned so current Loom documentation stays focused on active product behavior.
 
 ## [1.0.0] - 2026-06-27

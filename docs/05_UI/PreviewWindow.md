@@ -6,11 +6,11 @@ Document the PreviewWindow responsibilities in the 05_UI documentation area.
 
 ## Overview
 
-Covers the right-side Preview and Logs tabs in the V1.0 PySide6 GUI.
+Covers the right-side Source Preview, Output Preview, and Logs surfaces in the V1.0 PySide6 GUI.
 
 ## Architecture
 
-The preview pane shows generated report output paths and can open HTML/PDF reports through desktop services. The log pane records scan lifecycle events and cancellation requests.
+The Source Preview pane lists supported top-level media files and filters out `.DS_Store`, folders, and unsupported sidecar files. The Output Preview pane shows generated report output paths and can open HTML/PDF reports through desktop services. The log pane records scan lifecycle events and cancellation requests.
 
 ## Workflow
 
@@ -26,7 +26,7 @@ Configuration must remain explicit and versionable. Use YAML for rules, profiles
 
 ## Example
 
-After a scan, use Open HTML or the File menu Export PDF action to inspect generated reports.
+After a scan, use Open HTML or the File menu Export PDF action to inspect generated reports. Use the top Preview action to return focus to the source/output comparison panes.
 
 ## Known Limitations
 
@@ -42,9 +42,10 @@ Expand this document when the subsystem receives a new module, public API, UI su
 - `PROJECT_CONSTITUTION.md`
 - `docs/01_Architecture/SystemOverview.md`
 - `mediaqc/gui/main_window.py`
+- `mediaqc/gui/source_preview.py`
 - `mediaqc/processing/ffplay.py`
 
 ## Revision History
 
-- Documentation version: 1.0
+- Documentation version: 1.1
 - Last updated: 2026-06-29

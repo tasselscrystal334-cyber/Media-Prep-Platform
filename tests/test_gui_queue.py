@@ -2,6 +2,7 @@ from pathlib import Path
 
 from mediaqc.gui.queue import GuiTask, GuiTaskQueue
 from mediaqc.gui.results import read_csv_preview
+from mediaqc.gui.source_preview import is_preview_media_file, list_preview_media_files
 from mediaqc.gui.workers import ScanWorker
 
 
@@ -42,3 +43,20 @@ def test_read_csv_preview_limits_files_and_excludes_folders(tmp_path: Path) -> N
     assert preview.total_rows == 12
     assert len(preview.rows) == 10
     assert preview.rows[0][0] == "clip_0.mov"
+
+
+def test_source_preview_lists_only_supported_media_files(tmp_path: Path) -> None:
+    (tmp_path / ".DS_Store").write_text("metadata", encoding="utf-8")
+    (tmp_path / "notes.txt").write_text("notes", encoding="utf-8")
+    (tmp_path / "Folder").mkdir()
+    mov = tmp_path / "Opening.mov"
+    mp4 = tmp_path / "Preview.mp4"
+    mov.write_text("x", encoding="utf-8")
+    mp4.write_text("x", encoding="utf-8")
+
+    files, total = list_preview_media_files(tmp_path)
+
+    assert total == 2
+    assert [file.name for file in files] == ["Opening.mov", "Preview.mp4"]
+    assert is_preview_media_file(mov)
+    assert not is_preview_media_file(tmp_path / ".DS_Store")

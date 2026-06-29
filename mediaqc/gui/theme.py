@@ -100,25 +100,31 @@ QPushButton#PrimaryButton:hover {
     background: #526f82;
 }
 QPushButton#ToolbarButton {
-    background: transparent;
-    border: 0;
-    padding: 8px 10px;
+    background: #fbfcfd;
+    border: 1px solid #d6dde6;
+    border-radius: 6px;
+    padding: 8px 14px;
     color: #56616f;
     font-size: 14px;
+    min-width: 78px;
 }
 QPushButton#ToolbarButton:hover {
-    background: #e9eef3;
+    background: #eef3f7;
+    border-color: #b8c5d2;
 }
 QPushButton#ToolbarPrimaryButton {
-    background: transparent;
-    border: 0;
+    background: #eaf5ec;
+    border: 1px solid #b9d9bf;
+    border-radius: 6px;
     padding: 8px 12px;
-    color: #5c9d65;
+    color: #3f7d49;
     font-size: 14px;
     font-weight: 700;
+    min-width: 78px;
 }
 QPushButton#ToolbarPrimaryButton:hover {
-    background: #e9f3ea;
+    background: #dff0e3;
+    border-color: #9bc5a3;
 }
 QPushButton:disabled {
     background: #edf0f3;

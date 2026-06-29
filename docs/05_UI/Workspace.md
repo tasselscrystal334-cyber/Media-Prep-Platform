@@ -6,15 +6,15 @@ Document the Workspace responsibilities in the 05_UI documentation area.
 
 ## Overview
 
-Covers the V1.0 workspace layout: left Projects/Rules/History navigation, center Scan workspace, and right Preview/Logs panel.
+Covers the V1.0 workspace layout: in-window Loom menu bar, top source/action toolbar, source controls, parameter tabs, scan queue, and right Source Preview / Output Preview comparison panel.
 
 ## Architecture
 
-`MainWindow` composes the workspace with Qt splitters and tabs. Scan execution is delegated to `ScanWorker` and `QtScanThread` so the UI remains responsive.
+`MainWindow` composes the workspace with source controls, Qt splitters, tabs, and queue tables. Scan execution is delegated to `ScanWorker` and `QtScanThread` so the UI remains responsive. Source preview filtering is delegated to `mediaqc/gui/source_preview.py`.
 
 ## Workflow
 
-Operators drag folders or files into the scan field, build a project queue, start scans, request cancellation, and inspect generated outputs.
+Operators drag folders or files into the source field, build a project queue, start scans, request cancellation, switch Preview/Queue/Activity views from the toolbar, and inspect generated outputs.
 
 ## Dependencies
 
@@ -26,7 +26,7 @@ Configuration must remain explicit and versionable. Use YAML for rules, profiles
 
 ## Example
 
-The workspace exports JSON, CSV, HTML, and PDF into the selected output folder for each queued project.
+The workspace exports JSON, CSV, HTML, and PDF into the selected output folder for each queued project. Source preview lists show only supported top-level media files and exclude `.DS_Store`, folders, and unsupported sidecar files.
 
 ## Known Limitations
 
@@ -43,8 +43,9 @@ Expand this document when the subsystem receives a new module, public API, UI su
 - `docs/01_Architecture/SystemOverview.md`
 - `mediaqc/gui/main_window.py`
 - `mediaqc/gui/queue.py`
+- `mediaqc/gui/source_preview.py`
 
 ## Revision History
 
-- Documentation version: 1.0
+- Documentation version: 1.1
 - Last updated: 2026-06-29
