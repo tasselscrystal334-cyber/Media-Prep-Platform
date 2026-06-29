@@ -29,6 +29,7 @@ All notable Loom changes are documented here.
 - GUI batch import supports single files, multiple files, folders, and drag-and-drop into the media list.
 - GUI output defaults to MOV, writes to the source folder by default, supports custom destination and renaming controls, and keeps audio as copy by default.
 - GUI playback launches the selected file in a separate fullscreen FFplay window with crop filter controls.
+- `/Applications/Loom Local.app` development launcher script for opening the current working tree instead of an older packaged app.
 
 ### Changed
 

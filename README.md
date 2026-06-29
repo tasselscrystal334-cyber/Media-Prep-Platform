@@ -96,9 +96,10 @@ During development, the local repository is the first place to preview changes. 
 scripts/local_live_update.sh
 scripts/local_live_update.sh --launch
 scripts/local_live_update.sh --install-tools --launch
+scripts/install_loom_local_app.sh
 ```
 
-The script creates or reuses `.venv`, installs Loom from the current working tree with `pip install -e ".[gui,dev]"`, runs tests by default, shows `mediaqc tools doctor`, and can launch the local GUI. On macOS, `--launch` creates and opens a local `.local_app/Loom.app` wrapper so the system app menu is branded as Loom instead of Python. GitHub remains the remote backup and release channel; day-to-day validation should use this local workflow.
+The script creates or reuses `.venv`, installs Loom from the current working tree with `pip install -e ".[gui,dev]"`, runs tests by default, shows `mediaqc tools doctor`, and can launch the local GUI. On macOS, `--launch` creates and opens a local `.local_app/Loom.app` wrapper. `scripts/install_loom_local_app.sh` installs `/Applications/Loom Local.app`, which always points to this working tree so it does not open an older packaged app. GitHub remains the remote backup and release channel; day-to-day validation should use this local workflow.
 
 ## Media Pipeline
 

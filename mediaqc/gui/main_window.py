@@ -430,7 +430,7 @@ class MainWindow(QMainWindow):
         actions.addWidget(recent_button)
         actions.addStretch(1)
 
-        recent_label = QLabel("Recent Projects")
+        recent_label = QLabel("Recent Batches")
         recent_label.setStyleSheet("font-weight: 600; background: transparent;")
         self.recent_projects = QListWidget()
         self.recent_projects.setMaximumHeight(110)
@@ -666,7 +666,7 @@ class MainWindow(QMainWindow):
         return tabs
 
     def _browse_project(self) -> None:
-        folder = QFileDialog.getExistingDirectory(self, "Select Project Folder")
+        folder = QFileDialog.getExistingDirectory(self, "Select Media Folder")
         if folder:
             self._add_media_paths([folder])
 
