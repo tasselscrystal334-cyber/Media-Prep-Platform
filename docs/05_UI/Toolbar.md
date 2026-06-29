@@ -10,11 +10,11 @@ Covers the top source/action toolbar in the Loom desktop GUI.
 
 ## Architecture
 
-`MainWindow` builds a light, HandBrake-style toolbar above the source controls. Primary actions include Open Source, Add Queue, Start, and Pause. Secondary actions include Presets, Preview, Queue, and Activity. Presets opens a profile menu; Preview focuses the source/output comparison tab; Queue focuses the task queue; Activity focuses the logs tab.
+`MainWindow` builds a light, HandBrake-style toolbar above the source controls. Primary actions include Open Source, Add Queue, Start, and Pause. Activity focuses the logs tab. Project presets are selected from the source control row rather than duplicated in the toolbar.
 
 ## Workflow
 
-Operators choose a source, optionally add it to the queue, start scanning, and use Preview/Queue/Activity to move through the active workspace areas.
+Operators choose a source, optionally add it to the queue, start scanning, pause/cancel when needed, and use Activity to inspect logs.
 
 ## Dependencies
 
@@ -22,11 +22,11 @@ Python 3.11+ and PySide6.
 
 ## Configuration
 
-Toolbar preset names mirror the built-in project profiles and remain backed by YAML profile files.
+The source-row preset selector mirrors the built-in project profiles and remains backed by YAML profile files.
 
 ## Example
 
-Run `loom-gui`, open a source folder, click Presets to verify the profile menu, click Preview to focus comparison panes, and click Activity to focus logs.
+Run `loom-gui`, open a source folder, choose a source-row preset, start a scan, and click Activity to focus logs.
 
 ## Known Limitations
 
@@ -45,5 +45,5 @@ Add icons, keyboard shortcuts, and persistent toolbar state.
 
 ## Revision History
 
-- Documentation version: 1.1
+- Documentation version: 1.2
 - Last updated: 2026-06-29

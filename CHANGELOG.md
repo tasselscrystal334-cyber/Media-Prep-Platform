@@ -19,6 +19,7 @@ All notable Loom changes are documented here.
 
 - Desktop GUI palette now uses a softer light, low-contrast theme.
 - Desktop GUI layout now uses a professional transcoding-tool structure with a top action toolbar, source controls, parameter tabs, queue, and source/output preview comparison panes.
+- Desktop GUI source controls replace the irrelevant HandBrake-style Angle field with Scan Range and remove duplicated toolbar Presets, Preview, and Queue actions.
 - Desktop GUI uses an in-window Loom menu bar during local Python launches so menus remain correctly branded and responsive.
 - Documentation and generated build/report artifacts have been cleaned so current Loom documentation stays focused on active product behavior.
 

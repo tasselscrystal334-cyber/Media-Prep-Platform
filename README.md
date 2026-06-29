@@ -78,7 +78,7 @@ The V1.0 GUI provides a light PySide6 workspace with:
 - Loom splash and welcome cover with version, icon, New/Open/Recent entry points.
 - Menu bar sections for Loom, File, Edit, View, Presets, Window, and Help.
 - In-window Loom menu bar for local Python launches and packaged app runs.
-- HandBrake-style source/action toolbar, responsive Presets/Preview/Queue/Activity controls, source title controls, preset/range controls, and output path controls.
+- HandBrake-style source/action toolbar with Open Source, Add Queue, Start, Pause, and Activity controls, plus source title, scan range, preset, and output path controls.
 - Parameter tabs for Summary, Dimensions, Filters, Video, Audio, Subtitles, and Chapters.
 - Drag-and-drop scanning, batch queue, progress, and cancel request.
 - Source Preview and Output Preview comparison panes for compression and transcode workflows. Source previews show supported top-level media files and ignore `.DS_Store`, folders, and unsupported sidecar files.

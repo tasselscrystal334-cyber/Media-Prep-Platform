@@ -24,7 +24,6 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QListWidget,
     QMainWindow,
-    QMenu,
     QPushButton,
     QProgressBar,
     QSizePolicy,
@@ -347,18 +346,7 @@ class MainWindow(QMainWindow):
             button.clicked.connect(callback)
             layout.addWidget(button)
         layout.addStretch(1)
-        presets_button = QPushButton("Presets")
-        presets_button.setObjectName("ToolbarButton")
-        presets_menu = QMenu(presets_button)
-        for name in ["LED 4K", "LED 8K", "Disguise", "Millumin", "TouchDesigner", "Notch"]:
-            action = presets_menu.addAction(name)
-            action.triggered.connect(lambda checked=False, value=name: self._select_preset(value))
-        presets_button.setMenu(presets_menu)
-        layout.addWidget(presets_button)
-
         for text, callback in [
-            ("Preview", self._focus_preview),
-            ("Queue", self._focus_queue),
             ("Activity", self._focus_logs),
         ]:
             button = QPushButton(text)
@@ -379,10 +367,8 @@ class MainWindow(QMainWindow):
         self.output_input = QLineEdit(str(Path("./reports").resolve()))
         self.title_input = QLineEdit()
         self.title_input.setPlaceholderText("Source title")
-        self.angle_combo = QComboBox()
-        self.angle_combo.addItems(["Auto", "1", "2", "3"])
         self.range_combo = QComboBox()
-        self.range_combo.addItems(["Full", "First 10 files", "Selected queue"])
+        self.range_combo.addItems(["Full Scan", "First 10 Files", "Selected Queue"])
         self.preset_combo = QComboBox()
         self.preset_combo.addItems(["Unnamed", "H264 Preview", "H265 Preview", "HAP Q 4K", "ProRes 4444", "NotchLC"])
         browse_project = QPushButton("Browse...")
@@ -394,10 +380,8 @@ class MainWindow(QMainWindow):
         layout.addWidget(browse_project, 0, 6)
         layout.addWidget(QLabel("Title:"), 1, 0)
         layout.addWidget(self.title_input, 1, 1, 1, 3)
-        layout.addWidget(QLabel("Angle:"), 1, 4)
-        layout.addWidget(self.angle_combo, 1, 5)
-        layout.addWidget(QLabel("Range:"), 1, 6)
-        layout.addWidget(self.range_combo, 1, 7)
+        layout.addWidget(QLabel("Scan Range:"), 1, 4)
+        layout.addWidget(self.range_combo, 1, 5, 1, 2)
         layout.addWidget(QLabel("Preset:"), 2, 0)
         layout.addWidget(self.preset_combo, 2, 1, 1, 2)
         layout.addWidget(QLabel("Save As:"), 2, 3)
@@ -574,15 +558,6 @@ class MainWindow(QMainWindow):
             return
         self._add_project(path)
         self._log(f"Added to queue: {path}")
-
-    def _focus_preview(self) -> None:
-        self.stack.setCurrentIndex(1)
-        self.right_tabs.setCurrentIndex(0)
-        self._log("Preview compare is ready.")
-
-    def _focus_queue(self) -> None:
-        self.stack.setCurrentIndex(1)
-        self.tasks.setFocus()
 
     def _focus_logs(self) -> None:
         self.stack.setCurrentIndex(1)

@@ -14,7 +14,7 @@ Covers the V1.0 workspace layout: in-window Loom menu bar, top source/action too
 
 ## Workflow
 
-Operators drag folders or files into the source field, build a project queue, start scans, request cancellation, switch Preview/Queue/Activity views from the toolbar, and inspect generated outputs.
+Operators drag folders or files into the source field, choose a scan range and project preset, build a project queue, start scans, request cancellation, open Activity logs from the toolbar, and inspect generated outputs.
 
 ## Dependencies
 
@@ -47,5 +47,5 @@ Expand this document when the subsystem receives a new module, public API, UI su
 
 ## Revision History
 
-- Documentation version: 1.1
+- Documentation version: 1.2
 - Last updated: 2026-06-29

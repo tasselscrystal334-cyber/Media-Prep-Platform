@@ -26,7 +26,7 @@ Configuration must remain explicit and versionable. Use YAML for rules, profiles
 
 ## Example
 
-After a scan, use Open HTML or the File menu Export PDF action to inspect generated reports. Use the top Preview action to return focus to the source/output comparison panes.
+After a scan, use Open HTML or the File menu Export PDF action to inspect generated reports. The comparison panes remain visible in the right-side workspace.
 
 ## Known Limitations
 
@@ -47,5 +47,5 @@ Expand this document when the subsystem receives a new module, public API, UI su
 
 ## Revision History
 
-- Documentation version: 1.1
+- Documentation version: 1.2
 - Last updated: 2026-06-29
