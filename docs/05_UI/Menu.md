@@ -14,7 +14,7 @@ Covers the Loom desktop GUI menu system for local Python launches and packaged a
 
 ## Workflow
 
-Operators use File for project/report actions, Edit for queue clearing, View for Welcome/Workspace switching, Presets for profile selection, Window for standard window actions, and Help for diagnostics hints.
+Operators use File for project/report actions, Edit for queue clearing, View for Welcome/Workspace switching, Presets for profile selection, Window for standard window actions, and Help for diagnostics and documentation.
 
 ## Dependencies
 
@@ -26,15 +26,15 @@ Menu actions use the same local profile and report state as the main window. Per
 
 ## Example
 
-Run `loom-gui` locally. The visible window menu should start with Loom rather than Python.
+Run `scripts/local_live_update.sh --launch` on macOS to open the local Loom.app wrapper. The system menu and visible window menu should be branded as Loom. Use Help > Tools Doctor to open the diagnostics table and Help > Documentation to open the local documentation entry point.
 
 ## Known Limitations
 
-The local Python process can still appear as Python in platform-level process listings. The visible application menu inside the Loom window is the supported local development surface.
+Directly running `loom-gui` through Python can still show Python in the macOS system menu. Use the local Loom.app launcher for branded local GUI checks.
 
 ## Future Improvements
 
-Add persistent recent-project menu entries and a GUI Tools Doctor panel.
+Add persistent recent-project menu entries and richer inline documentation search.
 
 ## Related Modules
 
@@ -44,5 +44,5 @@ Add persistent recent-project menu entries and a GUI Tools Doctor panel.
 
 ## Revision History
 
-- Documentation version: 1.1
+- Documentation version: 1.2
 - Last updated: 2026-06-29

@@ -12,3 +12,4 @@ build/
 dist/
 dist_release/
 .preview/
+.local_app/

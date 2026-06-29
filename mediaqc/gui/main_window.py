@@ -6,7 +6,7 @@ from pathlib import Path
 
 from mediaqc import __version__
 from mediaqc.branding import PRODUCT_NAME, icon_path
-from mediaqc.processing.ffmpeg_runner import resolve_tool_path
+from mediaqc.processing.ffmpeg_runner import build_doctor_report, resolve_tool_path
 from mediaqc.processing.tool_installer import ensure_ffmpeg_bundle_installed
 
 from PySide6.QtCore import QThread, QTimer, Signal, Qt, QUrl
@@ -178,9 +178,51 @@ class MainWindow(QMainWindow):
         help_menu = self.menuBar().addMenu("Help")
         doctor_action = QAction("Tools Doctor", self)
         docs_action = QAction("Documentation", self)
-        doctor_action.triggered.connect(lambda: self._log("Run `mediaqc tools doctor` for FFmpeg paths."))
-        docs_action.triggered.connect(lambda: self._log("Documentation is available in the repository docs folder."))
+        doctor_action.triggered.connect(self._open_tools_doctor)
+        docs_action.triggered.connect(self._open_documentation)
         help_menu.addActions([doctor_action, docs_action])
+
+    def _open_tools_doctor(self) -> None:
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Tools Doctor")
+        dialog.resize(860, 520)
+        layout = QVBoxLayout(dialog)
+        table = QTableWidget()
+        table.setColumnCount(2)
+        table.setHorizontalHeaderLabels(["Check", "Value"])
+        layout.addWidget(QLabel("FFmpeg, FFprobe, FFplay, codec, and Adobe Media Encoder diagnostics."))
+        layout.addWidget(table)
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
+        buttons.rejected.connect(dialog.reject)
+        layout.addWidget(buttons)
+
+        try:
+            report = build_doctor_report()
+            values = report.to_dict()
+            rows = [(key, "; ".join(value) if isinstance(value, list) else str(value)) for key, value in values.items()]
+        except Exception as exc:  # noqa: BLE001 - diagnostics should surface errors in UI.
+            rows = [("error", str(exc))]
+
+        table.setRowCount(len(rows))
+        for row_index, (key, value) in enumerate(rows):
+            table.setItem(row_index, 0, QTableWidgetItem(key))
+            table.setItem(row_index, 1, QTableWidgetItem(value))
+        table.resizeColumnsToContents()
+        self._log("Tools Doctor opened.")
+        dialog.exec()
+
+    def _open_documentation(self) -> None:
+        candidates = [
+            Path.cwd() / "docs" / "README.md",
+            Path(__file__).resolve().parents[2] / "docs" / "README.md",
+            Path(__file__).resolve().parents[2] / "README.md",
+        ]
+        for path in candidates:
+            if path.exists():
+                QDesktopServices.openUrl(QUrl.fromLocalFile(str(path)))
+                self._log(f"Documentation opened: {path}")
+                return
+        QMessageBox.information(self, "Documentation", "Documentation files were not found in this local install.")
 
     def _open_preferences(self) -> None:
         dialog = QDialog(self)
@@ -370,7 +412,7 @@ class MainWindow(QMainWindow):
         self.range_combo = QComboBox()
         self.range_combo.addItems(["Full Scan", "First 10 Files", "Selected Queue"])
         self.preset_combo = QComboBox()
-        self.preset_combo.addItems(["Unnamed", "H264 Preview", "H265 Preview", "HAP Q 4K", "ProRes 4444", "NotchLC"])
+        self.preset_combo.addItems(["Unnamed", "H.264 Proxy", "H.265 Proxy", "HAP Q 4K", "ProRes 4444", "NotchLC"])
         browse_project = QPushButton("Browse...")
         browse_output = QPushButton("Browse...")
         browse_project.clicked.connect(self._browse_project)

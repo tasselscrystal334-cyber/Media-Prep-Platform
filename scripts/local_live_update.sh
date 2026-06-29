@@ -66,5 +66,9 @@ fi
 "${VENV_DIR}/bin/mediaqc" tools doctor || true
 
 if [[ "${LAUNCH_GUI}" -eq 1 ]]; then
-  "${VENV_DIR}/bin/loom-gui"
+  if [[ "$(uname -s)" == "Darwin" ]]; then
+    "${ROOT_DIR}/scripts/launch_loom_macos.sh"
+  else
+    "${VENV_DIR}/bin/loom-gui"
+  fi
 fi

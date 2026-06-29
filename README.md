@@ -78,7 +78,7 @@ The V1.0 GUI provides a light PySide6 workspace with:
 - Loom splash and welcome cover with version, icon, New/Open/Recent entry points.
 - Menu bar sections for Loom, File, Edit, View, Presets, Window, and Help.
 - In-window Loom menu bar for local Python launches and packaged app runs.
-- HandBrake-style source/action toolbar with Open Source, Add Queue, Start, Pause, and Activity controls, plus source title, scan range, preset, and output path controls.
+- HandBrake-style source/action toolbar with Open Source, Add Queue, Start, Pause, and Activity controls, plus source title, scan range, preset, and output path controls. H.264/H.265 Proxy presets are lightweight review/transcode outputs, not the Preview panel.
 - Parameter tabs for Summary, Dimensions, Filters, Video, Audio, Subtitles, and Chapters.
 - Drag-and-drop scanning, batch queue, progress, and cancel request.
 - Source Preview and Output Preview comparison panes for compression and transcode workflows. Source previews show the detected media count, supported top-level media files, and ignore `.DS_Store`, folders, and unsupported sidecar files.
@@ -96,7 +96,7 @@ scripts/local_live_update.sh --launch
 scripts/local_live_update.sh --install-tools --launch
 ```
 
-The script creates or reuses `.venv`, installs Loom from the current working tree with `pip install -e ".[gui,dev]"`, runs tests by default, shows `mediaqc tools doctor`, and can launch the local GUI. GitHub remains the remote backup and release channel; day-to-day validation should use this local workflow.
+The script creates or reuses `.venv`, installs Loom from the current working tree with `pip install -e ".[gui,dev]"`, runs tests by default, shows `mediaqc tools doctor`, and can launch the local GUI. On macOS, `--launch` creates and opens a local `.local_app/Loom.app` wrapper so the system app menu is branded as Loom instead of Python. GitHub remains the remote backup and release channel; day-to-day validation should use this local workflow.
 
 ## Media Pipeline
 

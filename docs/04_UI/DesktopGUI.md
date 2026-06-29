@@ -20,7 +20,7 @@ GUI code lives under `mediaqc/gui/`.
 
 ## Workflow
 
-Operators open Loom, choose New, Open, or Recent, then scan one or more media folders. On first launch, Loom checks `ffmpeg`, `ffprobe`, and `ffplay`; if any are missing, the GUI prompts before installing them into `tools/plugins/ffmpeg`. Reports can be exported as JSON, CSV, HTML, and PDF. After a scan finishes, Loom shows a CSV-style result dialog with up to 10 file rows and excludes folders. Compression and transcode workflows use the right-side Source Preview and Output Preview panes for comparison. Source previews show the detected media count, supported top-level media files, and exclude `.DS_Store`, folders, and unsupported sidecar files. The in-window menu bar exposes Loom, File, Edit, View, Presets, Window, and Help menus. The top workspace controls expose Open Source, Add Queue, Start, Pause, and Activity actions; project presets are selected from the source control row.
+Operators open Loom, choose New, Open, or Recent, then scan one or more media folders. On first launch, Loom checks `ffmpeg`, `ffprobe`, and `ffplay`; if any are missing, the GUI prompts before installing them into `tools/plugins/ffmpeg`. Reports can be exported as JSON, CSV, HTML, and PDF. After a scan finishes, Loom shows a CSV-style result dialog with up to 10 file rows and excludes folders. Compression and transcode workflows use the right-side Source Preview and Output Preview panes for comparison. Source previews show the detected media count, supported top-level media files, and exclude `.DS_Store`, folders, and unsupported sidecar files. The in-window menu bar exposes Loom, File, Edit, View, Presets, Window, and Help menus. Help > Tools Doctor opens an interactive diagnostics table; Help > Documentation opens local docs. The top workspace controls expose Open Source, Add Queue, Start, Pause, and Activity actions; project presets are selected from the source control row. H.264/H.265 Proxy presets mean lightweight review/transcode outputs.
 
 ## Dependencies
 
@@ -63,5 +63,5 @@ PyInstaller and macOS first-launch security checks can still add startup overhea
 
 ## Revision History
 
-- Documentation version: 1.5
+- Documentation version: 1.6
 - Last updated: 2026-06-29
