@@ -12,6 +12,7 @@ All notable Loom changes are documented here.
 - `mediaqc tools install-ffmpeg` for explicit preinstallation or repair of the FFmpeg tool bundle.
 - Preferences > Basic action for installing or repairing FFmpeg-family tools from the desktop GUI.
 - Scan-complete CSV preview dialog that shows up to 10 file rows and excludes folders.
+- `scripts/local_live_update.sh` for local editable install, test, tools doctor, and optional GUI launch without downloading GitHub release assets.
 
 ### Changed
 

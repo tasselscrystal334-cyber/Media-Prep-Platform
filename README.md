@@ -85,6 +85,18 @@ The V1.0 GUI provides a light PySide6 workspace with:
 - Background scanning in a worker thread.
 - Automatic JSON, CSV, HTML, and PDF report export.
 
+## Local Live Update
+
+During development, the local repository is the first place to preview changes. You do not need to download the GitHub release package after every change.
+
+```bash
+scripts/local_live_update.sh
+scripts/local_live_update.sh --launch
+scripts/local_live_update.sh --install-tools --launch
+```
+
+The script creates or reuses `.venv`, installs Loom from the current working tree with `pip install -e ".[gui,dev]"`, runs tests by default, shows `mediaqc tools doctor`, and can launch the local GUI. GitHub remains the remote backup and release channel; day-to-day validation should use this local workflow.
+
 ## Media Pipeline
 
 Loom treats NAS protocols such as SMB, AFP, and NFS as mounted filesystem paths. Mount the share with the operating system first, then run pipeline commands against the mounted path.
