@@ -58,6 +58,12 @@ QFrame#Panel, QTabWidget::pane, QTableWidget, QTextEdit, QListWidget {
     border: 1px solid #dfe4eb;
     border-radius: 6px;
 }
+QLabel#PreviewCanvas {
+    background: #edf0f3;
+    border: 1px solid #d4dbe4;
+    border-radius: 6px;
+    color: #667789;
+}
 QTabBar::tab {
     background: #f0f3f6;
     border: 1px solid #dfe4eb;

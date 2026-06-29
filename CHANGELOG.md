@@ -18,6 +18,10 @@ All notable Loom changes are documented here.
 - `scripts/launch_loom_macos.sh` for a local macOS Loom.app launcher during development.
 - GUI source previews now ignore `.DS_Store`, folders, and unsupported non-media files.
 - GUI source previews now show the detected media file count directly in the file list header.
+- GUI title selection now uses a dropdown of supported files in the selected source folder with duration labels.
+- GUI output presets now use parent/child grouped menus.
+- GUI format selection now uses common output container choices such as MP4, MOV, MKV, WebM, MXF, AVI, and image sequences.
+- GUI output preview now includes a Start Live Preview action that summarizes the selected title, preset, format, duration, and output name, and attempts to render a preview frame with FFmpeg.
 
 ### Changed
 

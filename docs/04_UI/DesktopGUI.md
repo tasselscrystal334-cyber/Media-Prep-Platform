@@ -6,7 +6,7 @@ Document the Loom desktop GUI structure, first-run experience, and packaging-fac
 
 ## Overview
 
-The desktop GUI is a PySide6 application named Loom. It opens with a light welcome cover that shows the product icon, version number, New/Open/Recent entry points, and a translucent glass-style panel over a light gray background. The main workspace uses a soft light, low-contrast gray and white engineering layout inspired by professional transcoding tools: an in-window Loom menu bar, a responsive source/action toolbar, source/title/scan-range/preset controls, central parameter tabs, a scan queue, and a right-side source/output preview comparison area.
+The desktop GUI is a PySide6 application named Loom. It opens with a light welcome cover that shows the product icon, version number, New/Open/Recent entry points, and a translucent glass-style panel over a light gray background. The main workspace uses a soft light, low-contrast gray and white engineering layout inspired by professional transcoding tools: an in-window Loom menu bar, a responsive source/action toolbar, source/title/scan-range/preset/format controls, central parameter tabs, a scan queue, and a right-side source/output preview comparison area.
 
 ## Architecture
 
@@ -20,7 +20,7 @@ GUI code lives under `mediaqc/gui/`.
 
 ## Workflow
 
-Operators open Loom, choose New, Open, or Recent, then scan one or more media folders. On first launch, Loom checks `ffmpeg`, `ffprobe`, and `ffplay`; if any are missing, the GUI prompts before installing them into `tools/plugins/ffmpeg`. Reports can be exported as JSON, CSV, HTML, and PDF. After a scan finishes, Loom shows a CSV-style result dialog with up to 10 file rows and excludes folders. Compression and transcode workflows use the right-side Source Preview and Output Preview panes for comparison. Source previews show the detected media count, supported top-level media files, and exclude `.DS_Store`, folders, and unsupported sidecar files. The in-window menu bar exposes Loom, File, Edit, View, Presets, Window, and Help menus. Help > Tools Doctor opens an interactive diagnostics table; Help > Documentation opens local docs. The top workspace controls expose Open Source, Add Queue, Start, Pause, and Activity actions; project presets are selected from the source control row. H.264/H.265 Proxy presets mean lightweight review/transcode outputs.
+Operators open Loom, choose New, Open, or Recent, then scan one or more media folders. On first launch, Loom checks `ffmpeg`, `ffprobe`, and `ffplay`; if any are missing, the GUI prompts before installing them into `tools/plugins/ffmpeg`. Reports can be exported as JSON, CSV, HTML, and PDF. After a scan finishes, Loom shows a CSV-style result dialog with up to 10 file rows and excludes folders. Compression and transcode workflows use the right-side Source Preview and Output Preview panes for comparison. Source previews show the detected media count, supported top-level media files, and exclude `.DS_Store`, folders, and unsupported sidecar files. The Title control lists supported files from the selected folder with duration labels. Presets are selected from parent/child grouped menus, and Format offers common output containers. The in-window menu bar exposes Loom, File, Edit, View, Presets, Window, and Help menus. Help > Tools Doctor opens an interactive diagnostics table; Help > Documentation opens local docs. The top workspace controls expose Open Source, Add Queue, Start, Pause, and Activity actions. H.264/H.265 Proxy presets mean lightweight review/transcode outputs. Start Live Preview updates the output preview with the selected title, preset, format, preview duration, output filename, and an FFmpeg-rendered preview frame when available.
 
 ## Dependencies
 
@@ -63,5 +63,5 @@ PyInstaller and macOS first-launch security checks can still add startup overhea
 
 ## Revision History
 
-- Documentation version: 1.6
+- Documentation version: 1.8
 - Last updated: 2026-06-29

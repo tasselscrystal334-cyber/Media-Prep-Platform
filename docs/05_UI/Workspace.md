@@ -6,7 +6,7 @@ Document the Workspace responsibilities in the 05_UI documentation area.
 
 ## Overview
 
-Covers the V1.0 workspace layout: in-window Loom menu bar, top source/action toolbar, source controls, parameter tabs, scan queue, and right Source Preview / Output Preview comparison panel.
+Covers the V1.0 workspace layout: in-window Loom menu bar, top source/action toolbar, source title dropdown, scan range, grouped preset menu, output format selector, parameter tabs, scan queue, and right Source Preview / Output Preview comparison panel.
 
 ## Architecture
 
@@ -14,7 +14,7 @@ Covers the V1.0 workspace layout: in-window Loom menu bar, top source/action too
 
 ## Workflow
 
-Operators drag folders or files into the source field, choose a scan range and project preset, build a project queue, start scans, request cancellation, open Activity logs from the toolbar, and inspect generated outputs.
+Operators drag folders or files into the source field, choose a title from the detected media dropdown, choose a scan range, choose a grouped preset, choose an output format, build a project queue, start scans, request cancellation, open Activity logs from the toolbar, and inspect generated outputs.
 
 ## Dependencies
 
@@ -26,7 +26,7 @@ Configuration must remain explicit and versionable. Use YAML for rules, profiles
 
 ## Example
 
-The workspace exports JSON, CSV, HTML, and PDF into the selected output folder for each queued project. Source preview lists show only supported top-level media files and exclude `.DS_Store`, folders, and unsupported sidecar files.
+The workspace exports JSON, CSV, HTML, and PDF into the selected output folder for each queued project. Source preview lists show only supported top-level media files and exclude `.DS_Store`, folders, and unsupported sidecar files. Start Live Preview updates the output preview summary and preview frame for the selected title, preset, format, duration, and output name.
 
 ## Known Limitations
 
@@ -47,5 +47,5 @@ Expand this document when the subsystem receives a new module, public API, UI su
 
 ## Revision History
 
-- Documentation version: 1.2
+- Documentation version: 1.4
 - Last updated: 2026-06-29

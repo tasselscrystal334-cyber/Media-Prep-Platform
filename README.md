@@ -78,10 +78,11 @@ The V1.0 GUI provides a light PySide6 workspace with:
 - Loom splash and welcome cover with version, icon, New/Open/Recent entry points.
 - Menu bar sections for Loom, File, Edit, View, Presets, Window, and Help.
 - In-window Loom menu bar for local Python launches and packaged app runs.
-- HandBrake-style source/action toolbar with Open Source, Add Queue, Start, Pause, and Activity controls, plus source title, scan range, preset, and output path controls. H.264/H.265 Proxy presets are lightweight review/transcode outputs, not the Preview panel.
+- HandBrake-style source/action toolbar with Open Source, Add Queue, Start, Pause, and Activity controls, plus source title, scan range, preset, format, and output path controls. Title selection lists supported files in the selected folder with duration labels. Presets are grouped into parent/child menus. H.264/H.265 Proxy presets are lightweight review/transcode outputs, not the Preview panel.
 - Parameter tabs for Summary, Dimensions, Filters, Video, Audio, Subtitles, and Chapters.
 - Drag-and-drop scanning, batch queue, progress, and cancel request.
 - Source Preview and Output Preview comparison panes for compression and transcode workflows. Source previews show the detected media count, supported top-level media files, and ignore `.DS_Store`, folders, and unsupported sidecar files.
+- Start Live Preview updates the output preview with the selected title, preset, format, preview duration, output filename, and an FFmpeg-rendered preview frame when available.
 - Scan-complete CSV preview dialog showing up to 10 file rows and excluding folders.
 - Background scanning in a worker thread.
 - Automatic JSON, CSV, HTML, and PDF report export.

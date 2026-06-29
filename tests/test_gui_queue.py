@@ -1,8 +1,16 @@
 from pathlib import Path
 
+import mediaqc.gui.source_preview as source_preview
+from mediaqc.gui.live_preview import PreviewSettings, build_output_preview_text
 from mediaqc.gui.queue import GuiTask, GuiTaskQueue
 from mediaqc.gui.results import read_csv_preview
-from mediaqc.gui.source_preview import build_source_preview_lines, is_preview_media_file, list_preview_media_files
+from mediaqc.gui.source_preview import (
+    build_source_preview_lines,
+    format_duration,
+    is_preview_media_file,
+    list_preview_media_files,
+    list_source_titles,
+)
 from mediaqc.gui.workers import ScanWorker
 
 
@@ -72,3 +80,35 @@ def test_source_preview_lines_show_detected_file_count(tmp_path: Path) -> None:
     assert total == 3
     assert "Files (3 detected):" in lines
     assert ".DS_Store" not in "\n".join(lines)
+
+
+def test_source_titles_include_index_duration_and_filename(tmp_path: Path, monkeypatch) -> None:  # noqa: ANN001
+    movie = tmp_path / "Opening.mov"
+    movie.write_text("x", encoding="utf-8")
+    monkeypatch.setattr(source_preview, "probe_duration_label", lambda path: "00:01:05")
+
+    titles = list_source_titles(tmp_path)
+
+    assert len(titles) == 1
+    assert titles[0].label == "1 - 00:01:05 - Opening"
+    assert titles[0].path == movie
+
+
+def test_format_duration_handles_fractional_seconds() -> None:
+    assert format_duration("65.4") == "00:01:05"
+    assert format_duration(None) == "--:--:--"
+
+
+def test_live_preview_text_uses_selected_source_preset_and_format(tmp_path: Path) -> None:
+    source = tmp_path / "clip.mov"
+    source.write_text("x", encoding="utf-8")
+
+    text = build_output_preview_text(
+        PreviewSettings(source_path=source, preset="Fast 1080p30", output_format="MP4", duration_seconds=30)
+    )
+
+    assert "Live Preview" in text
+    assert "Source: clip.mov" in text
+    assert "Preset: Fast 1080p30" in text
+    assert "Format: MP4" in text
+    assert "Output: clip.mp4" in text

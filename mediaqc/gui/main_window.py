@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import subprocess
 from pathlib import Path
 
 from mediaqc import __version__
@@ -10,7 +11,7 @@ from mediaqc.processing.ffmpeg_runner import build_doctor_report, resolve_tool_p
 from mediaqc.processing.tool_installer import ensure_ffmpeg_bundle_installed
 
 from PySide6.QtCore import QThread, QTimer, Signal, Qt, QUrl
-from PySide6.QtGui import QAction, QDesktopServices, QIcon
+from PySide6.QtGui import QAction, QDesktopServices, QIcon, QPixmap
 from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
@@ -24,6 +25,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QListWidget,
     QMainWindow,
+    QMenu,
     QPushButton,
     QProgressBar,
     QSizePolicy,
@@ -38,10 +40,20 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from .live_preview import PreviewSettings, build_output_preview_text
 from .queue import GuiTask, GuiTaskQueue
 from .results import read_csv_preview
-from .source_preview import build_source_preview_lines, is_preview_media_file
+from .source_preview import build_source_preview_lines, is_preview_media_file, list_source_titles
 from .workers import ScanWorker
+
+PRESET_GROUPS = {
+    "General": ["Fast 1080p30", "Fast 720p30", "Production 4K"],
+    "Web": ["H.264 Proxy", "H.265 Proxy", "WebM VP9"],
+    "Devices": ["Apple 1080p", "Windows MP4"],
+    "Matroska": ["MKV H.264", "MKV H.265"],
+    "Hardware": ["HAP Q 4K", "NotchLC"],
+    "Professional": ["ProRes 422 HQ", "ProRes 4444"],
+}
 
 
 class QtScanThread(QThread):
@@ -113,6 +125,7 @@ class MainWindow(QMainWindow):
         self.tool_install_thread: ToolInstallThread | None = None
         self.pending_tasks: list[GuiTask] = []
         self.last_outputs: dict[str, Path | None] = {}
+        self.source_titles: list = []
         self._build_ui()
         QTimer.singleShot(250, self._check_tools_on_first_run)
 
@@ -163,10 +176,12 @@ class MainWindow(QMainWindow):
         view_menu.addActions([welcome_action, workspace_action])
 
         preset_menu = self.menuBar().addMenu("Presets")
-        for name in ["LED 4K", "LED 8K", "Disguise", "Millumin", "TouchDesigner", "Notch"]:
-            preset_action = QAction(name, self)
-            preset_action.triggered.connect(lambda checked=False, value=name: self._select_preset(value))
-            preset_menu.addAction(preset_action)
+        for group_name, presets in PRESET_GROUPS.items():
+            submenu = preset_menu.addMenu(group_name)
+            for name in presets:
+                preset_action = QAction(name, self)
+                preset_action.triggered.connect(lambda checked=False, value=name: self._set_output_preset(value))
+                submenu.addAction(preset_action)
 
         window_menu = self.menuBar().addMenu("Window")
         minimize_action = QAction("Minimize", self)
@@ -407,12 +422,14 @@ class MainWindow(QMainWindow):
         self.project_input = DropLineEdit()
         self.project_input.dropped.connect(self._add_project)
         self.output_input = QLineEdit(str(Path("./reports").resolve()))
-        self.title_input = QLineEdit()
-        self.title_input.setPlaceholderText("Source title")
+        self.title_combo = QComboBox()
+        self.title_combo.addItem("Open a source folder")
+        self.title_combo.currentIndexChanged.connect(self._on_title_changed)
         self.range_combo = QComboBox()
         self.range_combo.addItems(["Full Scan", "First 10 Files", "Selected Queue"])
-        self.preset_combo = QComboBox()
-        self.preset_combo.addItems(["Unnamed", "H.264 Proxy", "H.265 Proxy", "HAP Q 4K", "ProRes 4444", "NotchLC"])
+        self.preset_button = QPushButton("Fast 1080p30")
+        self.preset_button.setMenu(self._build_preset_menu())
+        self.selected_preset = "Fast 1080p30"
         browse_project = QPushButton("Browse...")
         browse_output = QPushButton("Browse...")
         browse_project.clicked.connect(self._browse_project)
@@ -421,15 +438,24 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.project_input, 0, 1, 1, 5)
         layout.addWidget(browse_project, 0, 6)
         layout.addWidget(QLabel("Title:"), 1, 0)
-        layout.addWidget(self.title_input, 1, 1, 1, 3)
+        layout.addWidget(self.title_combo, 1, 1, 1, 3)
         layout.addWidget(QLabel("Scan Range:"), 1, 4)
         layout.addWidget(self.range_combo, 1, 5, 1, 2)
         layout.addWidget(QLabel("Preset:"), 2, 0)
-        layout.addWidget(self.preset_combo, 2, 1, 1, 2)
+        layout.addWidget(self.preset_button, 2, 1, 1, 2)
         layout.addWidget(QLabel("Save As:"), 2, 3)
         layout.addWidget(self.output_input, 2, 4, 1, 3)
         layout.addWidget(browse_output, 2, 7)
         return panel
+
+    def _build_preset_menu(self) -> QMenu:
+        menu = QMenu(self)
+        for group_name, presets in PRESET_GROUPS.items():
+            submenu = menu.addMenu(group_name)
+            for preset in presets:
+                action = submenu.addAction(preset)
+                action.triggered.connect(lambda checked=False, value=preset: self._set_output_preset(value))
+        return menu
 
     def _left_panel(self) -> QWidget:
         tabs = QTabWidget()
@@ -487,7 +513,8 @@ class MainWindow(QMainWindow):
         self.history = QListWidget()
         self.rules.addItems(["project_rules.yaml", "LED_4K", "Disguise", "TouchDesigner"])
         self.format_combo = QComboBox()
-        self.format_combo.addItems(["CSV + JSON + HTML + PDF", "CSV only", "JSON only"])
+        self.format_combo.addItems(["MP4", "MOV", "MKV", "WebM", "MXF", "AVI", "Image Sequence"])
+        self.format_combo.currentIndexChanged.connect(lambda _index: self._update_output_preview_placeholder())
         self.passthrough_box = QLineEdit("Enabled")
         self.passthrough_box.setReadOnly(True)
         self.source_count_label = QLabel("No source selected")
@@ -533,8 +560,23 @@ class MainWindow(QMainWindow):
         output_layout = QVBoxLayout(output_box)
         self.output_preview = QTextEdit()
         self.output_preview.setReadOnly(True)
-        self.output_preview.setText("Scan, compress, or transcode to compare output here.")
+        self.output_preview.setText("Select a title, preset, and format, then start live preview.")
+        self.output_preview_image = QLabel("Live preview frame will appear here.")
+        self.output_preview_image.setObjectName("PreviewCanvas")
+        self.output_preview_image.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.output_preview_image.setMinimumHeight(260)
+        preview_controls = QHBoxLayout()
+        self.preview_duration_combo = QComboBox()
+        self.preview_duration_combo.addItems(["10 sec", "30 sec", "60 sec"])
+        live_preview_button = QPushButton("Start Live Preview")
+        live_preview_button.setObjectName("PrimaryButton")
+        live_preview_button.clicked.connect(self._start_live_preview)
+        preview_controls.addWidget(QLabel("Live Preview:"))
+        preview_controls.addWidget(self.preview_duration_combo)
+        preview_controls.addWidget(live_preview_button)
+        output_layout.addWidget(self.output_preview_image)
         output_layout.addWidget(self.output_preview)
+        output_layout.addLayout(preview_controls)
         compare_row.addWidget(source_box)
         compare_row.addWidget(output_box)
         preview_layout.addLayout(compare_row)
@@ -593,6 +635,12 @@ class MainWindow(QMainWindow):
             self.rules.setCurrentItem(matches[0])
         self._log(f"Preset selected: {name}")
 
+    def _set_output_preset(self, name: str) -> None:
+        self.selected_preset = name
+        self.preset_button.setText(name)
+        self._log(f"Output preset selected: {name}")
+        self._update_output_preview_placeholder()
+
     def _add_current_to_queue(self) -> None:
         path = self.project_input.text().strip()
         if not path:
@@ -614,9 +662,112 @@ class MainWindow(QMainWindow):
             preview_lines, total_files = build_source_preview_lines(path)
             self.source_count_label.setText(f"{total_files} top-level media files")
             self.source_preview.setText("\n".join(preview_lines))
+            self._populate_title_combo(path)
         else:
             self.source_count_label.setText("1 media file" if is_preview_media_file(path) else "No supported media selected")
             self.source_preview.setText(f"Source file:\n{path}")
+            self._populate_title_combo(path.parent if path.exists() else None, selected=path)
+
+    def _populate_title_combo(self, folder: Path | None, selected: Path | None = None) -> None:
+        self.title_combo.blockSignals(True)
+        self.title_combo.clear()
+        self.source_titles = []
+        if folder and folder.exists():
+            self.source_titles = list_source_titles(folder)
+        if not self.source_titles:
+            self.title_combo.addItem("No supported media titles")
+        else:
+            for title in self.source_titles:
+                self.title_combo.addItem(title.label, str(title.path))
+            if selected:
+                for index, title in enumerate(self.source_titles):
+                    if title.path == selected:
+                        self.title_combo.setCurrentIndex(index)
+                        break
+        self.title_combo.blockSignals(False)
+        self._on_title_changed(self.title_combo.currentIndex())
+
+    def _on_title_changed(self, index: int) -> None:
+        title = self._selected_title_path()
+        if title:
+            self.source_preview.setText(f"Selected title:\n{title.name}\n\nPath:\n{title}")
+        self._update_output_preview_placeholder()
+
+    def _selected_title_path(self) -> Path | None:
+        value = self.title_combo.currentData()
+        return Path(value) if value else None
+
+    def _update_output_preview_placeholder(self) -> None:
+        source = self._selected_title_path()
+        name = source.name if source else "No title selected"
+        self.output_preview.setText(
+            "\n".join(
+                [
+                    "Output Preview",
+                    "",
+                    f"Title: {name}",
+                    f"Preset: {self.selected_preset}",
+                    f"Format: {self.format_combo.currentText()}",
+                    "",
+                    "Click Start Live Preview to render/update the realtime preview summary.",
+                ]
+            )
+        )
+
+    def _start_live_preview(self) -> None:
+        seconds = int(self.preview_duration_combo.currentText().split()[0])
+        settings = PreviewSettings(
+            source_path=self._selected_title_path(),
+            preset=self.selected_preset,
+            output_format=self.format_combo.currentText(),
+            duration_seconds=seconds,
+        )
+        self.output_preview.setText(build_output_preview_text(settings))
+        self._render_live_preview_frame(settings.source_path)
+        self.right_tabs.setCurrentIndex(0)
+        self._log("Live preview updated.")
+
+    def _render_live_preview_frame(self, source_path: Path | None) -> None:
+        if not source_path or not source_path.exists():
+            self.output_preview_image.setText("Select a media title to preview.")
+            return
+        ffmpeg = resolve_tool_path("ffmpeg", auto_install=False)
+        if not ffmpeg.path:
+            self.output_preview_image.setText("ffmpeg is required for live frame preview.")
+            self._log("Live preview frame skipped: ffmpeg was not found.")
+            return
+        preview_dir = Path.cwd() / ".preview"
+        preview_dir.mkdir(parents=True, exist_ok=True)
+        frame_path = preview_dir / "gui_live_preview.jpg"
+        command = [
+            ffmpeg.path,
+            "-y",
+            "-ss",
+            "00:00:01",
+            "-i",
+            str(source_path),
+            "-frames:v",
+            "1",
+            "-vf",
+            "scale='min(720,iw)':-2",
+            str(frame_path),
+        ]
+        completed = subprocess.run(command, capture_output=True, text=True, shell=False, check=False)
+        if completed.returncode != 0 or not frame_path.exists():
+            self.output_preview_image.setText("Unable to render live preview frame.")
+            self._log("Live preview frame render failed.")
+            return
+        pixmap = QPixmap(str(frame_path))
+        if pixmap.isNull():
+            self.output_preview_image.setText("Unable to load live preview frame.")
+            return
+        self.output_preview_image.setPixmap(
+            pixmap.scaled(
+                self.output_preview_image.size(),
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation,
+            )
+        )
 
     def _start_scan(self) -> None:
         output = Path(self.output_input.text()).expanduser()

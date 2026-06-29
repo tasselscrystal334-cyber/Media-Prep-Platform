@@ -10,7 +10,7 @@ Covers the right-side Source Preview, Output Preview, and Logs surfaces in the V
 
 ## Architecture
 
-The Source Preview pane lists supported top-level media files and filters out `.DS_Store`, folders, and unsupported sidecar files. The Output Preview pane shows generated report output paths and can open HTML/PDF reports through desktop services. The log pane records scan lifecycle events and cancellation requests.
+The Source Preview pane lists supported top-level media files and filters out `.DS_Store`, folders, and unsupported sidecar files. The Output Preview pane shows generated report output paths, live preview summaries, FFmpeg-rendered preview frames when available, and can open HTML/PDF reports through desktop services. The log pane records scan lifecycle events and cancellation requests.
 
 ## Workflow
 
@@ -26,7 +26,7 @@ Configuration must remain explicit and versionable. Use YAML for rules, profiles
 
 ## Example
 
-After a scan, use Open HTML or the File menu Export PDF action to inspect generated reports. The comparison panes remain visible in the right-side workspace.
+After a scan, use Open HTML or the File menu Export PDF action to inspect generated reports. For output preview, choose a title, preset, format, and preview duration, then click Start Live Preview to update the right-side preview summary and preview frame.
 
 ## Known Limitations
 
@@ -47,5 +47,5 @@ Expand this document when the subsystem receives a new module, public API, UI su
 
 ## Revision History
 
-- Documentation version: 1.2
+- Documentation version: 1.4
 - Last updated: 2026-06-29
