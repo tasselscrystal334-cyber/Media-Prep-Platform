@@ -40,7 +40,7 @@ from PySide6.QtWidgets import (
 
 from .queue import GuiTask, GuiTaskQueue
 from .results import read_csv_preview
-from .source_preview import is_preview_media_file, list_preview_media_files
+from .source_preview import build_source_preview_lines, is_preview_media_file
 from .workers import ScanWorker
 
 
@@ -569,15 +569,8 @@ class MainWindow(QMainWindow):
             return
         path = Path(path)
         if path.is_dir():
-            files, total_files = list_preview_media_files(path)
+            preview_lines, total_files = build_source_preview_lines(path)
             self.source_count_label.setText(f"{total_files} top-level media files")
-            preview_lines = [f"Source folder: {path}", "", "Files:"]
-            if files:
-                preview_lines.extend(f"- {item.name}" for item in files)
-            else:
-                preview_lines.append("No supported media files found.")
-            if total_files > len(files):
-                preview_lines.append(f"... {total_files - len(files)} more")
             self.source_preview.setText("\n".join(preview_lines))
         else:
             self.source_count_label.setText("1 media file" if is_preview_media_file(path) else "No supported media selected")

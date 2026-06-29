@@ -21,3 +21,18 @@ def is_preview_media_file(path: Path) -> bool:
     """Return whether a path should be shown as a media source."""
 
     return is_supported_media(Path(path))
+
+
+def build_source_preview_lines(folder: Path, limit: int = 10) -> tuple[list[str], int]:
+    """Build human-readable source preview text for a folder."""
+
+    path = Path(folder)
+    files, total_files = list_preview_media_files(path, limit=limit)
+    lines = [f"Source folder: {path}", "", f"Files ({total_files} detected):"]
+    if files:
+        lines.extend(f"- {item.name}" for item in files)
+    else:
+        lines.append("No supported media files found.")
+    if total_files > len(files):
+        lines.append(f"... {total_files - len(files)} more")
+    return (lines, total_files)

@@ -81,7 +81,7 @@ The V1.0 GUI provides a light PySide6 workspace with:
 - HandBrake-style source/action toolbar with Open Source, Add Queue, Start, Pause, and Activity controls, plus source title, scan range, preset, and output path controls.
 - Parameter tabs for Summary, Dimensions, Filters, Video, Audio, Subtitles, and Chapters.
 - Drag-and-drop scanning, batch queue, progress, and cancel request.
-- Source Preview and Output Preview comparison panes for compression and transcode workflows. Source previews show supported top-level media files and ignore `.DS_Store`, folders, and unsupported sidecar files.
+- Source Preview and Output Preview comparison panes for compression and transcode workflows. Source previews show the detected media count, supported top-level media files, and ignore `.DS_Store`, folders, and unsupported sidecar files.
 - Scan-complete CSV preview dialog showing up to 10 file rows and excluding folders.
 - Background scanning in a worker thread.
 - Automatic JSON, CSV, HTML, and PDF report export.

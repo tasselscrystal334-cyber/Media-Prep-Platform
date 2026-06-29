@@ -14,6 +14,7 @@ All notable Loom changes are documented here.
 - Scan-complete CSV preview dialog that shows up to 10 file rows and excludes folders.
 - `scripts/local_live_update.sh` for local editable install, test, tools doctor, and optional GUI launch without downloading GitHub release assets.
 - GUI source previews now ignore `.DS_Store`, folders, and unsupported non-media files.
+- GUI source previews now show the detected media file count directly in the file list header.
 
 ### Changed
 
