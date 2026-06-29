@@ -18,7 +18,7 @@ Operators can preview media with loop, mute, start time, scale, and timecode opt
 
 ## Dependencies
 
-- `ffplay` from a full FFmpeg package on `PATH`, bundled tools, or the Loom auto-install cache.
+- `ffplay` from a full FFmpeg package on `PATH`, bundled tools, or the software-local `tools/plugins/ffmpeg` directory.
 
 ## Configuration
 

@@ -7,8 +7,10 @@ All notable Loom changes are documented here.
 ### Added
 
 - Default FFmpeg tool modules for `ffmpeg`, `ffprobe`, and `ffplay`.
-- Automatic FFmpeg-family tool installation into the Loom tools cache when required binaries are missing.
+- First-run GUI detection with an install confirmation prompt when `ffmpeg`, `ffprobe`, or `ffplay` is missing.
+- Automatic FFmpeg-family tool installation into the software-local `tools/plugins/ffmpeg` directory when required binaries are missing.
 - `mediaqc tools install-ffmpeg` for explicit preinstallation or repair of the FFmpeg tool bundle.
+- Preferences > Basic action for installing or repairing FFmpeg-family tools from the desktop GUI.
 
 ### Changed
 

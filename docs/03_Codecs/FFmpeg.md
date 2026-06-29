@@ -16,7 +16,7 @@ The deep analysis command is:
 ffmpeg -v error -i input -f null -
 ```
 
-Processing commands are routed through `mediaqc/processing/ffmpeg_runner.py`, which keeps command lists shell-free and path-safe. If `ffmpeg`, `ffprobe`, or `ffplay` is missing, `mediaqc/processing/tool_installer.py` can download the full FFmpeg tool bundle into the Loom tools cache.
+Processing commands are routed through `mediaqc/processing/ffmpeg_runner.py`, which keeps command lists shell-free and path-safe. If `ffmpeg`, `ffprobe`, or `ffplay` is missing, `mediaqc/processing/tool_installer.py` can download the full FFmpeg tool bundle into the software-local `tools/plugins/ffmpeg` directory.
 
 ## Workflow
 
@@ -31,7 +31,7 @@ mediaqc transcode input.mov --preset h264_preview --output ./preview
 
 ## Dependencies
 
-- `ffmpeg` on `PATH`, in bundled tools, or in the Loom auto-install cache
+- `ffmpeg` on `PATH`, in bundled tools, or in the software-local `tools/plugins/ffmpeg` directory
 - Optional codec libraries such as HAP, ProRes, libx264, libx265, or external NotchLC backends.
 
 ## Configuration

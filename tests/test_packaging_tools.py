@@ -34,6 +34,22 @@ def test_resolve_tool_path_uses_bundled_directory(monkeypatch, tmp_path: Path) -
     assert result.source == "MEDIAQC_FFMPEG_DIR"
 
 
+def test_resolve_tool_path_uses_tools_plugins_directory(monkeypatch, tmp_path: Path) -> None:
+    plugin_dir = tmp_path / "tools" / "plugins" / "ffmpeg"
+    plugin_dir.mkdir(parents=True)
+    ffplay = plugin_dir / ("ffplay.exe" if sys.platform.startswith("win") else "ffplay")
+    make_executable(ffplay)
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.delenv("MEDIAQC_FFPLAY_PATH", raising=False)
+    monkeypatch.delenv("MEDIAQC_FFMPEG_DIR", raising=False)
+    monkeypatch.setattr("mediaqc.processing.ffmpeg_runner.shutil.which", lambda _: None)
+
+    result = resolve_tool_path("ffplay")
+
+    assert result.path == str(ffplay)
+    assert result.source == "working directory plugin tools"
+
+
 def test_make_release_generates_assets(tmp_path: Path) -> None:
     dist = tmp_path / "dist"
     output = tmp_path / "dist_release"

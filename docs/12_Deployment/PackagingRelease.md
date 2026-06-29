@@ -35,7 +35,7 @@ FFmpeg tools are resolved in this order:
 4. `tools/` beside the executable
 5. System `PATH`
 
-The `tools/` folder is included as an optional operator-managed location for `ffmpeg`, `ffprobe`, `ffplay`, `mediainfo`, officially obtained NotchLC tools, or other vendor command-line utilities. If the FFmpeg-family binaries are missing at runtime, Loom attempts to download the full FFmpeg tool bundle into the user tools cache unless `LOOM_DISABLE_TOOL_DOWNLOAD=1` is set.
+The `tools/` folder is included as an optional operator-managed location for `ffmpeg`, `ffprobe`, `ffplay`, `mediainfo`, officially obtained NotchLC tools, or other vendor command-line utilities. If the FFmpeg-family binaries are missing at runtime, GUI users are prompted before Loom downloads the full FFmpeg tool bundle into `tools/plugins/ffmpeg`; CLI users can run `mediaqc tools install-ffmpeg`. Set `LOOM_DISABLE_TOOL_DOWNLOAD=1` to disable automatic downloads.
 
 ## Example
 
@@ -47,7 +47,7 @@ python packaging/scripts/make_release.py --platform macos --dist dist --output d
 
 ## Known Limitations
 
-PyInstaller bundles do not download FFmpeg during build. Operators may install FFmpeg externally, place licensed binaries in a `tools/` folder before packaging, or allow Loom to download the tool bundle at runtime. The first GUI launch may still include platform security and PyInstaller startup overhead, so the GUI shows an early Loom splash and welcome screen as soon as Qt is initialized.
+PyInstaller bundles do not download FFmpeg during build. Operators may install FFmpeg externally, place licensed binaries in `tools/plugins/ffmpeg` before packaging, or allow Loom to download the tool bundle after the GUI prompt at runtime. The first GUI launch may still include platform security and PyInstaller startup overhead, so the GUI shows an early Loom splash and welcome screen as soon as Qt is initialized.
 
 ## Future Improvements
 

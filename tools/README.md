@@ -6,7 +6,7 @@ Document the optional external tools that may be placed beside Loom release bina
 
 ## Overview
 
-The `tools/` folder is intentionally included in release bundles as an operator-controlled location for external command-line tools. Loom first uses tools on `PATH` or explicit environment variables, then bundled tools, and can automatically download the FFmpeg tool bundle into the user tools cache when `ffmpeg`, `ffprobe`, or `ffplay` is missing.
+The `tools/` folder is intentionally included in release bundles as an operator-controlled location for external command-line tools. Loom first uses tools on `PATH` or explicit environment variables, then bundled tools, and can install the FFmpeg tool bundle into the software-local `tools/plugins/ffmpeg` directory when `ffmpeg`, `ffprobe`, or `ffplay` is missing.
 
 ## Architecture
 
@@ -14,7 +14,7 @@ Tool discovery is handled by `mediaqc/processing/ffmpeg_runner.py`. Download and
 
 ## Workflow
 
-Place licensed platform binaries in this folder before packaging, copy them into the installed release folder after download, or run:
+Place licensed platform binaries in this folder before packaging, copy them into the installed release folder after download, use Preferences > Basic in the desktop app, or run:
 
 ```bash
 mediaqc tools install-ffmpeg
@@ -51,14 +51,16 @@ Environment overrides:
 Loom/
   Loom
   tools/
-    ffmpeg
-    ffprobe
-    ffplay
+    plugins/
+      ffmpeg/
+        ffmpeg
+        ffprobe
+        ffplay
 ```
 
 ## Known Limitations
 
-Release scripts do not download FFmpeg or vendor tools automatically. At runtime, Loom can download FFmpeg-family tools into the user cache unless automatic downloads are disabled.
+Release scripts do not download FFmpeg or vendor tools automatically. At runtime, Loom prompts in the GUI before downloading FFmpeg-family tools into `tools/plugins/ffmpeg`; CLI workflows can install explicitly with `mediaqc tools install-ffmpeg`.
 
 ## Future Improvements
 

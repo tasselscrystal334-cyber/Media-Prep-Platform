@@ -6,6 +6,7 @@ import os
 import platform
 import shutil
 import stat
+import sys
 import tarfile
 import tempfile
 import urllib.request
@@ -37,13 +38,13 @@ def default_tool_install_dir() -> Path:
     configured = os.getenv("LOOM_TOOLS_DIR") or os.getenv("MEDIAQC_FFMPEG_DIR")
     if configured:
         return Path(configured).expanduser()
-    if platform.system() == "Windows":
-        base = Path(os.getenv("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
-        return base / "Loom" / "tools" / "ffmpeg"
-    if platform.system() == "Darwin":
-        return Path.home() / "Library" / "Application Support" / "Loom" / "tools" / "ffmpeg"
-    base = Path(os.getenv("XDG_DATA_HOME", Path.home() / ".local" / "share"))
-    return base / "loom" / "tools" / "ffmpeg"
+    return application_tools_plugins_dir() / "ffmpeg"
+
+
+def application_tools_plugins_dir() -> Path:
+    """Return the software-local tools/plugins directory."""
+
+    return _application_root() / "tools" / "plugins"
 
 
 def ensure_ffmpeg_bundle_installed() -> ToolInstallResult:
@@ -81,6 +82,16 @@ def _package_url() -> str:
         arch = "linuxarm64" if machine in {"arm64", "aarch64"} else "linux64"
         return f"https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-{arch}-gpl.tar.xz"
     raise ToolInstallError(f"automatic FFmpeg download is not supported on {system}")
+
+
+def _application_root() -> Path:
+    meipass = getattr(sys, "_MEIPASS", None)
+    if meipass:
+        return Path(str(meipass)).resolve()
+    source_root = Path(__file__).resolve().parents[2]
+    if (source_root / "pyproject.toml").exists():
+        return source_root
+    return Path(sys.executable).resolve().parent
 
 
 def _download(url: str, destination: Path) -> None:

@@ -20,7 +20,7 @@ GUI code lives under `mediaqc/gui/`.
 
 ## Workflow
 
-Operators open Loom, choose New, Open, or Recent, then scan one or more media folders. Reports can be exported as JSON, CSV, HTML, and PDF. The menu bar exposes Loom, File, Edit, View, Presets, Window, and Help menus.
+Operators open Loom, choose New, Open, or Recent, then scan one or more media folders. On first launch, Loom checks `ffmpeg`, `ffprobe`, and `ffplay`; if any are missing, the GUI prompts before installing them into `tools/plugins/ffmpeg`. Reports can be exported as JSON, CSV, HTML, and PDF. The menu bar exposes Loom, File, Edit, View, Presets, Window, and Help menus.
 
 ## Dependencies
 
@@ -31,7 +31,7 @@ Operators open Loom, choose New, Open, or Recent, then scan one or more media fo
 
 ## Configuration
 
-The GUI uses the same rules, profiles, presets, and report output paths as the CLI. The packaged application may use external tools from `PATH`, explicit `MEDIAQC_*` environment variables, or the bundled `tools/` folder.
+The GUI uses the same rules, profiles, presets, and report output paths as the CLI. The packaged application may use external tools from `PATH`, explicit `MEDIAQC_*` environment variables, or the bundled `tools/plugins/ffmpeg` folder. Preferences > Basic includes an Install / Repair FFmpeg Tools action.
 
 ## Example
 

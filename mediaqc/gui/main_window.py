@@ -6,10 +6,14 @@ from pathlib import Path
 
 from mediaqc import __version__
 from mediaqc.branding import PRODUCT_NAME, icon_path
+from mediaqc.processing.ffmpeg_runner import resolve_tool_path
+from mediaqc.processing.tool_installer import ensure_ffmpeg_bundle_installed
 
-from PySide6.QtCore import QThread, Signal, Qt, QUrl
+from PySide6.QtCore import QThread, QTimer, Signal, Qt, QUrl
 from PySide6.QtGui import QAction, QDesktopServices, QIcon
 from PySide6.QtWidgets import (
+    QDialog,
+    QDialogButtonBox,
     QFileDialog,
     QFrame,
     QHBoxLayout,
@@ -20,6 +24,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QProgressBar,
     QSizePolicy,
+    QMessageBox,
     QSplitter,
     QStackedWidget,
     QTableWidget,
@@ -56,6 +61,18 @@ class QtScanThread(QThread):
         self.worker.cancel()
 
 
+class ToolInstallThread(QThread):
+    completed = Signal(str, bool, str)
+    failed = Signal(str)
+
+    def run(self) -> None:
+        try:
+            result = ensure_ffmpeg_bundle_installed()
+            self.completed.emit(str(result.install_dir), result.downloaded, result.source_url)
+        except Exception as exc:  # noqa: BLE001 - GUI must surface installer failures.
+            self.failed.emit(str(exc))
+
+
 class DropLineEdit(QLineEdit):
     dropped = Signal(str)
 
@@ -87,9 +104,11 @@ class MainWindow(QMainWindow):
         self.setMinimumSize(1120, 720)
         self.queue = GuiTaskQueue()
         self.current_thread: QtScanThread | None = None
+        self.tool_install_thread: ToolInstallThread | None = None
         self.pending_tasks: list[GuiTask] = []
         self.last_outputs: dict[str, Path | None] = {}
         self._build_ui()
+        QTimer.singleShot(250, self._check_tools_on_first_run)
 
     def _build_ui(self) -> None:
         self._build_actions()
@@ -102,7 +121,10 @@ class MainWindow(QMainWindow):
     def _build_actions(self) -> None:
         app_menu = self.menuBar().addMenu(PRODUCT_NAME)
         about = QAction(f"About {PRODUCT_NAME}", self)
+        preferences = QAction("Preferences...", self)
         about.triggered.connect(lambda: self._log(f"{PRODUCT_NAME} {__version__}"))
+        preferences.triggered.connect(self._open_preferences)
+        app_menu.addAction(preferences)
         app_menu.addAction(about)
 
         file_menu = self.menuBar().addMenu("File")
@@ -153,6 +175,78 @@ class MainWindow(QMainWindow):
         doctor_action.triggered.connect(lambda: self._log("Run `mediaqc tools doctor` for FFmpeg paths."))
         docs_action.triggered.connect(lambda: self._log("Documentation is available in the repository docs folder."))
         help_menu.addActions([doctor_action, docs_action])
+
+    def _open_preferences(self) -> None:
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Preferences")
+        dialog.resize(560, 300)
+        layout = QVBoxLayout(dialog)
+        tabs = QTabWidget()
+        basic = QWidget()
+        basic_layout = QVBoxLayout(basic)
+        title = QLabel("FFmpeg Tools")
+        title.setStyleSheet("font-weight: 700; background: transparent;")
+        description = QLabel("Install or repair ffmpeg, ffprobe, and ffplay in Loom tools/plugins.")
+        description.setWordWrap(True)
+        install_button = QPushButton("Install / Repair FFmpeg Tools")
+        install_button.setObjectName("PrimaryButton")
+        install_button.clicked.connect(self._install_tools_from_preferences)
+        basic_layout.addWidget(title)
+        basic_layout.addWidget(description)
+        basic_layout.addWidget(install_button)
+        basic_layout.addStretch(1)
+        tabs.addTab(basic, "Basic")
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
+        buttons.rejected.connect(dialog.reject)
+        layout.addWidget(tabs)
+        layout.addWidget(buttons)
+        dialog.exec()
+
+    def _check_tools_on_first_run(self) -> None:
+        missing = self._missing_tools()
+        if not missing:
+            self._log("FFmpeg tools detected: ffmpeg, ffprobe, ffplay.")
+            return
+        names = ", ".join(missing)
+        response = QMessageBox.question(
+            self,
+            "Install FFmpeg Tools",
+            f"Loom could not find: {names}.\n\nInstall ffmpeg, ffprobe, and ffplay into tools/plugins now?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.Yes,
+        )
+        if response == QMessageBox.StandardButton.Yes:
+            self._start_tool_install("Installing FFmpeg tools...")
+        else:
+            self._log(f"FFmpeg tool install skipped. Missing: {names}")
+
+    def _install_tools_from_preferences(self) -> None:
+        self._start_tool_install("Installing FFmpeg tools from Preferences...")
+
+    def _start_tool_install(self, message: str) -> None:
+        if self.tool_install_thread and self.tool_install_thread.isRunning():
+            self._log("FFmpeg tool installation is already running.")
+            return
+        self._log(message)
+        self.tool_install_thread = ToolInstallThread()
+        self.tool_install_thread.completed.connect(self._on_tool_install_completed)
+        self.tool_install_thread.failed.connect(self._on_tool_install_failed)
+        self.tool_install_thread.start()
+
+    def _on_tool_install_completed(self, install_dir: str, downloaded: bool, source_url: str) -> None:
+        status = "Downloaded" if downloaded else "Already installed"
+        self._log(f"{status} FFmpeg tools: {install_dir}")
+        if source_url:
+            self._log(f"FFmpeg source: {source_url}")
+        QMessageBox.information(self, "FFmpeg Tools", f"{status} FFmpeg tools in:\n{install_dir}")
+
+    def _on_tool_install_failed(self, error: str) -> None:
+        self._log(f"FFmpeg tool install failed: {error}")
+        QMessageBox.warning(self, "FFmpeg Tools", f"Install failed:\n{error}")
+
+    @staticmethod
+    def _missing_tools() -> list[str]:
+        return [name for name in ("ffmpeg", "ffprobe", "ffplay") if resolve_tool_path(name, auto_install=False).path is None]
 
     def _welcome_panel(self) -> QWidget:
         background = QFrame()

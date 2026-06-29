@@ -144,7 +144,7 @@ powershell -ExecutionPolicy Bypass -File packaging/scripts/build_windows.ps1
 
 Release artifacts are written to `dist_release/` and include zipped CLI bundles, a desktop GUI bundle named like `Loom-1.0.0-macos.zip`, Docker packaging assets, `SHA256SUMS.txt`, and `release_notes.md`. GitHub Actions builds release assets from `.github/workflows/release.yml` when a `v*` tag is pushed.
 
-Loom uses `ffmpeg`, `ffprobe`, and `ffplay` as default media tool modules. They can be provided externally on `PATH`, pointed to with `MEDIAQC_FFMPEG_PATH` / `MEDIAQC_FFMPEG_DIR`, bundled in a `tools/` folder beside the executable, or installed automatically into the Loom tools cache when missing. Use `mediaqc tools install-ffmpeg` to preinstall the full FFmpeg tool bundle, and `LOOM_DISABLE_TOOL_DOWNLOAD=1` to disable automatic downloads.
+Loom uses `ffmpeg`, `ffprobe`, and `ffplay` as default media tool modules. They can be provided externally on `PATH`, pointed to with `MEDIAQC_FFMPEG_PATH` / `MEDIAQC_FFMPEG_DIR`, bundled beside the executable, or installed into the software-local `tools/plugins/ffmpeg` directory. On first GUI launch, Loom checks for all three tools and prompts before installing missing tools. Use `mediaqc tools install-ffmpeg` or Preferences > Basic to preinstall or repair the full FFmpeg tool bundle, and `LOOM_DISABLE_TOOL_DOWNLOAD=1` to disable automatic downloads.
 
 ## Documentation Entry Points
 

@@ -3,7 +3,17 @@ import stat
 import zipfile
 from pathlib import Path
 
-from mediaqc.processing.tool_installer import ensure_ffmpeg_bundle_installed
+from mediaqc.processing.tool_installer import application_tools_plugins_dir, default_tool_install_dir, ensure_ffmpeg_bundle_installed
+
+
+def test_default_tool_install_dir_uses_software_tools_plugins(monkeypatch) -> None:
+    monkeypatch.delenv("LOOM_TOOLS_DIR", raising=False)
+    monkeypatch.delenv("MEDIAQC_FFMPEG_DIR", raising=False)
+
+    install_dir = default_tool_install_dir()
+
+    assert install_dir == application_tools_plugins_dir() / "ffmpeg"
+    assert install_dir.parts[-3:] == ("tools", "plugins", "ffmpeg")
 
 
 def test_ensure_ffmpeg_bundle_installed_from_zip(monkeypatch, tmp_path: Path) -> None:

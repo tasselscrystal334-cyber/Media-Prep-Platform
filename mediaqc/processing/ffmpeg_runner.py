@@ -181,13 +181,22 @@ def _candidate_tool_dirs() -> list[tuple[Path, str]]:
     meipass = getattr(sys, "_MEIPASS", None)
     if meipass:
         base = Path(str(meipass))
-        dirs.extend([(base / "tools", "PyInstaller bundle"), (base / "ffmpeg", "PyInstaller bundle")])
+        dirs.extend(
+            [
+                (base / "tools" / "plugins" / "ffmpeg", "PyInstaller bundle plugins"),
+                (base / "tools", "PyInstaller bundle"),
+                (base / "ffmpeg", "PyInstaller bundle"),
+            ]
+        )
 
     executable_dir = Path(sys.executable).resolve().parent
     dirs.extend(
         [
+            (executable_dir / "tools" / "plugins" / "ffmpeg", "bundled plugin tools"),
             (executable_dir / "tools", "bundled tools"),
+            (executable_dir.parent / "tools" / "plugins" / "ffmpeg", "bundled plugin tools"),
             (executable_dir.parent / "tools", "bundled tools"),
+            (Path.cwd() / "tools" / "plugins" / "ffmpeg", "working directory plugin tools"),
             (Path.cwd() / "tools", "working directory tools"),
         ]
     )

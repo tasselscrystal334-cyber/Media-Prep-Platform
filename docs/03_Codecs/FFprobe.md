@@ -22,7 +22,7 @@ ffprobe -v quiet -print_format json -show_format -show_streams input_file
 
 ## Dependencies
 
-- `ffprobe` on `PATH`, in bundled tools, or in the Loom auto-install cache
+- `ffprobe` on `PATH`, in bundled tools, or in the software-local `tools/plugins/ffmpeg` directory
 
 ## Configuration
 
