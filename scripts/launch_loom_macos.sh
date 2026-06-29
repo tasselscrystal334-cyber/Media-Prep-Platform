@@ -6,6 +6,7 @@ APP_DIR="${ROOT_DIR}/.local_app/Loom.app"
 CONTENTS_DIR="${APP_DIR}/Contents"
 MACOS_DIR="${CONTENTS_DIR}/MacOS"
 EXECUTABLE="${MACOS_DIR}/Loom"
+PYTHON_LAUNCHER="${MACOS_DIR}/LoomPython"
 PLIST="${CONTENTS_DIR}/Info.plist"
 
 if [[ "$(uname -s)" != "Darwin" ]]; then
@@ -13,6 +14,7 @@ if [[ "$(uname -s)" != "Darwin" ]]; then
 fi
 
 mkdir -p "${MACOS_DIR}" "${CONTENTS_DIR}/Resources"
+ln -sf "${ROOT_DIR}/.venv/bin/python" "${PYTHON_LAUNCHER}"
 
 cat > "${PLIST}" <<'EOF'
 <?xml version="1.0" encoding="UTF-8"?>
@@ -46,7 +48,7 @@ cat > "${EXECUTABLE}" <<EOF
 #!/usr/bin/env bash
 cd "${ROOT_DIR}"
 export PYTHONPATH="${ROOT_DIR}:\${PYTHONPATH:-}"
-exec "${ROOT_DIR}/.venv/bin/python" -m mediaqc.gui.app "\$@"
+exec -a "Loom" "${PYTHON_LAUNCHER}" -m mediaqc.gui.app "\$@"
 EOF
 chmod +x "${EXECUTABLE}"
 

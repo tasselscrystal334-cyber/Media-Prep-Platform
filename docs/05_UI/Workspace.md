@@ -6,15 +6,15 @@ Document the Workspace responsibilities in the 05_UI documentation area.
 
 ## Overview
 
-Covers the V1.0 workspace layout: in-window Loom menu bar, top source/action toolbar, source title dropdown, scan range, grouped preset menu, output format selector, parameter tabs, scan queue, and right Source Preview / Output Preview comparison panel.
+Covers the V1.0 workspace layout: in-window Loom menu bar, top action toolbar, media import list, output setting controls, destination and renaming controls, output file table, and paged right-side Source Preview, Output Preview, and Logs panels.
 
 ## Architecture
 
-`MainWindow` composes the workspace with source controls, Qt splitters, tabs, and queue tables. Scan execution is delegated to `ScanWorker` and `QtScanThread` so the UI remains responsive. Source preview filtering is delegated to `mediaqc/gui/source_preview.py`.
+`MainWindow` composes the workspace with media import controls, Qt splitters, output planning tables, preview tabs, and background worker threads. Scan execution is delegated to `ScanWorker` and `QtScanThread`; transcode execution is delegated to a GUI `TranscodeThread`. Source preview filtering is delegated to `mediaqc/gui/source_preview.py`.
 
 ## Workflow
 
-Operators drag folders or files into the source field, choose a title from the detected media dropdown, choose a scan range, choose a grouped preset, choose an output format, build a project queue, start scans, request cancellation, open Activity logs from the toolbar, and inspect generated outputs.
+Operators import files, import folders, or drag media into the Files to process list. They choose Codec, Frame Rate, Proxy, Format, destination, and renaming options, then run Analyze, SHA256, Play, or Transcode. Rules are customized in YAML under `config/` and do not occupy the main workspace.
 
 ## Dependencies
 
@@ -26,11 +26,11 @@ Configuration must remain explicit and versionable. Use YAML for rules, profiles
 
 ## Example
 
-The workspace exports JSON, CSV, HTML, and PDF into the selected output folder for each queued project. Source preview lists show only supported top-level media files and exclude `.DS_Store`, folders, and unsupported sidecar files. Start Live Preview updates the output preview summary and preview frame for the selected title, preset, format, duration, and output name.
+The workspace exports JSON, CSV, HTML, and PDF for analysis/reporting and writes transcoded files to the source folder by default. Operators can choose a custom destination and batch rename with remove, append, and prefix controls. Format defaults to MOV; audio defaults to Copy original audio. Start Live Preview generates a short output preview video for the selected file, settings, duration, and output name, then launches FFplay for realtime playback.
 
 ## Known Limitations
 
-The V1.0 workspace is focused on scanning and reporting. Editing rules inside the GUI is reserved for a later milestone.
+Embedded video playback is not yet inside the Qt panel; playback and live previews launch FFplay in separate windows.
 
 ## Future Improvements
 

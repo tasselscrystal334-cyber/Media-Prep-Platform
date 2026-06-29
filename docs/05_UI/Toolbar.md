@@ -10,11 +10,11 @@ Covers the top source/action toolbar in the Loom desktop GUI.
 
 ## Architecture
 
-`MainWindow` builds a light, HandBrake-style toolbar above the source controls. Primary actions include Open Source, Add Queue, Start, and Pause. Activity focuses the logs tab. Project presets are selected from the source control row rather than duplicated in the toolbar.
+`MainWindow` builds a light batch media toolbar above the workspace. Primary actions include Import Files, Import Folder, Analyze, SHA256, Play, and Transcode. Activity focuses the logs tab. Encoding, frame-rate, proxy, and format choices live in the output settings column.
 
 ## Workflow
 
-Operators choose a source, optionally add it to the queue, start scanning, pause/cancel when needed, and use Activity to inspect logs.
+Operators import one or more media files or folders, then run analysis, SHA256 verification, playback, or transcode/export directly from the file list. Activity opens operational logs.
 
 ## Dependencies
 

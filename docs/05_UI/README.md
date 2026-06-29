@@ -6,7 +6,7 @@ Document the README responsibilities in the 05_UI documentation area.
 
 ## Overview
 
-Covers the V1.0 PySide6 studio UI with a soft light professional transcoding workspace, source toolbar, parameter tabs, source/output preview comparison, scan queue, logs, settings, themes, and shortcuts.
+Covers the V1.0 PySide6 studio UI with a soft light professional batch media workspace, media import toolbar, output settings, source/output preview pages, logs, settings, themes, and shortcuts.
 
 ## Architecture
 

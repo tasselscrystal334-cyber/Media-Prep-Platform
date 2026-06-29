@@ -20,14 +20,21 @@ All notable Loom changes are documented here.
 - GUI source previews now show the detected media file count directly in the file list header.
 - GUI title selection now uses a dropdown of supported files in the selected source folder with duration labels.
 - GUI output presets now use parent/child grouped menus.
+- GUI output presets are simplified into General, Web, Production, and Alpha groups, with ProRes 4444 Alpha, HAP Alpha, and HAP Q Alpha presets.
 - GUI format selection now uses common output container choices such as MP4, MOV, MKV, WebM, MXF, AVI, and image sequences.
-- GUI output preview now includes a Start Live Preview action that summarizes the selected title, preset, format, duration, and output name, and attempts to render a preview frame with FFmpeg.
+- GUI output preview now includes a Start Live Preview action that generates a short output preview video with FFmpeg and plays it in realtime with FFplay.
+- GUI right-side previews now use Source Preview, Output Preview, and Logs pages instead of a cramped side-by-side preview layout.
+- Local macOS development launcher now starts Python with a Loom process argv through the generated `.local_app/Loom.app` wrapper.
+- Desktop GUI workspace now centers on imported media files for decode, analysis, playback, SHA256 verification, and transcode/export.
+- GUI batch import supports single files, multiple files, folders, and drag-and-drop into the media list.
+- GUI output defaults to MOV, writes to the source folder by default, supports custom destination and renaming controls, and keeps audio as copy by default.
+- GUI playback launches the selected file in a separate fullscreen FFplay window with crop filter controls.
 
 ### Changed
 
 - Desktop GUI palette now uses a softer light, low-contrast theme.
-- Desktop GUI layout now uses a professional transcoding-tool structure with a top action toolbar, source controls, parameter tabs, queue, and source/output preview comparison panes.
-- Desktop GUI source controls replace the irrelevant HandBrake-style Angle field with Scan Range and remove duplicated toolbar Presets, Preview, and Queue actions.
+- Desktop GUI layout now uses a professional batch media-tool structure with a top action toolbar, imported media list, output settings, output file table, and paged source/output preview surfaces.
+- Desktop GUI source controls now use direct media import, output setting, destination, renaming, playback, and transcode actions.
 - Desktop GUI preset labels use Proxy for H.264/H.265 lightweight review/transcode outputs to avoid confusing them with the Preview panel.
 - Desktop GUI uses an in-window Loom menu bar during local Python launches so menus remain correctly branded and responsive.
 - Documentation and generated build/report artifacts have been cleaned so current Loom documentation stays focused on active product behavior.

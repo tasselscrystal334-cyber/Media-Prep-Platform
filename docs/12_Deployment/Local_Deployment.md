@@ -29,7 +29,7 @@ scripts/local_live_update.sh --launch
 scripts/local_live_update.sh --install-tools --launch
 ```
 
-The script creates or reuses `.venv`, installs Loom with `pip install -e ".[gui,dev]"`, runs tests by default, reports FFmpeg-family tool paths through `mediaqc tools doctor`, and optionally launches the GUI. On macOS, launch uses `scripts/launch_loom_macos.sh` to generate `.local_app/Loom.app` and open the GUI through that local app wrapper, which keeps the system menu branded as Loom instead of Python. This keeps local validation tied to the files on disk and avoids downloading release assets for every development change.
+The script creates or reuses `.venv`, installs Loom with `pip install -e ".[gui,dev]"`, runs tests by default, reports FFmpeg-family tool paths through `mediaqc tools doctor`, and optionally launches the GUI. On macOS, launch uses `scripts/launch_loom_macos.sh` to generate `.local_app/Loom.app` and open the GUI through that local app wrapper. The wrapper launches Python with Loom as the process argv so local menu and process branding prefer Loom instead of Python. Quit older Python-launched GUI windows before testing the wrapper. This keeps local validation tied to the files on disk and avoids downloading release assets for every development change.
 
 ## Dependencies
 
@@ -71,5 +71,5 @@ Add a GUI-accessible development update action when the desktop settings model b
 
 ## Revision History
 
-- Documentation version: 1.1
+- Documentation version: 1.2
 - Last updated: 2026-06-29

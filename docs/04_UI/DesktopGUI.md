@@ -6,21 +6,21 @@ Document the Loom desktop GUI structure, first-run experience, and packaging-fac
 
 ## Overview
 
-The desktop GUI is a PySide6 application named Loom. It opens with a light welcome cover that shows the product icon, version number, New/Open/Recent entry points, and a translucent glass-style panel over a light gray background. The main workspace uses a soft light, low-contrast gray and white engineering layout inspired by professional transcoding tools: an in-window Loom menu bar, a responsive source/action toolbar, source/title/scan-range/preset/format controls, central parameter tabs, a scan queue, and a right-side source/output preview comparison area.
+The desktop GUI is a PySide6 application named Loom. It opens with a light welcome cover that shows the product icon, version number, New/Open/Recent entry points, and a translucent glass-style panel over a light gray background. The main workspace uses a soft light, low-contrast gray and white engineering layout inspired by professional transcoding tools: an in-window Loom menu bar, a responsive action toolbar, imported media file lists, direct output settings, output file planning, and paged source/output/log views.
 
 ## Architecture
 
 GUI code lives under `mediaqc/gui/`.
 
 - `app.py` creates the Qt application, sets Loom branding, shows the early splash screen, and opens the main window.
-- `main_window.py` owns the in-window menu bar, welcome cover, workspace layout, drag/drop project selection, source preview filtering, scan queue, progress, cancellation, logs, and report opening.
+- `main_window.py` owns the in-window menu bar, welcome cover, workspace layout, drag/drop media import, source preview filtering, progress, cancellation, logs, playback, transcode/export, and report opening.
 - `theme.py` defines the light stylesheet.
 - `workers.py` keeps scan execution off the main thread and lazily imports heavier scan/report modules after the operator starts a scan.
 - `mediaqc/assets/loom_icon.svg` provides the packaged icon asset.
 
 ## Workflow
 
-Operators open Loom, choose New, Open, or Recent, then scan one or more media folders. On first launch, Loom checks `ffmpeg`, `ffprobe`, and `ffplay`; if any are missing, the GUI prompts before installing them into `tools/plugins/ffmpeg`. Reports can be exported as JSON, CSV, HTML, and PDF. After a scan finishes, Loom shows a CSV-style result dialog with up to 10 file rows and excludes folders. Compression and transcode workflows use the right-side Source Preview and Output Preview panes for comparison. Source previews show the detected media count, supported top-level media files, and exclude `.DS_Store`, folders, and unsupported sidecar files. The Title control lists supported files from the selected folder with duration labels. Presets are selected from parent/child grouped menus, and Format offers common output containers. The in-window menu bar exposes Loom, File, Edit, View, Presets, Window, and Help menus. Help > Tools Doctor opens an interactive diagnostics table; Help > Documentation opens local docs. The top workspace controls expose Open Source, Add Queue, Start, Pause, and Activity actions. H.264/H.265 Proxy presets mean lightweight review/transcode outputs. Start Live Preview updates the output preview with the selected title, preset, format, preview duration, output filename, and an FFmpeg-rendered preview frame when available.
+Operators open Loom, choose New, Open, or Recent, then import one file, multiple files, a folder, or drag media into the file list. On first launch, Loom checks `ffmpeg`, `ffprobe`, and `ffplay`; if any are missing, the GUI prompts before installing them into `tools/plugins/ffmpeg`. The primary modules are decode, analysis, playback, SHA256 verification, and transcode/export. Output settings are direct controls for Codec, Frame Rate, Proxy, and Format; Format defaults to MOV and audio defaults to copying the original audio. Output files default to each source file's folder unless a custom destination is selected. Compression and transcode workflows use right-side Source Preview, Output Preview, and Logs pages. Play opens the selected file in a separate fullscreen FFplay window, and crop controls can be applied as an FFplay crop filter. Rules remain configurable through YAML files under `config/` rather than as a main workspace panel.
 
 ## Dependencies
 
@@ -31,7 +31,7 @@ Operators open Loom, choose New, Open, or Recent, then scan one or more media fo
 
 ## Configuration
 
-The GUI uses the same rules, profiles, presets, and report output paths as the CLI. The packaged application may use external tools from `PATH`, explicit `MEDIAQC_*` environment variables, or the bundled `tools/plugins/ffmpeg` folder. Preferences > Basic includes an Install / Repair FFmpeg Tools action.
+The GUI uses the same rules, profiles, presets, and report output paths as the CLI, but rule editing remains a configuration-file workflow in `config/`. The packaged application may use external tools from `PATH`, explicit `MEDIAQC_*` environment variables, or the bundled `tools/plugins/ffmpeg` folder. Preferences > Basic includes an Install / Repair FFmpeg Tools action.
 
 ## Example
 

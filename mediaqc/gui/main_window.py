@@ -11,21 +11,22 @@ from mediaqc.processing.ffmpeg_runner import build_doctor_report, resolve_tool_p
 from mediaqc.processing.tool_installer import ensure_ffmpeg_bundle_installed
 
 from PySide6.QtCore import QThread, QTimer, Signal, Qt, QUrl
-from PySide6.QtGui import QAction, QDesktopServices, QIcon, QPixmap
+from PySide6.QtGui import QAction, QDesktopServices, QIcon
 from PySide6.QtWidgets import (
+    QAbstractItemView,
+    QCheckBox,
     QComboBox,
     QDialog,
     QDialogButtonBox,
     QFileDialog,
     QFrame,
     QGridLayout,
-    QGroupBox,
     QHBoxLayout,
     QLabel,
     QLineEdit,
     QListWidget,
+    QListWidgetItem,
     QMainWindow,
-    QMenu,
     QPushButton,
     QProgressBar,
     QSizePolicy,
@@ -40,20 +41,19 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from .live_preview import PreviewSettings, build_output_preview_text
-from .queue import GuiTask, GuiTaskQueue
+from .live_preview import PreviewSettings, build_output_preview, build_output_preview_text, build_transcode_args
+from .queue import GuiTask
 from .results import read_csv_preview
-from .source_preview import build_source_preview_lines, is_preview_media_file, list_source_titles
+from .source_preview import build_source_preview_lines, is_preview_media_file
 from .workers import ScanWorker
 
 PRESET_GROUPS = {
-    "General": ["Fast 1080p30", "Fast 720p30", "Production 4K"],
-    "Web": ["H.264 Proxy", "H.265 Proxy", "WebM VP9"],
-    "Devices": ["Apple 1080p", "Windows MP4"],
-    "Matroska": ["MKV H.264", "MKV H.265"],
-    "Hardware": ["HAP Q 4K", "NotchLC"],
-    "Professional": ["ProRes 422 HQ", "ProRes 4444"],
+    "Codec": ["H.264", "H.265 / HEVC", "ProRes 422 HQ", "ProRes 4444 Alpha", "HAP", "HAP Q", "HAP Alpha", "HAP Q Alpha", "NotchLC"],
+    "Frame Rate": ["Source FPS", "24 fps", "25 fps", "29.97 fps", "30 fps", "50 fps", "59.94 fps", "60 fps"],
+    "Proxy": ["Proxy H.264 1080p", "Proxy H.265 1080p", "Proxy ProRes 1080p"],
 }
+
+VIDEO_FORMATS = ["MOV", "MP4", "MKV", "MXF", "AVI", "WebM"]
 
 
 class QtScanThread(QThread):
@@ -90,27 +90,97 @@ class ToolInstallThread(QThread):
             self.failed.emit(str(exc))
 
 
-class DropLineEdit(QLineEdit):
-    dropped = Signal(str)
+class OutputPreviewThread(QThread):
+    completed = Signal(str)
+    failed = Signal(str)
+
+    def __init__(self, settings: PreviewSettings, preview_dir: Path) -> None:
+        super().__init__()
+        self.settings = settings
+        self.preview_dir = preview_dir
+
+    def run(self) -> None:
+        try:
+            ffmpeg = resolve_tool_path("ffmpeg", auto_install=False)
+            if not ffmpeg.path:
+                raise RuntimeError("ffmpeg is required to generate live output previews.")
+            preview = build_output_preview(self.settings, self.preview_dir)
+            command = [ffmpeg.path, *preview.ffmpeg_args]
+            completed = subprocess.run(
+                command,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                shell=False,
+                check=False,
+            )
+            if completed.returncode != 0 or not preview.output_path.exists():
+                detail = completed.stderr.strip() or completed.stdout.strip() or "Unknown FFmpeg error"
+                raise RuntimeError(f"Preview render failed: {detail}")
+            self.completed.emit(str(preview.output_path))
+        except Exception as exc:  # noqa: BLE001 - GUI must show preview errors.
+            self.failed.emit(str(exc))
+
+
+class TranscodeThread(QThread):
+    progress = Signal(int, int, str)
+    completed = Signal()
+    failed = Signal(int, str)
+
+    def __init__(self, jobs: list[tuple[Path, Path, str, str, str, str | None]]) -> None:
+        super().__init__()
+        self.jobs = jobs
+        self.cancel_requested = False
+
+    def run(self) -> None:
+        ffmpeg = resolve_tool_path("ffmpeg", auto_install=False)
+        if not ffmpeg.path:
+            self.failed.emit(-1, "ffmpeg is required for transcoding.")
+            return
+        for index, (source, output, preset, output_format, fps, crop_filter) in enumerate(self.jobs):
+            if self.cancel_requested:
+                self.failed.emit(index, "Transcode cancelled.")
+                return
+            output.parent.mkdir(parents=True, exist_ok=True)
+            self.progress.emit(index, 5, "Running")
+            command = [ffmpeg.path, *build_transcode_args(source, output, preset, output_format, fps, crop_filter)]
+            completed = subprocess.run(
+                command,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                shell=False,
+                check=False,
+            )
+            if completed.returncode != 0:
+                detail = completed.stderr.strip() or completed.stdout.strip() or "Unknown FFmpeg error"
+                self.failed.emit(index, detail)
+                return
+            self.progress.emit(index, 100, "Done")
+        self.completed.emit()
+
+    def cancel(self) -> None:
+        self.cancel_requested = True
+
+
+class DropMediaList(QListWidget):
+    dropped = Signal(list)
 
     def __init__(self) -> None:
         super().__init__()
         self.setAcceptDrops(True)
-        self.setPlaceholderText("Drop a media folder here")
+        self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
 
     def dragEnterEvent(self, event) -> None:  # noqa: ANN001
         if event.mimeData().hasUrls():
             event.acceptProposedAction()
 
     def dropEvent(self, event) -> None:  # noqa: ANN001
-        urls = event.mimeData().urls()
-        for index, url in enumerate(urls):
-            path = Path(url.toLocalFile())
-            if path.is_file():
-                path = path.parent
-            if index == 0:
-                self.setText(str(path))
-            self.dropped.emit(str(path))
+        paths = [url.toLocalFile() for url in event.mimeData().urls() if url.toLocalFile()]
+        if paths:
+            self.dropped.emit(paths)
 
 
 class MainWindow(QMainWindow):
@@ -120,12 +190,16 @@ class MainWindow(QMainWindow):
         self.setWindowIcon(QIcon(str(icon_path())))
         self.setMinimumSize(1120, 720)
         self.menuBar().setNativeMenuBar(False)
-        self.queue = GuiTaskQueue()
         self.current_thread: QtScanThread | None = None
+        self.current_task: GuiTask | None = None
         self.tool_install_thread: ToolInstallThread | None = None
+        self.preview_thread: OutputPreviewThread | None = None
+        self.preview_process: subprocess.Popen | None = None
+        self.transcode_thread: TranscodeThread | None = None
         self.pending_tasks: list[GuiTask] = []
         self.last_outputs: dict[str, Path | None] = {}
-        self.source_titles: list = []
+        self.media_files: list[Path] = []
+        self.selected_preset = "ProRes 422 HQ"
         self._build_ui()
         QTimer.singleShot(250, self._check_tools_on_first_run)
 
@@ -147,8 +221,8 @@ class MainWindow(QMainWindow):
         app_menu.addAction(about)
 
         file_menu = self.menuBar().addMenu("File")
-        new_project = QAction("New Project", self)
-        open_project = QAction("Open Project...", self)
+        new_project = QAction("New Batch", self)
+        open_project = QAction("Import Folder...", self)
         export_html = QAction("Open HTML Report", self)
         export_pdf = QAction("Export PDF", self)
         quit_action = QAction("Quit", self)
@@ -164,8 +238,8 @@ class MainWindow(QMainWindow):
         file_menu.addAction(quit_action)
 
         edit_menu = self.menuBar().addMenu("Edit")
-        clear_queue = QAction("Clear Task Queue", self)
-        clear_queue.triggered.connect(self._clear_queue)
+        clear_queue = QAction("Clear Files", self)
+        clear_queue.triggered.connect(self._clear_files)
         edit_menu.addAction(clear_queue)
 
         view_menu = self.menuBar().addMenu("View")
@@ -377,11 +451,10 @@ class MainWindow(QMainWindow):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
         layout.addWidget(self._toolbar_panel())
-        layout.addWidget(self._source_panel())
-        splitter = QSplitter(Qt.Orientation.Horizontal)
-        splitter.addWidget(self._settings_panel())
+        splitter = QSplitter(Qt.Orientation.Vertical)
+        splitter.addWidget(self._batch_panel())
         splitter.addWidget(self._right_panel())
-        splitter.setSizes([900, 480])
+        splitter.setSizes([460, 300])
         layout.addWidget(splitter, 1)
         return panel
 
@@ -392,10 +465,12 @@ class MainWindow(QMainWindow):
         layout.setContentsMargins(14, 10, 14, 10)
         layout.setSpacing(14)
         buttons = [
-            ("Open Source", self._browse_project, "ToolbarButton"),
-            ("Add Queue", self._add_current_to_queue, "ToolbarButton"),
-            ("Start", self._start_scan, "ToolbarPrimaryButton"),
-            ("Pause", self._cancel_scan, "ToolbarButton"),
+            ("Import Files", self._browse_files, "ToolbarButton"),
+            ("Import Folder", self._browse_project, "ToolbarButton"),
+            ("Analyze", self._start_scan, "ToolbarPrimaryButton"),
+            ("SHA256", self._start_scan, "ToolbarButton"),
+            ("Play", self._play_selected_media, "ToolbarButton"),
+            ("Transcode", self._start_transcode, "ToolbarPrimaryButton"),
         ]
         for text, callback, object_name in buttons:
             button = QPushButton(text)
@@ -412,208 +487,293 @@ class MainWindow(QMainWindow):
             layout.addWidget(button)
         return toolbar
 
-    def _source_panel(self) -> QWidget:
+    def _batch_panel(self) -> QWidget:
         panel = QFrame()
         panel.setObjectName("SourcePanel")
         layout = QGridLayout(panel)
-        layout.setContentsMargins(18, 14, 18, 12)
-        layout.setHorizontalSpacing(12)
+        layout.setContentsMargins(18, 18, 18, 18)
+        layout.setHorizontalSpacing(18)
         layout.setVerticalSpacing(10)
-        self.project_input = DropLineEdit()
-        self.project_input.dropped.connect(self._add_project)
-        self.output_input = QLineEdit(str(Path("./reports").resolve()))
-        self.title_combo = QComboBox()
-        self.title_combo.addItem("Open a source folder")
-        self.title_combo.currentIndexChanged.connect(self._on_title_changed)
-        self.range_combo = QComboBox()
-        self.range_combo.addItems(["Full Scan", "First 10 Files", "Selected Queue"])
-        self.preset_button = QPushButton("Fast 1080p30")
-        self.preset_button.setMenu(self._build_preset_menu())
-        self.selected_preset = "Fast 1080p30"
-        browse_project = QPushButton("Browse...")
-        browse_output = QPushButton("Browse...")
-        browse_project.clicked.connect(self._browse_project)
-        browse_output.clicked.connect(self._browse_output)
-        layout.addWidget(QLabel("Source:"), 0, 0)
-        layout.addWidget(self.project_input, 0, 1, 1, 5)
-        layout.addWidget(browse_project, 0, 6)
-        layout.addWidget(QLabel("Title:"), 1, 0)
-        layout.addWidget(self.title_combo, 1, 1, 1, 3)
-        layout.addWidget(QLabel("Scan Range:"), 1, 4)
-        layout.addWidget(self.range_combo, 1, 5, 1, 2)
-        layout.addWidget(QLabel("Preset:"), 2, 0)
-        layout.addWidget(self.preset_button, 2, 1, 1, 2)
-        layout.addWidget(QLabel("Save As:"), 2, 3)
-        layout.addWidget(self.output_input, 2, 4, 1, 3)
-        layout.addWidget(browse_output, 2, 7)
-        return panel
 
-    def _build_preset_menu(self) -> QMenu:
-        menu = QMenu(self)
-        for group_name, presets in PRESET_GROUPS.items():
-            submenu = menu.addMenu(group_name)
-            for preset in presets:
-                action = submenu.addAction(preset)
-                action.triggered.connect(lambda checked=False, value=preset: self._set_output_preset(value))
-        return menu
+        files_title = QLabel("Files to process")
+        files_title.setStyleSheet("font-weight: 700; font-size: 15px;")
+        import_files = QPushButton("Import Files")
+        import_folder = QPushButton("Import Folder")
+        clear_files = QPushButton("Clear")
+        import_files.clicked.connect(self._browse_files)
+        import_folder.clicked.connect(self._browse_project)
+        clear_files.clicked.connect(self._clear_files)
+        file_buttons = QHBoxLayout()
+        file_buttons.addWidget(import_files)
+        file_buttons.addWidget(import_folder)
+        file_buttons.addWidget(clear_files)
+        self.files_list = DropMediaList()
+        self.files_list.dropped.connect(self._add_media_paths)
+        self.files_list.currentRowChanged.connect(lambda _row: self._on_file_selection_changed())
 
-    def _left_panel(self) -> QWidget:
-        tabs = QTabWidget()
-        self.projects = QListWidget()
-        self.rules = QListWidget()
-        self.history = QListWidget()
-        self.rules.addItems(["project_rules.yaml", "LED_4K", "Disguise", "TouchDesigner"])
-        tabs.addTab(self.projects, "Projects")
-        tabs.addTab(self.rules, "Rules")
-        tabs.addTab(self.history, "History")
-        return tabs
+        format_title = QLabel("Output settings")
+        format_title.setStyleSheet("font-weight: 700; font-size: 15px;")
+        self.format_combo = QComboBox()
+        self.format_combo.addItems(VIDEO_FORMATS)
+        self.format_combo.setCurrentText("MOV")
+        self.format_combo.currentIndexChanged.connect(lambda _index: self._refresh_output_files())
+        self.codec_combo = QComboBox()
+        self.codec_combo.addItems(PRESET_GROUPS["Codec"])
+        self.codec_combo.setCurrentText("ProRes 422 HQ")
+        self.codec_combo.currentIndexChanged.connect(lambda _index: self._sync_preset_from_controls())
+        self.fps_combo = QComboBox()
+        self.fps_combo.addItems(PRESET_GROUPS["Frame Rate"])
+        self.fps_combo.currentIndexChanged.connect(lambda _index: self._sync_preset_from_controls())
+        self.proxy_combo = QComboBox()
+        self.proxy_combo.addItems(["None", *PRESET_GROUPS["Proxy"]])
+        self.proxy_combo.currentIndexChanged.connect(lambda _index: self._sync_preset_from_controls())
+        self.audio_mode = QLineEdit("Copy original audio")
+        self.audio_mode.setReadOnly(True)
 
-    def _settings_panel(self) -> QWidget:
-        panel = QFrame()
-        panel.setObjectName("Panel")
-        layout = QVBoxLayout(panel)
-        self.settings_tabs = QTabWidget()
-        self.settings_tabs.addTab(self._summary_tab(), "Summary")
-        self.settings_tabs.addTab(self._simple_tab("Dimensions", ["Resolution", "Canvas", "Scaling"]), "Dimensions")
-        self.settings_tabs.addTab(self._simple_tab("Filters", ["Deinterlace", "Color", "Sharpen"]), "Filters")
-        self.settings_tabs.addTab(self._simple_tab("Video", ["Codec", "Frame Rate", "Bitrate"]), "Video")
-        self.settings_tabs.addTab(self._simple_tab("Audio", ["Tracks", "Codec", "Mixdown"]), "Audio")
-        self.settings_tabs.addTab(self._simple_tab("Subtitles", ["Tracks", "Burn-in", "Passthrough"]), "Subtitles")
-        self.settings_tabs.addTab(self._simple_tab("Chapters", ["Markers", "Export"]), "Chapters")
-        layout.addWidget(self.settings_tabs)
-        button_row = QHBoxLayout()
-        self.scan_button = QPushButton("Start Scan")
-        self.scan_button.setObjectName("PrimaryButton")
-        self.cancel_button = QPushButton("Cancel")
-        self.open_html_button = QPushButton("Open HTML")
-        self.open_html_button.setEnabled(False)
-        self.cancel_button.setEnabled(False)
-        self.scan_button.clicked.connect(self._start_scan)
-        self.cancel_button.clicked.connect(self._cancel_scan)
-        self.open_html_button.clicked.connect(self._open_html)
-        button_row.addWidget(self.scan_button)
-        button_row.addWidget(self.cancel_button)
-        button_row.addWidget(self.open_html_button)
+        rename_title = QLabel("File renaming")
+        rename_title.setStyleSheet("font-weight: 700; font-size: 15px;")
+        self.remove_text = QLineEdit("")
+        self.append_text = QLineEdit("")
+        self.prefix_text = QLineEdit("")
+        for field in (self.remove_text, self.append_text, self.prefix_text):
+            field.textChanged.connect(self._refresh_output_files)
+        self.same_as_source_checkbox = QCheckBox("Same as source")
+        self.same_as_source_checkbox.setChecked(True)
+        self.same_as_source_checkbox.stateChanged.connect(lambda _state: self._on_destination_mode_changed())
+        self.output_input = QLineEdit("")
+        self.output_input.setEnabled(False)
+        choose_output = QPushButton("Choose...")
+        choose_output.clicked.connect(self._browse_output)
+        self.choose_output_button = choose_output
+        self.choose_output_button.setEnabled(False)
+
+        output_title = QLabel("Output files")
+        output_title.setStyleSheet("font-weight: 700; font-size: 15px;")
+        export_button = QPushButton("Export")
+        export_button.setObjectName("PrimaryButton")
+        export_button.clicked.connect(self._start_transcode)
+        self.output_table = QTableWidget(0, 2)
+        self.output_table.setHorizontalHeaderLabels(["File", "Status"])
+        self.output_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.progress = QProgressBar()
         self.progress.setRange(0, 100)
-        self.tasks = QTableWidget(0, 4)
-        self.tasks.setHorizontalHeaderLabels(["Project", "Status", "Progress", "Message"])
-        layout.addLayout(button_row)
-        layout.addWidget(self.progress)
-        layout.addWidget(QLabel("Task Queue"))
-        layout.addWidget(self.tasks)
-        return panel
 
-    def _summary_tab(self) -> QWidget:
-        panel = QWidget()
-        layout = QGridLayout(panel)
-        layout.setContentsMargins(28, 22, 28, 22)
-        self.projects = QListWidget()
-        self.rules = QListWidget()
-        self.history = QListWidget()
-        self.rules.addItems(["project_rules.yaml", "LED_4K", "Disguise", "TouchDesigner"])
-        self.format_combo = QComboBox()
-        self.format_combo.addItems(["MP4", "MOV", "MKV", "WebM", "MXF", "AVI", "Image Sequence"])
-        self.format_combo.currentIndexChanged.connect(lambda _index: self._update_output_preview_placeholder())
-        self.passthrough_box = QLineEdit("Enabled")
-        self.passthrough_box.setReadOnly(True)
-        self.source_count_label = QLabel("No source selected")
-        layout.addWidget(QLabel("Projects"), 0, 0)
-        layout.addWidget(self.projects, 1, 0, 5, 1)
-        layout.addWidget(QLabel("Rules"), 0, 1)
-        layout.addWidget(self.rules, 1, 1, 5, 1)
-        layout.addWidget(QLabel("Format:"), 1, 2)
-        layout.addWidget(self.format_combo, 1, 3)
-        layout.addWidget(QLabel("Metadata:"), 2, 2)
-        layout.addWidget(self.passthrough_box, 2, 3)
-        layout.addWidget(QLabel("Source files:"), 3, 2)
-        layout.addWidget(self.source_count_label, 3, 3)
-        layout.setColumnStretch(3, 1)
-        return panel
+        layout.addWidget(files_title, 0, 0)
+        layout.addLayout(file_buttons, 1, 0)
+        layout.addWidget(self.files_list, 2, 0, 8, 1)
 
-    def _simple_tab(self, title: str, rows: list[str]) -> QWidget:
-        panel = QWidget()
-        layout = QGridLayout(panel)
-        layout.setContentsMargins(28, 24, 28, 24)
-        layout.setVerticalSpacing(18)
-        for index, label in enumerate(rows):
-            layout.addWidget(QLabel(f"{label}:"), index, 0)
-            field = QLineEdit("Auto")
-            field.setReadOnly(True)
-            layout.addWidget(field, index, 1)
+        layout.addWidget(format_title, 0, 1)
+        layout.addWidget(QLabel("Format:"), 1, 1)
+        layout.addWidget(self.format_combo, 2, 1)
+        layout.addWidget(QLabel("Codec:"), 3, 1)
+        layout.addWidget(self.codec_combo, 4, 1)
+        layout.addWidget(QLabel("Frame rate:"), 5, 1)
+        layout.addWidget(self.fps_combo, 6, 1)
+        layout.addWidget(QLabel("Proxy:"), 7, 1)
+        layout.addWidget(self.proxy_combo, 8, 1)
+        layout.addWidget(self.audio_mode, 9, 1)
+
+        layout.addWidget(rename_title, 0, 2)
+        layout.addWidget(QLabel("Remove:"), 1, 2)
+        layout.addWidget(self.remove_text, 2, 2)
+        layout.addWidget(QLabel("Append:"), 3, 2)
+        layout.addWidget(self.append_text, 4, 2)
+        layout.addWidget(QLabel("Prefix:"), 5, 2)
+        layout.addWidget(self.prefix_text, 6, 2)
+        layout.addWidget(QLabel("Destination:"), 7, 2)
+        layout.addWidget(self.same_as_source_checkbox, 8, 2)
+        destination_row = QHBoxLayout()
+        destination_row.addWidget(self.output_input)
+        destination_row.addWidget(choose_output)
+        layout.addLayout(destination_row, 9, 2)
+
+        layout.addWidget(output_title, 0, 3)
+        layout.addWidget(export_button, 1, 3)
+        layout.addWidget(self.output_table, 2, 3, 8, 1)
+        layout.addWidget(self.progress, 10, 0, 1, 4)
+        layout.setColumnStretch(0, 2)
         layout.setColumnStretch(1, 1)
+        layout.setColumnStretch(2, 1)
+        layout.setColumnStretch(3, 2)
         return panel
 
     def _right_panel(self) -> QWidget:
         tabs = QTabWidget()
         self.right_tabs = tabs
-        preview_panel = QWidget()
-        preview_layout = QVBoxLayout(preview_panel)
-        compare_row = QHBoxLayout()
-        source_box = QGroupBox("Source Preview")
-        source_layout = QVBoxLayout(source_box)
+
+        source_panel = QWidget()
+        source_layout = QVBoxLayout(source_panel)
         self.source_preview = QTextEdit()
         self.source_preview.setReadOnly(True)
         self.source_preview.setText("Open a source folder or file.")
+        self.source_preview.setMinimumHeight(420)
         source_layout.addWidget(self.source_preview)
-        output_box = QGroupBox("Output Preview")
-        output_layout = QVBoxLayout(output_box)
+
+        output_panel = QWidget()
+        output_layout = QVBoxLayout(output_panel)
+        output_layout.setContentsMargins(18, 16, 18, 16)
+        output_layout.setSpacing(12)
         self.output_preview = QTextEdit()
         self.output_preview.setReadOnly(True)
         self.output_preview.setText("Select a title, preset, and format, then start live preview.")
-        self.output_preview_image = QLabel("Live preview frame will appear here.")
+        self.output_preview.setMinimumHeight(150)
+        self.output_preview.setMaximumHeight(190)
+        self.output_preview_image = QLabel("Live output preview opens in an FFplay window.")
         self.output_preview_image.setObjectName("PreviewCanvas")
         self.output_preview_image.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.output_preview_image.setMinimumHeight(260)
+        self.output_preview_image.setMaximumHeight(260)
+        self.output_preview_image.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        crop_layout = QHBoxLayout()
+        self.crop_left = QLineEdit("0")
+        self.crop_top = QLineEdit("0")
+        self.crop_width = QLineEdit("Auto")
+        self.crop_height = QLineEdit("Auto")
+        for field in (self.crop_left, self.crop_top, self.crop_width, self.crop_height):
+            field.setMaximumWidth(84)
+        crop_layout.addWidget(QLabel("Crop:"))
+        crop_layout.addWidget(QLabel("X"))
+        crop_layout.addWidget(self.crop_left)
+        crop_layout.addWidget(QLabel("Y"))
+        crop_layout.addWidget(self.crop_top)
+        crop_layout.addWidget(QLabel("W"))
+        crop_layout.addWidget(self.crop_width)
+        crop_layout.addWidget(QLabel("H"))
+        crop_layout.addWidget(self.crop_height)
+        crop_layout.addStretch(1)
         preview_controls = QHBoxLayout()
         self.preview_duration_combo = QComboBox()
         self.preview_duration_combo.addItems(["10 sec", "30 sec", "60 sec"])
+        self.preview_duration_combo.setFixedWidth(130)
         live_preview_button = QPushButton("Start Live Preview")
         live_preview_button.setObjectName("PrimaryButton")
+        live_preview_button.setFixedWidth(180)
         live_preview_button.clicked.connect(self._start_live_preview)
         preview_controls.addWidget(QLabel("Live Preview:"))
         preview_controls.addWidget(self.preview_duration_combo)
         preview_controls.addWidget(live_preview_button)
+        preview_controls.addStretch(1)
         output_layout.addWidget(self.output_preview_image)
         output_layout.addWidget(self.output_preview)
+        output_layout.addLayout(crop_layout)
         output_layout.addLayout(preview_controls)
-        compare_row.addWidget(source_box)
-        compare_row.addWidget(output_box)
-        preview_layout.addLayout(compare_row)
         self.preview = self.output_preview
         self.log = QTextEdit()
         self.log.setReadOnly(True)
-        tabs.addTab(preview_panel, "Preview Compare")
+        tabs.addTab(source_panel, "Source Preview")
+        tabs.addTab(output_panel, "Output Preview")
         tabs.addTab(self.log, "Logs")
         return tabs
 
     def _browse_project(self) -> None:
         folder = QFileDialog.getExistingDirectory(self, "Select Project Folder")
         if folder:
-            self._open_project_path(folder)
+            self._add_media_paths([folder])
+
+    def _browse_files(self) -> None:
+        files, _selected_filter = QFileDialog.getOpenFileNames(
+            self,
+            "Select Media Files",
+            str(Path.home()),
+            "Media Files (*.mov *.mp4 *.mxf *.avi *.mkv *.png *.jpg *.jpeg *.tif *.tiff *.exr *.wav *.aiff *.mp3);;All Files (*)",
+        )
+        if files:
+            self._add_media_paths(files)
 
     def _browse_output(self) -> None:
         folder = QFileDialog.getExistingDirectory(self, "Select Output Folder")
         if folder:
             self.output_input.setText(folder)
+            self.same_as_source_checkbox.setChecked(False)
+            self._refresh_output_files()
 
     def _add_project(self, path: str) -> None:
-        if path and not self._list_contains(self.projects, path):
-            self.projects.addItem(path)
-        if path and not self._list_contains(self.recent_projects, path):
-            self.recent_projects.addItem(path)
-        self._update_source_preview(Path(path))
+        self._add_media_paths([path])
+
+    def _add_media_paths(self, paths: list[str] | list[Path]) -> None:
+        discovered: list[Path] = []
+        for raw_path in paths:
+            path = Path(raw_path).expanduser()
+            if path.is_dir():
+                discovered.extend(item for item in sorted(path.rglob("*"), key=lambda item: str(item).casefold()) if is_preview_media_file(item))
+            elif is_preview_media_file(path):
+                discovered.append(path)
+        existing = {path.resolve() for path in self.media_files if path.exists()}
+        for path in discovered:
+            resolved = path.resolve()
+            if resolved in existing:
+                continue
+            self.media_files.append(path)
+            existing.add(resolved)
+            item = QListWidgetItem(path.name)
+            item.setData(Qt.ItemDataRole.UserRole, str(path))
+            self.files_list.addItem(item)
+        if self.files_list.count() and self.files_list.currentRow() < 0:
+            self.files_list.setCurrentRow(0)
+        if self.media_files and not self.output_input.text():
+            self.output_input.setText(str(self.media_files[0].parent))
+        first_path = str(Path(paths[0]).expanduser()) if paths else ""
+        if first_path and not self._list_contains(self.recent_projects, first_path):
+            self.recent_projects.addItem(first_path)
+        self._on_file_selection_changed()
+        self._refresh_output_files()
+        self._log(f"Imported {len(discovered)} supported media file(s).")
+
+    def _clear_files(self) -> None:
+        self.media_files = []
+        self.files_list.clear()
+        self.output_table.setRowCount(0)
+        self.source_preview.setText("Import media files or drag files/folders into the list.")
+        self.output_preview.setText("Select a file, codec, frame rate, proxy, and format, then start live preview.")
+        self.progress.setValue(0)
+        self._log("Media file list cleared.")
+
+    def _on_destination_mode_changed(self) -> None:
+        enabled = not self.same_as_source_checkbox.isChecked()
+        self.output_input.setEnabled(enabled)
+        self.choose_output_button.setEnabled(enabled)
+        self._refresh_output_files()
+
+    def _sync_preset_from_controls(self) -> None:
+        proxy = self.proxy_combo.currentText()
+        self.selected_preset = proxy if proxy != "None" else self.codec_combo.currentText()
+        self._refresh_output_files()
+        self._update_output_preview_placeholder()
+
+    def _on_file_selection_changed(self) -> None:
+        source = self._selected_title_path()
+        if not source:
+            return
+        self._update_source_preview(source)
+        self._update_output_preview_placeholder()
+
+    def _refresh_output_files(self) -> None:
+        if not hasattr(self, "output_table"):
+            return
+        self.output_table.setRowCount(len(self.media_files))
+        for row, source in enumerate(self.media_files):
+            output_path = self._output_path_for(source)
+            self.output_table.setItem(row, 0, QTableWidgetItem(str(output_path)))
+            self.output_table.setItem(row, 1, QTableWidgetItem("Ready"))
+
+    def _output_path_for(self, source: Path) -> Path:
+        destination = source.parent if self.same_as_source_checkbox.isChecked() else Path(self.output_input.text()).expanduser()
+        extension = f".{self.format_combo.currentText().lower()}"
+        stem = source.stem
+        remove = self.remove_text.text()
+        if remove:
+            stem = stem.replace(remove, "")
+        stem = f"{self.prefix_text.text()}{stem}{self.append_text.text()}"
+        return destination / f"{stem}{extension}"
 
     def _new_project(self) -> None:
         self.stack.setCurrentIndex(1)
-        self.project_input.clear()
-        self.project_input.setFocus()
+        self._clear_files()
         self._log("New project ready.")
 
     def _open_project_path(self, path: str) -> None:
         self.stack.setCurrentIndex(1)
-        self.project_input.setText(path)
-        self._add_project(path)
+        self._add_media_paths([path])
 
     def _open_recent(self) -> None:
         if self.recent_projects.count() == 0:
@@ -621,37 +781,24 @@ class MainWindow(QMainWindow):
             return
         self._open_project_path(self.recent_projects.item(0).text())
 
-    def _clear_queue(self) -> None:
-        self.queue.clear()
-        self.pending_tasks = []
-        self._refresh_tasks()
-        self.progress.setValue(0)
-        self._log("Task queue cleared.")
-
     def _select_preset(self, name: str) -> None:
         self.stack.setCurrentIndex(1)
-        matches = self.rules.findItems(name, Qt.MatchFlag.MatchContains)
-        if matches:
-            self.rules.setCurrentItem(matches[0])
-        self._log(f"Preset selected: {name}")
+        self._set_output_preset(name)
 
     def _set_output_preset(self, name: str) -> None:
         self.selected_preset = name
-        self.preset_button.setText(name)
+        if hasattr(self, "codec_combo") and name in PRESET_GROUPS["Codec"]:
+            self.codec_combo.setCurrentText(name)
+        elif hasattr(self, "fps_combo") and name in PRESET_GROUPS["Frame Rate"]:
+            self.fps_combo.setCurrentText(name)
+        elif hasattr(self, "proxy_combo") and name in PRESET_GROUPS["Proxy"]:
+            self.proxy_combo.setCurrentText(name)
         self._log(f"Output preset selected: {name}")
         self._update_output_preview_placeholder()
 
-    def _add_current_to_queue(self) -> None:
-        path = self.project_input.text().strip()
-        if not path:
-            self._log("No source selected for queue.")
-            return
-        self._add_project(path)
-        self._log(f"Added to queue: {path}")
-
     def _focus_logs(self) -> None:
         self.stack.setCurrentIndex(1)
-        self.right_tabs.setCurrentIndex(1)
+        self.right_tabs.setCurrentIndex(2)
         self.log.setFocus()
 
     def _update_source_preview(self, path: Path) -> None:
@@ -660,42 +807,16 @@ class MainWindow(QMainWindow):
         path = Path(path)
         if path.is_dir():
             preview_lines, total_files = build_source_preview_lines(path)
-            self.source_count_label.setText(f"{total_files} top-level media files")
             self.source_preview.setText("\n".join(preview_lines))
-            self._populate_title_combo(path)
+            self._log(f"{total_files} supported media file(s) detected.")
         else:
-            self.source_count_label.setText("1 media file" if is_preview_media_file(path) else "No supported media selected")
             self.source_preview.setText(f"Source file:\n{path}")
-            self._populate_title_combo(path.parent if path.exists() else None, selected=path)
-
-    def _populate_title_combo(self, folder: Path | None, selected: Path | None = None) -> None:
-        self.title_combo.blockSignals(True)
-        self.title_combo.clear()
-        self.source_titles = []
-        if folder and folder.exists():
-            self.source_titles = list_source_titles(folder)
-        if not self.source_titles:
-            self.title_combo.addItem("No supported media titles")
-        else:
-            for title in self.source_titles:
-                self.title_combo.addItem(title.label, str(title.path))
-            if selected:
-                for index, title in enumerate(self.source_titles):
-                    if title.path == selected:
-                        self.title_combo.setCurrentIndex(index)
-                        break
-        self.title_combo.blockSignals(False)
-        self._on_title_changed(self.title_combo.currentIndex())
-
-    def _on_title_changed(self, index: int) -> None:
-        title = self._selected_title_path()
-        if title:
-            self.source_preview.setText(f"Selected title:\n{title.name}\n\nPath:\n{title}")
-        self._update_output_preview_placeholder()
 
     def _selected_title_path(self) -> Path | None:
-        value = self.title_combo.currentData()
-        return Path(value) if value else None
+        if hasattr(self, "files_list") and self.files_list.currentItem():
+            value = self.files_list.currentItem().data(Qt.ItemDataRole.UserRole)
+            return Path(value) if value else None
+        return self.media_files[0] if self.media_files else None
 
     def _update_output_preview_placeholder(self) -> None:
         source = self._selected_title_path()
@@ -709,7 +830,7 @@ class MainWindow(QMainWindow):
                     f"Preset: {self.selected_preset}",
                     f"Format: {self.format_combo.currentText()}",
                     "",
-                    "Click Start Live Preview to render/update the realtime preview summary.",
+                    "Click Start Live Preview to generate a short output video and play it in realtime.",
                 ]
             )
         )
@@ -723,81 +844,175 @@ class MainWindow(QMainWindow):
             duration_seconds=seconds,
         )
         self.output_preview.setText(build_output_preview_text(settings))
-        self._render_live_preview_frame(settings.source_path)
-        self.right_tabs.setCurrentIndex(0)
-        self._log("Live preview updated.")
+        self._start_output_video_preview(settings)
+        self.right_tabs.setCurrentIndex(1)
+        self._log("Live output preview requested.")
 
-    def _render_live_preview_frame(self, source_path: Path | None) -> None:
-        if not source_path or not source_path.exists():
+    def _play_selected_media(self) -> None:
+        source = self._selected_title_path()
+        if not source or not source.exists():
+            self._log("No media file selected for playback.")
+            return
+        ffplay = resolve_tool_path("ffplay", auto_install=False)
+        if not ffplay.path:
+            self._log("Playback skipped: ffplay was not found.")
+            QMessageBox.warning(self, "Playback", "ffplay is required for playback. Install FFmpeg tools first.")
+            return
+        command = [
+            ffplay.path,
+            "-fs",
+            "-window_title",
+            f"Loom Player - {source.name}",
+        ]
+        crop_filter = self._crop_filter()
+        if crop_filter:
+            command.extend(["-vf", crop_filter])
+        command.append(str(source))
+        self._stop_preview_process()
+        try:
+            self.preview_process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)  # noqa: S603
+        except OSError as exc:
+            self._log(f"Unable to launch player: {exc}")
+            return
+        self.right_tabs.setCurrentIndex(1)
+        self.output_preview_image.setText(f"Playing selected media in fullscreen FFplay:\n{source}")
+        self._log(f"Playback started: {source}")
+
+    def _crop_filter(self) -> str | None:
+        width = self.crop_width.text().strip()
+        height = self.crop_height.text().strip()
+        if width.lower() == "auto" or height.lower() == "auto":
+            return None
+        try:
+            int(width)
+            int(height)
+            int(self.crop_left.text())
+            int(self.crop_top.text())
+        except ValueError:
+            self._log("Crop ignored: X/Y/W/H must be integers, or W/H can be Auto.")
+            return None
+        return f"crop={width}:{height}:{self.crop_left.text()}:{self.crop_top.text()}"
+
+    def _start_output_video_preview(self, settings: PreviewSettings) -> None:
+        if not settings.source_path or not settings.source_path.exists():
             self.output_preview_image.setText("Select a media title to preview.")
             return
+        if self.preview_thread and self.preview_thread.isRunning():
+            self.output_preview_image.setText("Preview render is already running.")
+            return
+        self._stop_preview_process()
         ffmpeg = resolve_tool_path("ffmpeg", auto_install=False)
         if not ffmpeg.path:
-            self.output_preview_image.setText("ffmpeg is required for live frame preview.")
-            self._log("Live preview frame skipped: ffmpeg was not found.")
+            self.output_preview_image.setText("ffmpeg is required for live output preview.")
+            self._log("Live output preview skipped: ffmpeg was not found.")
             return
-        preview_dir = Path.cwd() / ".preview"
-        preview_dir.mkdir(parents=True, exist_ok=True)
-        frame_path = preview_dir / "gui_live_preview.jpg"
+        self.output_preview_image.setText("Generating output preview video...")
+        self.preview_thread = OutputPreviewThread(settings, Path.cwd() / ".preview")
+        self.preview_thread.completed.connect(self._on_output_preview_ready)
+        self.preview_thread.failed.connect(self._on_output_preview_failed)
+        self.preview_thread.start()
+
+    def _on_output_preview_ready(self, output_path: str) -> None:
+        ffplay = resolve_tool_path("ffplay", auto_install=False)
+        if not ffplay.path:
+            self.output_preview_image.setText(f"Preview video generated:\n{output_path}\n\nffplay is required to play it.")
+            self._log("Output preview generated, but ffplay was not found.")
+            return
         command = [
-            ffmpeg.path,
-            "-y",
-            "-ss",
-            "00:00:01",
-            "-i",
-            str(source_path),
-            "-frames:v",
-            "1",
-            "-vf",
-            "scale='min(720,iw)':-2",
-            str(frame_path),
+            ffplay.path,
+            "-autoexit",
+            "-window_title",
+            "Loom Output Preview",
+            output_path,
         ]
-        completed = subprocess.run(command, capture_output=True, text=True, shell=False, check=False)
-        if completed.returncode != 0 or not frame_path.exists():
-            self.output_preview_image.setText("Unable to render live preview frame.")
-            self._log("Live preview frame render failed.")
+        try:
+            self.preview_process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)  # noqa: S603
+        except OSError as exc:
+            self.output_preview_image.setText(f"Preview video generated:\n{output_path}\n\nUnable to launch ffplay.")
+            self._log(f"Unable to launch ffplay: {exc}")
             return
-        pixmap = QPixmap(str(frame_path))
-        if pixmap.isNull():
-            self.output_preview_image.setText("Unable to load live preview frame.")
-            return
-        self.output_preview_image.setPixmap(
-            pixmap.scaled(
-                self.output_preview_image.size(),
-                Qt.AspectRatioMode.KeepAspectRatio,
-                Qt.TransformationMode.SmoothTransformation,
+        self.output_preview_image.setText(f"Playing output preview in FFplay:\n{output_path}")
+        self.output_preview.setText(
+            "\n".join(
+                [
+                    self.output_preview.toPlainText(),
+                    "",
+                    "Preview status: playing realtime output video",
+                    f"Preview file: {output_path}",
+                ]
             )
         )
+        self._log(f"Output preview playing: {output_path}")
+
+    def _on_output_preview_failed(self, error: str) -> None:
+        self.output_preview_image.setText("Unable to generate output preview video.")
+        self.output_preview.setText(f"{self.output_preview.toPlainText()}\n\nPreview error: {error}")
+        self._log(f"Output preview failed: {error}")
+
+    def _stop_preview_process(self) -> None:
+        if self.preview_process and self.preview_process.poll() is None:
+            self.preview_process.terminate()
+        self.preview_process = None
+
+    def _start_transcode(self) -> None:
+        if not self.media_files:
+            self._log("No media files selected for transcode.")
+            return
+        if self.transcode_thread and self.transcode_thread.isRunning():
+            self._log("Transcode is already running.")
+            return
+        jobs = [
+            (
+                source,
+                self._output_path_for(source),
+                self.selected_preset,
+                self.format_combo.currentText(),
+                self.fps_combo.currentText(),
+                self._crop_filter(),
+            )
+            for source in self.media_files
+        ]
+        for row in range(self.output_table.rowCount()):
+            self.output_table.setItem(row, 1, QTableWidgetItem("Waiting"))
+        self.transcode_thread = TranscodeThread(jobs)
+        self.transcode_thread.progress.connect(self._on_transcode_progress)
+        self.transcode_thread.completed.connect(self._on_transcode_completed)
+        self.transcode_thread.failed.connect(self._on_transcode_failed)
+        self.transcode_thread.start()
+        self._log(f"Transcode started for {len(jobs)} file(s). Audio mode: copy original audio.")
+
+    def _on_transcode_progress(self, row: int, value: int, message: str) -> None:
+        if row >= 0 and row < self.output_table.rowCount():
+            self.output_table.setItem(row, 1, QTableWidgetItem(message))
+        total = max(1, len(self.media_files))
+        self.progress.setValue(int(((row + 1) / total) * value))
+
+    def _on_transcode_completed(self) -> None:
+        self.progress.setValue(100)
+        self._log("Transcode completed.")
+
+    def _on_transcode_failed(self, row: int, error: str) -> None:
+        if row >= 0 and row < self.output_table.rowCount():
+            self.output_table.setItem(row, 1, QTableWidgetItem("Failed"))
+        self._log(f"Transcode failed: {error}")
 
     def _start_scan(self) -> None:
-        output = Path(self.output_input.text()).expanduser()
         projects = self._project_paths()
         if not projects:
-            project = Path(self.project_input.text()).expanduser()
-            if project.is_file():
-                project = project.parent
-            if project.exists() and project.is_dir():
-                projects = [project]
-        if not projects:
-            self._log("No valid project folders selected.")
+            self._log("No valid media files selected.")
             return
         self.pending_tasks = [
-            GuiTask(project_path=project, output_path=output / project.name, status="PENDING", progress=0, message="Queued")
+            GuiTask(project_path=project, output_path=project / "loom_reports", status="PENDING", progress=0, message="Pending")
             for project in projects
         ]
-        for task in self.pending_tasks:
-            self.queue.add(task)
-        self._refresh_tasks()
-        self.scan_button.setEnabled(False)
-        self.cancel_button.setEnabled(True)
         self._start_next_task()
 
     def _start_next_task(self) -> None:
         if not self.pending_tasks:
-            self.scan_button.setEnabled(True)
-            self.cancel_button.setEnabled(False)
+            self.current_task = None
             return
         task = self.pending_tasks.pop(0)
+        self.current_task = task
         task.status = "RUNNING"
         task.message = "Starting"
         worker = ScanWorker(task.project_path, task.output_path, html=True, pdf=True)
@@ -811,20 +1026,18 @@ class MainWindow(QMainWindow):
         if self.current_thread:
             self.current_thread.cancel()
             self._log("Cancel requested. Current file operation may finish before the scan stops.")
-            self.cancel_button.setEnabled(False)
 
     def _on_progress(self, value: int, message: str) -> None:
         self.progress.setValue(value)
-        running = self._running_task()
+        running = self.current_task
         if running:
             task = running
             task.progress = value
             task.message = message
-            self._refresh_tasks()
         self._log(message)
 
     def _on_completed(self, result: dict) -> None:
-        running = self._running_task()
+        running = self.current_task
         if running:
             task = running
             task.status = str(result.get("status", "SUCCESS"))
@@ -841,20 +1054,19 @@ class MainWindow(QMainWindow):
             "pdf": result.get("pdf_path"),
         }
         self.preview.setText("\n".join(f"{key.upper()}: {value}" for key, value in self.last_outputs.items() if value))
-        self.open_html_button.setEnabled(bool(result.get("html_path")))
-        self._refresh_tasks()
+        if hasattr(self, "open_html_button"):
+            self.open_html_button.setEnabled(bool(result.get("html_path")))
         self._log("Scan completed")
         self._show_scan_result_dialog(result)
         self._start_next_task()
 
     def _on_failed(self, error: str) -> None:
-        running = self._running_task()
+        running = self.current_task
         if running:
             task = running
             task.status = "FAILED"
             task.errors.append(error)
             task.message = error
-        self._refresh_tasks()
         self._log(f"Scan failed: {error}")
         self._start_next_task()
 
@@ -869,11 +1081,7 @@ class MainWindow(QMainWindow):
             QDesktopServices.openUrl(QUrl.fromLocalFile(str(pdf)))
 
     def _refresh_tasks(self) -> None:
-        tasks = self.queue.all()
-        self.tasks.setRowCount(len(tasks))
-        for row, task in enumerate(tasks):
-            for column, value in enumerate(task.to_row()):
-                self.tasks.setItem(row, column, QTableWidgetItem(value))
+        return
 
     def _log(self, message: str) -> None:
         self.log.append(message)
@@ -908,17 +1116,17 @@ class MainWindow(QMainWindow):
         return any(widget.item(index).text() == value for index in range(widget.count()))
 
     def _project_paths(self) -> list[Path]:
-        projects: list[Path] = []
-        for index in range(self.projects.count()):
-            path = Path(self.projects.item(index).text()).expanduser()
-            if path.is_file():
-                path = path.parent
-            if path.exists() and path.is_dir():
-                projects.append(path)
-        return projects
+        return sorted({path.parent for path in self.media_files if path.exists()})
 
     def _running_task(self) -> GuiTask | None:
-        for task in self.queue.all():
-            if task.status == "RUNNING":
-                return task
-        return None
+        return self.current_task if self.current_task and self.current_task.status == "RUNNING" else None
+
+    def closeEvent(self, event) -> None:  # noqa: ANN001
+        self._stop_preview_process()
+        if self.preview_thread and self.preview_thread.isRunning():
+            self.preview_thread.quit()
+            self.preview_thread.wait(1500)
+        if self.transcode_thread and self.transcode_thread.isRunning():
+            self.transcode_thread.cancel()
+            self.transcode_thread.wait(1500)
+        super().closeEvent(event)

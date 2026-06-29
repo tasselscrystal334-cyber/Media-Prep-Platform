@@ -12,7 +12,7 @@ Loom is a professional media preparation and quality-control platform for live e
 - Modular validation engine with YAML rules and project profiles.
 - Live event checks for output specs, LED canvas layouts, codec risk, manifests, and integrity verification.
 - FFmpeg/FFplay environment checks, preview playback, transcode presets, subtitles, logo overlays, and batch job reports.
-- PySide6 desktop GUI named Loom with splash/welcome cover, light engineering theme, source/action toolbar, parameter tabs, scan queue, source/output preview panes, and JSON/CSV/HTML/PDF export.
+- PySide6 desktop GUI named Loom with splash/welcome cover, light engineering theme, media import toolbar, batch output settings, source/output preview panes, and JSON/CSV/HTML/PDF export.
 - Media Pipeline for mounted NAS/SMB/AFP/NFS workflows, SHA256 sync, FFprobe/MediaInfo metadata, transfer reports, compare reports, and project packages.
 - Enterprise Media Asset Management foundation for the commercial edition, including users, roles, projects, assets, REST API, GraphQL entry point, webhooks, notification adapters, and Docker Compose services for PostgreSQL, Redis, RabbitMQ, and MinIO.
 - JSON, CSV, and HTML reporting.
@@ -78,11 +78,12 @@ The V1.0 GUI provides a light PySide6 workspace with:
 - Loom splash and welcome cover with version, icon, New/Open/Recent entry points.
 - Menu bar sections for Loom, File, Edit, View, Presets, Window, and Help.
 - In-window Loom menu bar for local Python launches and packaged app runs.
-- HandBrake-style source/action toolbar with Open Source, Add Queue, Start, Pause, and Activity controls, plus source title, scan range, preset, format, and output path controls. Title selection lists supported files in the selected folder with duration labels. Presets are grouped into parent/child menus. H.264/H.265 Proxy presets are lightweight review/transcode outputs, not the Preview panel.
-- Parameter tabs for Summary, Dimensions, Filters, Video, Audio, Subtitles, and Chapters.
-- Drag-and-drop scanning, batch queue, progress, and cancel request.
-- Source Preview and Output Preview comparison panes for compression and transcode workflows. Source previews show the detected media count, supported top-level media files, and ignore `.DS_Store`, folders, and unsupported sidecar files.
-- Start Live Preview updates the output preview with the selected title, preset, format, preview duration, output filename, and an FFmpeg-rendered preview frame when available.
+- Batch workspace for audio/video decode, analysis, playback, SHA256 verification, and transcode/export.
+- Import single files, multiple files, folders, or drag supported media into the file list.
+- Direct output settings for Codec, Frame Rate, Proxy, and video Format. Format defaults to MOV and audio defaults to Copy original audio.
+- Output files default to the source folder, with optional custom destination, prefix, remove, and append renaming controls.
+- Source Preview, Output Preview, and Logs are separate right-side pages for compression and transcode workflows. Source previews show the detected media count, supported top-level media files, and ignore `.DS_Store`, folders, and unsupported sidecar files.
+- Start Live Preview generates a short output preview video with FFmpeg from the selected file, codec, frame-rate, proxy, format, and duration, then plays it in realtime with FFplay. Play opens the selected file in a separate fullscreen FFplay window with crop controls.
 - Scan-complete CSV preview dialog showing up to 10 file rows and excluding folders.
 - Background scanning in a worker thread.
 - Automatic JSON, CSV, HTML, and PDF report export.

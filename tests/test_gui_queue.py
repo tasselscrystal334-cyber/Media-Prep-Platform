@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import mediaqc.gui.source_preview as source_preview
-from mediaqc.gui.live_preview import PreviewSettings, build_output_preview_text
+from mediaqc.gui.live_preview import PreviewSettings, build_output_preview, build_output_preview_text, build_transcode_args
 from mediaqc.gui.queue import GuiTask, GuiTaskQueue
 from mediaqc.gui.results import read_csv_preview
 from mediaqc.gui.source_preview import (
@@ -112,3 +112,50 @@ def test_live_preview_text_uses_selected_source_preset_and_format(tmp_path: Path
     assert "Preset: Fast 1080p30" in text
     assert "Format: MP4" in text
     assert "Output: clip.mp4" in text
+
+
+def test_live_preview_builds_playable_output_video_command(tmp_path: Path) -> None:
+    source = tmp_path / "clip.mov"
+    source.write_text("x", encoding="utf-8")
+
+    preview = build_output_preview(
+        PreviewSettings(source_path=source, preset="Fast 1080p30", output_format="MP4", duration_seconds=10),
+        tmp_path / ".preview",
+    )
+
+    assert preview.output_path.name == "clip_loom_preview.mp4"
+    assert "-frames:v" not in preview.ffmpeg_args
+    assert preview.ffmpeg_args[:2] == ["-y", "-hide_banner"]
+    assert preview.ffmpeg_args[-1] == str(preview.output_path)
+    assert "-t" in preview.ffmpeg_args
+    assert "-c:v" in preview.ffmpeg_args
+    audio_index = preview.ffmpeg_args.index("-c:a")
+    assert preview.ffmpeg_args[audio_index + 1] == "copy"
+    assert preview.ffplay_args[-1] == str(preview.output_path)
+
+
+def test_live_preview_alpha_preset_uses_alpha_hap_format(tmp_path: Path) -> None:
+    source = tmp_path / "plate.mov"
+    source.write_text("x", encoding="utf-8")
+
+    preview = build_output_preview(
+        PreviewSettings(source_path=source, preset="HAP Q Alpha", output_format="MOV", duration_seconds=10),
+        tmp_path / ".preview",
+    )
+
+    assert preview.output_path.name == "plate_loom_preview.mov"
+    format_index = preview.ffmpeg_args.index("-format")
+    assert preview.ffmpeg_args[format_index + 1] == "hap_q_alpha"
+
+
+def test_transcode_args_copy_audio_and_keep_source_fps_by_default(tmp_path: Path) -> None:
+    source = tmp_path / "clip.mp4"
+    output = tmp_path / "clip.mov"
+    source.write_text("x", encoding="utf-8")
+
+    args = build_transcode_args(source, output, preset="ProRes 422 HQ", output_format="MOV")
+
+    assert args[-1] == str(output)
+    assert "-r" not in args
+    audio_index = args.index("-c:a")
+    assert args[audio_index + 1] == "copy"

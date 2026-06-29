@@ -9,6 +9,8 @@ from mediaqc.branding import PRODUCT_NAME, icon_path
 
 
 def launch_gui() -> int:
+    if sys.platform == "darwin":
+        sys.argv[0] = PRODUCT_NAME
     try:
         from PySide6.QtCore import QCoreApplication, Qt
         from PySide6.QtGui import QColor, QFont, QIcon, QPainter, QPixmap
