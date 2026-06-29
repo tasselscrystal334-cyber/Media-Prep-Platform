@@ -77,9 +77,11 @@ The V1.0 GUI provides a light PySide6 workspace with:
 
 - Loom splash and welcome cover with version, icon, New/Open/Recent entry points.
 - Menu bar sections for Loom, File, Edit, View, Presets, Window, and Help.
-- Left navigation for Projects, Rules, and History.
-- Center scan workspace with drag-and-drop, batch queue, progress, and cancel request.
-- Right Preview and Logs tabs.
+- HandBrake-style source/action toolbar, source title controls, preset/range controls, and output path controls.
+- Parameter tabs for Summary, Dimensions, Filters, Video, Audio, Subtitles, and Chapters.
+- Drag-and-drop scanning, batch queue, progress, and cancel request.
+- Source Preview and Output Preview comparison panes for compression and transcode workflows.
+- Scan-complete CSV preview dialog showing up to 10 file rows and excluding folders.
 - Background scanning in a worker thread.
 - Automatic JSON, CSV, HTML, and PDF report export.
 

@@ -12,10 +12,13 @@ from mediaqc.processing.tool_installer import ensure_ffmpeg_bundle_installed
 from PySide6.QtCore import QThread, QTimer, Signal, Qt, QUrl
 from PySide6.QtGui import QAction, QDesktopServices, QIcon
 from PySide6.QtWidgets import (
+    QComboBox,
     QDialog,
     QDialogButtonBox,
     QFileDialog,
     QFrame,
+    QGridLayout,
+    QGroupBox,
     QHBoxLayout,
     QLabel,
     QLineEdit,
@@ -36,6 +39,7 @@ from PySide6.QtWidgets import (
 )
 
 from .queue import GuiTask, GuiTaskQueue
+from .results import read_csv_preview
 from .workers import ScanWorker
 
 
@@ -309,12 +313,86 @@ class MainWindow(QMainWindow):
         return background
 
     def _workspace_panel(self) -> QWidget:
+        panel = QWidget()
+        layout = QVBoxLayout(panel)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+        layout.addWidget(self._toolbar_panel())
+        layout.addWidget(self._source_panel())
         splitter = QSplitter(Qt.Orientation.Horizontal)
-        splitter.addWidget(self._left_panel())
-        splitter.addWidget(self._center_panel())
+        splitter.addWidget(self._settings_panel())
         splitter.addWidget(self._right_panel())
-        splitter.setSizes([240, 720, 360])
-        return splitter
+        splitter.setSizes([900, 480])
+        layout.addWidget(splitter, 1)
+        return panel
+
+    def _toolbar_panel(self) -> QWidget:
+        toolbar = QFrame()
+        toolbar.setObjectName("TopToolbar")
+        layout = QHBoxLayout(toolbar)
+        layout.setContentsMargins(14, 10, 14, 10)
+        layout.setSpacing(14)
+        buttons = [
+            ("Open Source", self._browse_project, "ToolbarButton"),
+            ("Add Queue", self._add_current_to_queue, "ToolbarButton"),
+            ("Start", self._start_scan, "ToolbarPrimaryButton"),
+            ("Pause", self._cancel_scan, "ToolbarButton"),
+        ]
+        for text, callback, object_name in buttons:
+            button = QPushButton(text)
+            button.setObjectName(object_name)
+            button.clicked.connect(callback)
+            layout.addWidget(button)
+        layout.addStretch(1)
+        for text, callback in [
+            ("Presets", lambda: self._select_preset("Disguise")),
+            ("Preview", self._focus_preview),
+            ("Queue", self._focus_queue),
+            ("Activity", self._focus_logs),
+        ]:
+            button = QPushButton(text)
+            button.setObjectName("ToolbarButton")
+            button.clicked.connect(callback)
+            layout.addWidget(button)
+        return toolbar
+
+    def _source_panel(self) -> QWidget:
+        panel = QFrame()
+        panel.setObjectName("SourcePanel")
+        layout = QGridLayout(panel)
+        layout.setContentsMargins(18, 14, 18, 12)
+        layout.setHorizontalSpacing(12)
+        layout.setVerticalSpacing(10)
+        self.project_input = DropLineEdit()
+        self.project_input.dropped.connect(self._add_project)
+        self.output_input = QLineEdit(str(Path("./reports").resolve()))
+        self.title_input = QLineEdit()
+        self.title_input.setPlaceholderText("Source title")
+        self.angle_combo = QComboBox()
+        self.angle_combo.addItems(["Auto", "1", "2", "3"])
+        self.range_combo = QComboBox()
+        self.range_combo.addItems(["Full", "First 10 files", "Selected queue"])
+        self.preset_combo = QComboBox()
+        self.preset_combo.addItems(["Unnamed", "H264 Preview", "H265 Preview", "HAP Q 4K", "ProRes 4444", "NotchLC"])
+        browse_project = QPushButton("Browse...")
+        browse_output = QPushButton("Browse...")
+        browse_project.clicked.connect(self._browse_project)
+        browse_output.clicked.connect(self._browse_output)
+        layout.addWidget(QLabel("Source:"), 0, 0)
+        layout.addWidget(self.project_input, 0, 1, 1, 5)
+        layout.addWidget(browse_project, 0, 6)
+        layout.addWidget(QLabel("Title:"), 1, 0)
+        layout.addWidget(self.title_input, 1, 1, 1, 3)
+        layout.addWidget(QLabel("Angle:"), 1, 4)
+        layout.addWidget(self.angle_combo, 1, 5)
+        layout.addWidget(QLabel("Range:"), 1, 6)
+        layout.addWidget(self.range_combo, 1, 7)
+        layout.addWidget(QLabel("Preset:"), 2, 0)
+        layout.addWidget(self.preset_combo, 2, 1, 1, 2)
+        layout.addWidget(QLabel("Save As:"), 2, 3)
+        layout.addWidget(self.output_input, 2, 4, 1, 3)
+        layout.addWidget(browse_output, 2, 7)
+        return panel
 
     def _left_panel(self) -> QWidget:
         tabs = QTabWidget()
@@ -327,19 +405,19 @@ class MainWindow(QMainWindow):
         tabs.addTab(self.history, "History")
         return tabs
 
-    def _center_panel(self) -> QWidget:
+    def _settings_panel(self) -> QWidget:
         panel = QFrame()
         panel.setObjectName("Panel")
         layout = QVBoxLayout(panel)
-        title = QLabel("Scan")
-        title.setStyleSheet("font-size: 20px; font-weight: 700; background: transparent;")
-        self.project_input = DropLineEdit()
-        self.project_input.dropped.connect(self._add_project)
-        self.output_input = QLineEdit(str(Path("./reports").resolve()))
-        browse_project = QPushButton("Browse Project")
-        browse_output = QPushButton("Browse Output")
-        browse_project.clicked.connect(self._browse_project)
-        browse_output.clicked.connect(self._browse_output)
+        self.settings_tabs = QTabWidget()
+        self.settings_tabs.addTab(self._summary_tab(), "Summary")
+        self.settings_tabs.addTab(self._simple_tab("Dimensions", ["Resolution", "Canvas", "Scaling"]), "Dimensions")
+        self.settings_tabs.addTab(self._simple_tab("Filters", ["Deinterlace", "Color", "Sharpen"]), "Filters")
+        self.settings_tabs.addTab(self._simple_tab("Video", ["Codec", "Frame Rate", "Bitrate"]), "Video")
+        self.settings_tabs.addTab(self._simple_tab("Audio", ["Tracks", "Codec", "Mixdown"]), "Audio")
+        self.settings_tabs.addTab(self._simple_tab("Subtitles", ["Tracks", "Burn-in", "Passthrough"]), "Subtitles")
+        self.settings_tabs.addTab(self._simple_tab("Chapters", ["Markers", "Export"]), "Chapters")
+        layout.addWidget(self.settings_tabs)
         button_row = QHBoxLayout()
         self.scan_button = QPushButton("Start Scan")
         self.scan_button.setObjectName("PrimaryButton")
@@ -357,27 +435,74 @@ class MainWindow(QMainWindow):
         self.progress.setRange(0, 100)
         self.tasks = QTableWidget(0, 4)
         self.tasks.setHorizontalHeaderLabels(["Project", "Status", "Progress", "Message"])
-        layout.addWidget(title)
-        layout.addWidget(QLabel("Project Folder"))
-        layout.addWidget(self.project_input)
-        layout.addWidget(browse_project)
-        layout.addWidget(QLabel("Output Folder"))
-        layout.addWidget(self.output_input)
-        layout.addWidget(browse_output)
         layout.addLayout(button_row)
         layout.addWidget(self.progress)
         layout.addWidget(QLabel("Task Queue"))
         layout.addWidget(self.tasks)
         return panel
 
+    def _summary_tab(self) -> QWidget:
+        panel = QWidget()
+        layout = QGridLayout(panel)
+        layout.setContentsMargins(28, 22, 28, 22)
+        self.projects = QListWidget()
+        self.rules = QListWidget()
+        self.history = QListWidget()
+        self.rules.addItems(["project_rules.yaml", "LED_4K", "Disguise", "TouchDesigner"])
+        self.format_combo = QComboBox()
+        self.format_combo.addItems(["CSV + JSON + HTML + PDF", "CSV only", "JSON only"])
+        self.passthrough_box = QLineEdit("Enabled")
+        self.passthrough_box.setReadOnly(True)
+        self.source_count_label = QLabel("No source selected")
+        layout.addWidget(QLabel("Projects"), 0, 0)
+        layout.addWidget(self.projects, 1, 0, 5, 1)
+        layout.addWidget(QLabel("Rules"), 0, 1)
+        layout.addWidget(self.rules, 1, 1, 5, 1)
+        layout.addWidget(QLabel("Format:"), 1, 2)
+        layout.addWidget(self.format_combo, 1, 3)
+        layout.addWidget(QLabel("Metadata:"), 2, 2)
+        layout.addWidget(self.passthrough_box, 2, 3)
+        layout.addWidget(QLabel("Source files:"), 3, 2)
+        layout.addWidget(self.source_count_label, 3, 3)
+        layout.setColumnStretch(3, 1)
+        return panel
+
+    def _simple_tab(self, title: str, rows: list[str]) -> QWidget:
+        group = QGroupBox(title)
+        layout = QGridLayout(group)
+        for index, label in enumerate(rows):
+            layout.addWidget(QLabel(f"{label}:"), index, 0)
+            field = QLineEdit("Auto")
+            field.setReadOnly(True)
+            layout.addWidget(field, index, 1)
+        layout.setColumnStretch(1, 1)
+        return group
+
     def _right_panel(self) -> QWidget:
         tabs = QTabWidget()
-        self.preview = QTextEdit()
-        self.preview.setReadOnly(True)
-        self.preview.setText("Preview\n\nDrop a folder or run a scan to inspect report outputs.")
+        self.right_tabs = tabs
+        preview_panel = QWidget()
+        preview_layout = QVBoxLayout(preview_panel)
+        compare_row = QHBoxLayout()
+        source_box = QGroupBox("Source Preview")
+        source_layout = QVBoxLayout(source_box)
+        self.source_preview = QTextEdit()
+        self.source_preview.setReadOnly(True)
+        self.source_preview.setText("Open a source folder or file.")
+        source_layout.addWidget(self.source_preview)
+        output_box = QGroupBox("Output Preview")
+        output_layout = QVBoxLayout(output_box)
+        self.output_preview = QTextEdit()
+        self.output_preview.setReadOnly(True)
+        self.output_preview.setText("Scan, compress, or transcode to compare output here.")
+        output_layout.addWidget(self.output_preview)
+        compare_row.addWidget(source_box)
+        compare_row.addWidget(output_box)
+        preview_layout.addLayout(compare_row)
+        self.preview = self.output_preview
         self.log = QTextEdit()
         self.log.setReadOnly(True)
-        tabs.addTab(self.preview, "Preview")
+        tabs.addTab(preview_panel, "Preview Compare")
         tabs.addTab(self.log, "Logs")
         return tabs
 
@@ -396,6 +521,7 @@ class MainWindow(QMainWindow):
             self.projects.addItem(path)
         if path and not self._list_contains(self.recent_projects, path):
             self.recent_projects.addItem(path)
+        self._update_source_preview(Path(path))
 
     def _new_project(self) -> None:
         self.stack.setCurrentIndex(1)
@@ -427,6 +553,44 @@ class MainWindow(QMainWindow):
         if matches:
             self.rules.setCurrentItem(matches[0])
         self._log(f"Preset selected: {name}")
+
+    def _add_current_to_queue(self) -> None:
+        path = self.project_input.text().strip()
+        if not path:
+            self._log("No source selected for queue.")
+            return
+        self._add_project(path)
+        self._log(f"Added to queue: {path}")
+
+    def _focus_preview(self) -> None:
+        self.stack.setCurrentIndex(1)
+        self.right_tabs.setCurrentIndex(0)
+        self._log("Preview compare is ready.")
+
+    def _focus_queue(self) -> None:
+        self.stack.setCurrentIndex(1)
+        self.tasks.setFocus()
+
+    def _focus_logs(self) -> None:
+        self.stack.setCurrentIndex(1)
+        self.right_tabs.setCurrentIndex(1)
+        self.log.setFocus()
+
+    def _update_source_preview(self, path: Path) -> None:
+        if not hasattr(self, "source_preview"):
+            return
+        path = Path(path)
+        if path.is_dir():
+            files = [item for item in sorted(path.iterdir(), key=lambda item: item.name.casefold()) if item.is_file()]
+            self.source_count_label.setText(f"{len(files)} top-level files")
+            preview_lines = [f"Source folder: {path}", "", "Files:"]
+            preview_lines.extend(f"- {item.name}" for item in files[:10])
+            if len(files) > 10:
+                preview_lines.append(f"... {len(files) - 10} more")
+            self.source_preview.setText("\n".join(preview_lines))
+        else:
+            self.source_count_label.setText("1 file" if path.exists() else "No source selected")
+            self.source_preview.setText(f"Source file:\n{path}")
 
     def _start_scan(self) -> None:
         output = Path(self.output_input.text()).expanduser()
@@ -503,6 +667,7 @@ class MainWindow(QMainWindow):
         self.open_html_button.setEnabled(bool(result.get("html_path")))
         self._refresh_tasks()
         self._log("Scan completed")
+        self._show_scan_result_dialog(result)
         self._start_next_task()
 
     def _on_failed(self, error: str) -> None:
@@ -535,6 +700,31 @@ class MainWindow(QMainWindow):
 
     def _log(self, message: str) -> None:
         self.log.append(message)
+
+    def _show_scan_result_dialog(self, result: dict) -> None:
+        csv_path = result.get("csv_path")
+        if not csv_path:
+            return
+        preview = read_csv_preview(Path(csv_path), limit=10)
+        if not preview.headers:
+            return
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Scan Results")
+        dialog.resize(980, 420)
+        layout = QVBoxLayout(dialog)
+        layout.addWidget(QLabel(f"CSV preview: {csv_path}"))
+        table = QTableWidget(len(preview.rows), len(preview.headers))
+        table.setHorizontalHeaderLabels(preview.headers)
+        for row_index, row in enumerate(preview.rows):
+            for column_index, value in enumerate(row):
+                table.setItem(row_index, column_index, QTableWidgetItem(value))
+        layout.addWidget(table)
+        layout.addWidget(QLabel(f"Showing {len(preview.rows)} of {preview.total_rows} file rows. Folders are excluded."))
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Open | QDialogButtonBox.StandardButton.Close)
+        buttons.accepted.connect(lambda: QDesktopServices.openUrl(QUrl.fromLocalFile(str(csv_path))))
+        buttons.rejected.connect(dialog.reject)
+        layout.addWidget(buttons)
+        dialog.exec()
 
     @staticmethod
     def _list_contains(widget: QListWidget, value: str) -> bool:

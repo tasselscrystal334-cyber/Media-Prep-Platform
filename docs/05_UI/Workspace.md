@@ -47,4 +47,4 @@ Expand this document when the subsystem receives a new module, public API, UI su
 ## Revision History
 
 - Documentation version: 1.0
-- Last updated: 2026-06-27
+- Last updated: 2026-06-29

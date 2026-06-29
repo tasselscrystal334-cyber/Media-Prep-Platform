@@ -6,7 +6,7 @@ Document the Loom desktop GUI structure, first-run experience, and packaging-fac
 
 ## Overview
 
-The desktop GUI is a PySide6 application named Loom. It opens with a light welcome cover that shows the product icon, version number, New/Open/Recent entry points, and a translucent glass-style panel over a light gray background. The main workspace uses a soft light, low-contrast gray and white engineering layout: left project/rules/history navigation, center scan queue, and right preview/log panels.
+The desktop GUI is a PySide6 application named Loom. It opens with a light welcome cover that shows the product icon, version number, New/Open/Recent entry points, and a translucent glass-style panel over a light gray background. The main workspace uses a soft light, low-contrast gray and white engineering layout inspired by professional transcoding tools: a top source/action toolbar, source/title/preset/range controls, central parameter tabs, a scan queue, and a right-side source/output preview comparison area.
 
 ## Architecture
 
@@ -20,7 +20,7 @@ GUI code lives under `mediaqc/gui/`.
 
 ## Workflow
 
-Operators open Loom, choose New, Open, or Recent, then scan one or more media folders. On first launch, Loom checks `ffmpeg`, `ffprobe`, and `ffplay`; if any are missing, the GUI prompts before installing them into `tools/plugins/ffmpeg`. Reports can be exported as JSON, CSV, HTML, and PDF. The menu bar exposes Loom, File, Edit, View, Presets, Window, and Help menus.
+Operators open Loom, choose New, Open, or Recent, then scan one or more media folders. On first launch, Loom checks `ffmpeg`, `ffprobe`, and `ffplay`; if any are missing, the GUI prompts before installing them into `tools/plugins/ffmpeg`. Reports can be exported as JSON, CSV, HTML, and PDF. After a scan finishes, Loom shows a CSV-style result dialog with up to 10 file rows and excludes folders. Compression and transcode workflows use the right-side Source Preview and Output Preview panes for comparison. The menu bar exposes Loom, File, Edit, View, Presets, Window, and Help menus.
 
 ## Dependencies
 
@@ -63,5 +63,5 @@ PyInstaller and macOS first-launch security checks can still add startup overhea
 
 ## Revision History
 
-- Documentation version: 1.1
+- Documentation version: 1.2
 - Last updated: 2026-06-29

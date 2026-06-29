@@ -6,7 +6,7 @@ Document the Theme responsibilities in the 05_UI documentation area.
 
 ## Overview
 
-Covers future PySide6 studio UI with a professional dark interface, dockable workspace, asset browser, inspector, preview, batch queue, settings, themes, and shortcuts.
+Covers future PySide6 studio UI with a soft light professional transcoding workspace, source toolbar, parameter tabs, source/output preview comparison, batch queue, settings, themes, and shortcuts.
 
 ## Architecture
 
@@ -45,4 +45,4 @@ Expand this document when the subsystem receives a new module, public API, UI su
 ## Revision History
 
 - Documentation version: 1.0
-- Last updated: 2026-06-27
+- Last updated: 2026-06-29

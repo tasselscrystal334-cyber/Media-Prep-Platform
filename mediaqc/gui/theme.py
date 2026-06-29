@@ -45,6 +45,14 @@ QFrame#GlassPanel {
     border: 1px solid rgba(198, 207, 218, 128);
     border-radius: 8px;
 }
+QFrame#TopToolbar {
+    background: #f6f7f9;
+    border-bottom: 1px solid #dfe4eb;
+}
+QFrame#SourcePanel {
+    background: #f3f4f6;
+    border-bottom: 1px solid #dfe4eb;
+}
 QFrame#Panel, QTabWidget::pane, QTableWidget, QTextEdit, QListWidget {
     background: #ffffff;
     border: 1px solid #dfe4eb;
@@ -90,6 +98,27 @@ QPushButton#PrimaryButton {
 }
 QPushButton#PrimaryButton:hover {
     background: #526f82;
+}
+QPushButton#ToolbarButton {
+    background: transparent;
+    border: 0;
+    padding: 8px 10px;
+    color: #56616f;
+    font-size: 14px;
+}
+QPushButton#ToolbarButton:hover {
+    background: #e9eef3;
+}
+QPushButton#ToolbarPrimaryButton {
+    background: transparent;
+    border: 0;
+    padding: 8px 12px;
+    color: #5c9d65;
+    font-size: 14px;
+    font-weight: 700;
+}
+QPushButton#ToolbarPrimaryButton:hover {
+    background: #e9f3ea;
 }
 QPushButton:disabled {
     background: #edf0f3;

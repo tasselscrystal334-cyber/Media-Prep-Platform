@@ -6,7 +6,7 @@ Document the README responsibilities in the 05_UI documentation area.
 
 ## Overview
 
-Covers the V1.0 PySide6 studio UI with a professional dark interface, project/rule/history navigation, scan workspace, preview/log panes, batch queue, settings, themes, and shortcuts.
+Covers the V1.0 PySide6 studio UI with a soft light professional transcoding workspace, source toolbar, parameter tabs, source/output preview comparison, scan queue, logs, settings, themes, and shortcuts.
 
 ## Architecture
 
@@ -51,4 +51,4 @@ Add persistent GUI settings, richer preview playback, PDF styling, rule/profile 
 ## Revision History
 
 - Documentation version: 1.0
-- Last updated: 2026-06-27
+- Last updated: 2026-06-29
