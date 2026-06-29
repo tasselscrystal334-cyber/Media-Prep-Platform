@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Document the SQLite database used by MediaPrepTool.
+Document the SQLite database used by Loom.
 
 ## Overview
 

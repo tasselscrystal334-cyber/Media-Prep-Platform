@@ -6,15 +6,19 @@ Document the optional external tools that may be placed beside Loom release bina
 
 ## Overview
 
-The `tools/` folder is intentionally included in release bundles as an operator-controlled location for external command-line tools. Loom does not require bundled tools when FFmpeg is already available on `PATH`, but packaged deployments can place supported binaries here for portable offline workflows.
+The `tools/` folder is intentionally included in release bundles as an operator-controlled location for external command-line tools. Loom first uses tools on `PATH` or explicit environment variables, then bundled tools, and can automatically download the FFmpeg tool bundle into the user tools cache when `ffmpeg`, `ffprobe`, or `ffplay` is missing.
 
 ## Architecture
 
-Tool discovery is handled by `mediaqc/processing/ffmpeg_runner.py`. The resolver checks explicit environment variables, `MEDIAQC_FFMPEG_DIR`, bundled release folders, a `tools/` directory beside the executable, and finally the system `PATH`.
+Tool discovery is handled by `mediaqc/processing/ffmpeg_runner.py`. Download and install behavior is isolated in `mediaqc/processing/tool_installer.py`.
 
 ## Workflow
 
-Place licensed platform binaries in this folder before packaging, or copy them into the installed release folder after download.
+Place licensed platform binaries in this folder before packaging, copy them into the installed release folder after download, or run:
+
+```bash
+mediaqc tools install-ffmpeg
+```
 
 Recommended candidates:
 
@@ -37,6 +41,9 @@ Environment overrides:
 - `MEDIAQC_FFPROBE_PATH`
 - `MEDIAQC_FFPLAY_PATH`
 - `MEDIAQC_FFMPEG_DIR`
+- `LOOM_TOOLS_DIR`
+- `LOOM_FFMPEG_PACKAGE_URL`
+- `LOOM_DISABLE_TOOL_DOWNLOAD=1`
 
 ## Example
 
@@ -51,22 +58,22 @@ Loom/
 
 ## Known Limitations
 
-Release scripts do not download FFmpeg or vendor tools automatically. Empty `tools/` folders are valid and mean Loom will use environment variables or `PATH`.
+Release scripts do not download FFmpeg or vendor tools automatically. At runtime, Loom can download FFmpeg-family tools into the user cache unless automatic downloads are disabled.
 
 ## Future Improvements
 
 - Add a GUI tools doctor panel.
-- Add optional first-run prompts when FFmpeg tools are missing.
 - Add platform-specific tool bundle recipes.
 
 ## Related Modules
 
 - `mediaqc/processing/ffmpeg_runner.py`
+- `mediaqc/processing/tool_installer.py`
 - `mediaqc/diagnostics.py`
 - `packaging/pyinstaller/mediaqc_gui.spec`
 - `packaging/scripts/make_release.py`
 
 ## Revision History
 
-- Documentation version: 1.0
-- Last updated: 2026-06-27
+- Documentation version: 1.1
+- Last updated: 2026-06-29

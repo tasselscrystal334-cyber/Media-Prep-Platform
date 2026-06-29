@@ -6,7 +6,7 @@ Document the Loom desktop GUI structure, first-run experience, and packaging-fac
 
 ## Overview
 
-The desktop GUI is a PySide6 application named Loom. It opens with a light welcome cover that shows the product icon, version number, New/Open/Recent entry points, and a translucent glass-style panel over a light gray background. The main workspace uses a restrained light gray and white engineering layout inspired by professional transcode tools: left project/rules/history navigation, center scan queue, and right preview/log panels.
+The desktop GUI is a PySide6 application named Loom. It opens with a light welcome cover that shows the product icon, version number, New/Open/Recent entry points, and a translucent glass-style panel over a light gray background. The main workspace uses a soft light, low-contrast gray and white engineering layout: left project/rules/history navigation, center scan queue, and right preview/log panels.
 
 ## Architecture
 
@@ -63,5 +63,5 @@ PyInstaller and macOS first-launch security checks can still add startup overhea
 
 ## Revision History
 
-- Documentation version: 1.0
-- Last updated: 2026-06-27
+- Documentation version: 1.1
+- Last updated: 2026-06-29

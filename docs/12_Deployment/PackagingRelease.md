@@ -35,7 +35,7 @@ FFmpeg tools are resolved in this order:
 4. `tools/` beside the executable
 5. System `PATH`
 
-The `tools/` folder is included as an optional operator-managed location for `ffmpeg`, `ffprobe`, `ffplay`, `mediainfo`, officially obtained NotchLC tools, or other vendor command-line utilities.
+The `tools/` folder is included as an optional operator-managed location for `ffmpeg`, `ffprobe`, `ffplay`, `mediainfo`, officially obtained NotchLC tools, or other vendor command-line utilities. If the FFmpeg-family binaries are missing at runtime, Loom attempts to download the full FFmpeg tool bundle into the user tools cache unless `LOOM_DISABLE_TOOL_DOWNLOAD=1` is set.
 
 ## Example
 
@@ -47,7 +47,7 @@ python packaging/scripts/make_release.py --platform macos --dist dist --output d
 
 ## Known Limitations
 
-PyInstaller bundles do not download FFmpeg automatically. Operators must install FFmpeg externally or place licensed binaries in a `tools/` folder before packaging. The first GUI launch may still include platform security and PyInstaller startup overhead, so the GUI shows an early Loom splash and welcome screen as soon as Qt is initialized.
+PyInstaller bundles do not download FFmpeg during build. Operators may install FFmpeg externally, place licensed binaries in a `tools/` folder before packaging, or allow Loom to download the tool bundle at runtime. The first GUI launch may still include platform security and PyInstaller startup overhead, so the GUI shows an early Loom splash and welcome screen as soon as Qt is initialized.
 
 ## Future Improvements
 
@@ -65,5 +65,5 @@ Add code signing, notarization, Windows installer generation, package manager pu
 
 ## Revision History
 
-- Documentation version: 2.1
-- Last updated: 2026-06-27
+- Documentation version: 2.2
+- Last updated: 2026-06-29

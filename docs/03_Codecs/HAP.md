@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Document HAP handling in MediaPrepTool.
+Document HAP handling in Loom.
 
 ## Overview
 
@@ -46,4 +46,5 @@ Add frame sampling for alpha-channel confirmation.
 
 ## Revision History
 
-- Documentation version: 0.95
+- Documentation version: 1.0
+- Last updated: 2026-06-29

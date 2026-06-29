@@ -36,6 +36,7 @@ from .processing.ffmpeg_runner import (
     FFplayNotFoundError,
     build_doctor_report,
 )
+from .processing.tool_installer import ToolInstallError, ensure_ffmpeg_bundle_installed
 from .processing.ffplay import play_media
 from .processing.jobs import ProcessingJob, run_jobs, write_job_report
 from .processing.overlay import build_logo_command
@@ -116,6 +117,21 @@ def tools_doctor() -> None:
     if report.errors:
         table.add_row("errors", "; ".join(report.errors), style="red")
     console.print(table)
+
+
+@tools_app.command("install-ffmpeg")
+def tools_install_ffmpeg() -> None:
+    """Download and install FFmpeg, FFprobe, and FFplay into the Loom tools cache."""
+
+    try:
+        result = ensure_ffmpeg_bundle_installed()
+    except ToolInstallError as exc:
+        console.print(f"[bold red]FFmpeg install failed:[/bold red] {exc}")
+        raise typer.Exit(code=1) from exc
+    status = "Downloaded" if result.downloaded else "Already installed"
+    console.print(f"[green]{status}:[/green] {result.install_dir}")
+    if result.source_url:
+        console.print(f"[green]Source:[/green] {result.source_url}")
 
 
 @tools_app.command("install-check")

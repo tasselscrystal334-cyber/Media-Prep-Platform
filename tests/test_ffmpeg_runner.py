@@ -24,6 +24,7 @@ def test_run_command_dry_run_does_not_execute(tmp_path: Path) -> None:
 
 def test_run_ffmpeg_missing_raises_clear_error(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr("mediaqc.processing.ffmpeg_runner.shutil.which", lambda _: None)
+    monkeypatch.setenv("LOOM_DISABLE_TOOL_DOWNLOAD", "1")
 
     with pytest.raises(FFmpegNotFoundError, match="ffmpeg was not found"):
         run_ffmpeg(["-version"], dry_run=True)
@@ -41,6 +42,7 @@ def test_ffplay_command_generation() -> None:
 
 def test_doctor_handles_missing_tools(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr("mediaqc.processing.ffmpeg_runner.shutil.which", lambda _: None)
+    monkeypatch.setenv("LOOM_DISABLE_TOOL_DOWNLOAD", "1")
 
     report = build_doctor_report()
 

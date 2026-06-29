@@ -1,46 +1,28 @@
 # Changelog
 
-All notable changes to Loom are documented in this file.
-
-The format follows Keep a Changelog and the project aims to follow Semantic Versioning after the public v1.0 release.
+All notable Loom changes are documented here.
 
 ## [Unreleased]
 
 ### Added
 
-- Repository documentation system for Loom.
-- Project constitution, security policy, code of conduct, and AI collaboration documents.
-- Product specifications under `docs/17_Specifications/`.
-- Direct tests for Live Event output spec and codec profile risk behavior.
-- FFmpeg/FFplay processing extension with tools doctor, preview playback, YAML transcode presets, optional encoder backends, subtitle embedding/burn-in, logo overlay, batch jobs, logs, and job reports.
-- Adobe Media Encoder NotchLC Watch Folder preparation workflow with official-only plugin policy, `ame_jobs.json`, `ame_jobs.csv`, and operator instructions.
-- V1.0 PySide6 desktop GUI with Loom splash, welcome cover, light theme, Projects/Rules/History navigation, drag-and-drop scan queue, threaded scanning, progress, cancellation request, logs, preview pane, and JSON/CSV/HTML/PDF export.
-- V1.5 Media Pipeline for NAS/SMB/AFP/NFS mounted sync, SHA256 transfer reports, FFprobe/optional MediaInfo metadata, compare reports, and project packages for Millumin, Disguise, Pixera, TouchDesigner, and Notch workflows.
-- V2.0 enterprise MAM foundation with users, permissions, project management, REST/OpenAPI, GraphQL entry point, webhooks, notifications, storage adapters, Docker Compose, PostgreSQL, Redis, Celery, RabbitMQ, and MinIO configuration.
-- V2.0 packaging and release system with PyInstaller CLI/GUI specs, platform build scripts, Docker packaging files, GitHub Actions release workflow, bundled FFmpeg path detection, Loom GUI entry points, SHA256SUMS generation, and release notes generation.
-- V2.0 stability pass with root command aliases, install health checks, file log discovery, update checks, support diagnostics, and a copyable LED example project.
-- Community/Enterprise edition matrix with Apache License 2.0 Community capabilities and commercial Enterprise capabilities exposed through `mediaqc editions`.
-- Loom product rename across user-facing documentation and GUI surfaces.
-- Release packaging emits the desktop GUI asset as `Loom-<version>-<platform>.zip` and documents the optional bundled `tools/` folder for FFmpeg, FFprobe, FFplay, MediaInfo, official NotchLC tools, and vendor utilities.
+- Default FFmpeg tool modules for `ffmpeg`, `ffprobe`, and `ffplay`.
+- Automatic FFmpeg-family tool installation into the Loom tools cache when required binaries are missing.
+- `mediaqc tools install-ffmpeg` for explicit preinstallation or repair of the FFmpeg tool bundle.
 
 ### Changed
 
-- Root documentation now uses Loom as the product name while preserving the current `mediaqc` CLI implementation.
-- Manifest `fps` values are normalized to numeric values for delivery manifests.
-- HAP Alpha checks now warn when alpha is requested by codec name but not confirmed by pixel format metadata.
-- HTML report template can display a Processing Summary when processing job data is provided.
-- Package version updated to `1.0.0` for the first public release line.
+- Desktop GUI palette now uses a softer light, low-contrast theme.
+- Documentation and generated build/report artifacts have been cleaned so current Loom documentation stays focused on active product behavior.
 
-## [0.95.0] - 2026-06-26
+## [1.0.0] - 2026-06-27
 
 ### Added
 
-- Live Event Loom QC extension with output spec checks, canvas validation, codec risk profiles, manifest generation, and integrity verification.
-- FastAPI dashboard and REST API foundation.
-- SQLite hash cache, history, and duplicate search.
-- Watch mode, project profiles, validation engine, FFmpeg deep analysis, and HTML reporting.
+- Loom CLI and desktop GUI release line.
+- Media scanning, SHA256, FFprobe metadata, FFmpeg analysis, validation rules, reports, live-event checks, manifests, watch mode, dashboard, packaging, and release automation.
 
 ## Revision History
 
-- Documentation version: 1.0
-- Last updated: 2026-06-27
+- Documentation version: 1.1
+- Last updated: 2026-06-29

@@ -6,7 +6,7 @@ Document local installation and runtime.
 
 ## Overview
 
-MediaPrepTool is currently deployed as a local Python CLI and FastAPI service.
+Loom can run as a local Python CLI, PySide6 desktop GUI, and FastAPI service.
 
 ## Architecture
 
@@ -24,7 +24,7 @@ python -m pip install -e .
 ## Dependencies
 
 - Python 3.11+
-- FFmpeg tools
+- FFmpeg tools with automatic install support
 
 ## Configuration
 
@@ -38,11 +38,11 @@ mediaqc dashboard --database ./reports/media.db --host 127.0.0.1 --port 8000
 
 ## Known Limitations
 
-No packaged binary or desktop app exists yet.
+Packaged desktop builds depend on platform security settings, code signing, and FFmpeg tool availability.
 
 ## Future Improvements
 
-Add packaged installers.
+Add signed platform installers.
 
 ## Related Modules
 

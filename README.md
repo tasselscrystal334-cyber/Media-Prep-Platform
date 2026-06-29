@@ -144,7 +144,7 @@ powershell -ExecutionPolicy Bypass -File packaging/scripts/build_windows.ps1
 
 Release artifacts are written to `dist_release/` and include zipped CLI bundles, a desktop GUI bundle named like `Loom-1.0.0-macos.zip`, Docker packaging assets, `SHA256SUMS.txt`, and `release_notes.md`. GitHub Actions builds release assets from `.github/workflows/release.yml` when a `v*` tag is pushed.
 
-FFmpeg can be provided externally on `PATH`, pointed to with `MEDIAQC_FFMPEG_PATH` / `MEDIAQC_FFMPEG_DIR`, or bundled in a `tools/` folder beside the executable. The `tools/` folder may also hold FFprobe, FFplay, MediaInfo, legally obtained official NotchLC tools, or vendor-specific verification commands. `mediaqc tools doctor` shows the exact FFmpeg, FFprobe, and FFplay paths currently in use.
+Loom uses `ffmpeg`, `ffprobe`, and `ffplay` as default media tool modules. They can be provided externally on `PATH`, pointed to with `MEDIAQC_FFMPEG_PATH` / `MEDIAQC_FFMPEG_DIR`, bundled in a `tools/` folder beside the executable, or installed automatically into the Loom tools cache when missing. Use `mediaqc tools install-ffmpeg` to preinstall the full FFmpeg tool bundle, and `LOOM_DISABLE_TOOL_DOWNLOAD=1` to disable automatic downloads.
 
 ## Documentation Entry Points
 
@@ -163,6 +163,7 @@ A copyable live-event example is available in `examples/LED_Show_6400x2000/`. Ad
 
 ```bash
 mediaqc doctor
+mediaqc tools install-ffmpeg
 mediaqc tools install-check
 mediaqc tools logs
 mediaqc update check

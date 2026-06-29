@@ -2,11 +2,11 @@
 
 ## Purpose
 
-Describe the current MediaPrepTool system architecture.
+Describe the current Loom system architecture.
 
 ## Overview
 
-MediaPrepTool is a Python application with a Typer CLI, modular validation engine, live event extensions, SQLite persistence, generated reports, and a FastAPI dashboard.
+Loom is a Python application with a Typer CLI, PySide6 desktop GUI, modular validation engine, live event extensions, SQLite persistence, generated reports, and a FastAPI dashboard.
 
 ## Architecture
 
@@ -34,7 +34,7 @@ MediaPrepTool is a Python application with a Typer CLI, modular validation engin
 ## Dependencies
 
 - Python 3.11+
-- FFmpeg tools
+- FFmpeg tools with automatic install support
 - Typer
 - Rich
 - PyYAML

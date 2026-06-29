@@ -10,6 +10,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from .tool_installer import ToolInstallError, default_tool_install_dir, ensure_ffmpeg_bundle_installed
+
 
 class FFmpegNotFoundError(RuntimeError):
     """Raised when ffmpeg is unavailable."""
@@ -68,6 +70,7 @@ class DoctorReport:
     notchlc_encode_support: bool = False
     adobe_media_encoder_path: str | None = None
     notchlc_adobe_plugin_hint: bool = False
+    auto_install_dir: str | None = None
     errors: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
@@ -91,26 +94,27 @@ class DoctorReport:
             "notchlc_encode_support": self.notchlc_encode_support,
             "adobe_media_encoder_path": self.adobe_media_encoder_path,
             "notchlc_adobe_plugin_hint": self.notchlc_adobe_plugin_hint,
+            "auto_install_dir": self.auto_install_dir,
             "errors": self.errors,
         }
 
 
 def check_ffmpeg_available() -> str:
-    executable = resolve_tool_path("ffmpeg")
+    executable = resolve_tool_path("ffmpeg", auto_install=True)
     if executable.path is None:
         raise FFmpegNotFoundError("ffmpeg was not found. Install FFmpeg and make sure ffmpeg is on PATH.")
     return executable.path
 
 
 def check_ffprobe_available() -> str:
-    executable = resolve_tool_path("ffprobe")
+    executable = resolve_tool_path("ffprobe", auto_install=True)
     if executable.path is None:
         raise FFprobeNotFoundError("ffprobe was not found. Install FFmpeg and make sure ffprobe is on PATH.")
     return executable.path
 
 
 def check_ffplay_available() -> str:
-    executable = resolve_tool_path("ffplay")
+    executable = resolve_tool_path("ffplay", auto_install=True)
     if executable.path is None:
         raise FFplayNotFoundError(
             "ffplay was not found. Install a full FFmpeg package and make sure ffplay is on PATH."
@@ -125,9 +129,23 @@ class ToolResolution:
     source: str
 
 
-def resolve_tool_path(name: str) -> ToolResolution:
+def resolve_tool_path(name: str, auto_install: bool = False) -> ToolResolution:
     """Resolve ffmpeg-family tools from env, bundled folders, then PATH."""
 
+    resolved = _resolve_tool_path_without_install(name)
+    if resolved.path or not auto_install:
+        return resolved
+    try:
+        result = ensure_ffmpeg_bundle_installed()
+    except ToolInstallError:
+        return resolved
+    candidate = _tool_candidate(result.install_dir, name)
+    if _is_executable_file(candidate):
+        return ToolResolution(name=name, path=str(candidate), source="auto-installed tools")
+    return resolved
+
+
+def _resolve_tool_path_without_install(name: str) -> ToolResolution:
     env_key = f"MEDIAQC_{name.upper()}_PATH"
     explicit_path = os.getenv(env_key)
     if explicit_path:
@@ -158,6 +176,7 @@ def _candidate_tool_dirs() -> list[tuple[Path, str]]:
     env_dir = os.getenv("MEDIAQC_FFMPEG_DIR")
     if env_dir:
         dirs.append((Path(env_dir).expanduser(), "MEDIAQC_FFMPEG_DIR"))
+    dirs.append((default_tool_install_dir(), "auto install cache"))
 
     meipass = getattr(sys, "_MEIPASS", None)
     if meipass:
@@ -266,8 +285,9 @@ def build_doctor_report() -> DoctorReport:
     from .adobe_ame import detect_adobe_media_encoder, detect_notchlc_adobe_plugin_hint
 
     report = DoctorReport()
+    report.auto_install_dir = str(default_tool_install_dir())
     try:
-        ffmpeg = resolve_tool_path("ffmpeg")
+        ffmpeg = resolve_tool_path("ffmpeg", auto_install=True)
         report.ffmpeg_path = ffmpeg.path
         report.ffmpeg_source = ffmpeg.source
         if ffmpeg.path is None:
@@ -276,7 +296,7 @@ def build_doctor_report() -> DoctorReport:
     except FFmpegNotFoundError as exc:
         report.errors.append(str(exc))
     try:
-        ffprobe = resolve_tool_path("ffprobe")
+        ffprobe = resolve_tool_path("ffprobe", auto_install=True)
         report.ffprobe_path = ffprobe.path
         report.ffprobe_source = ffprobe.source
         if ffprobe.path is None:
@@ -284,7 +304,7 @@ def build_doctor_report() -> DoctorReport:
     except FFprobeNotFoundError as exc:
         report.errors.append(str(exc))
     try:
-        ffplay = resolve_tool_path("ffplay")
+        ffplay = resolve_tool_path("ffplay", auto_install=True)
         report.ffplay_path = ffplay.path
         report.ffplay_source = ffplay.source
         if ffplay.path is None:

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Document the target GitHub repository structure for MediaPrepTool.
+Document the target GitHub repository structure for Loom.
 
 ## Overview
 
@@ -13,7 +13,7 @@ The repository separates source code, tests, documentation, assets, examples, an
 Target structure:
 
 ```text
-MediaPrepTool/
+Loom/
   docs/
     01_Project/
     02_Architecture/
