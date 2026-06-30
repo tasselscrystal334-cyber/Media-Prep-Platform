@@ -248,6 +248,7 @@ class MainWindow(QMainWindow):
         self.preview_process: subprocess.Popen | None = None
         self.player_controls: PlayerControlsDialog | None = None
         self.transcode_thread: TranscodeThread | None = None
+        self._owned_threads: list[QThread] = []
         self.pending_tasks: list[GuiTask] = []
         self.last_outputs: dict[str, Path | None] = {}
         self.media_files: list[Path] = []
@@ -322,6 +323,14 @@ class MainWindow(QMainWindow):
         doctor_action.triggered.connect(self._open_tools_doctor)
         docs_action.triggered.connect(self._open_documentation)
         help_menu.addActions([doctor_action, docs_action])
+
+    def _track_thread(self, thread: QThread) -> None:
+        self._owned_threads.append(thread)
+        thread.finished.connect(lambda thread=thread: self._release_thread(thread))
+
+    def _release_thread(self, thread: QThread) -> None:
+        if thread in self._owned_threads:
+            self._owned_threads.remove(thread)
 
     def _open_tools_doctor(self) -> None:
         dialog = QDialog(self)
@@ -418,6 +427,7 @@ class MainWindow(QMainWindow):
             return
         self._log(message)
         self.tool_install_thread = ToolInstallThread()
+        self._track_thread(self.tool_install_thread)
         self.tool_install_thread.completed.connect(self._on_tool_install_completed)
         self.tool_install_thread.failed.connect(self._on_tool_install_failed)
         self.tool_install_thread.start()
@@ -978,6 +988,7 @@ class MainWindow(QMainWindow):
             return
         self.output_preview_image.setText("Generating output preview video...")
         self.preview_thread = OutputPreviewThread(settings, Path.cwd() / ".preview")
+        self._track_thread(self.preview_thread)
         self.preview_thread.completed.connect(self._on_output_preview_ready)
         self.preview_thread.failed.connect(self._on_output_preview_failed)
         self.preview_thread.start()
@@ -1047,6 +1058,7 @@ class MainWindow(QMainWindow):
         for row in range(self.output_table.rowCount()):
             self.output_table.setItem(row, 1, QTableWidgetItem("Waiting"))
         self.transcode_thread = TranscodeThread(jobs)
+        self._track_thread(self.transcode_thread)
         self.transcode_thread.progress.connect(self._on_transcode_progress)
         self.transcode_thread.completed.connect(self._on_transcode_completed)
         self.transcode_thread.failed.connect(self._on_transcode_failed)
@@ -1089,6 +1101,7 @@ class MainWindow(QMainWindow):
         task.message = "Starting"
         worker = ScanWorker(task.project_path, task.output_path, html=True, pdf=True)
         self.current_thread = QtScanThread(worker)
+        self._track_thread(self.current_thread)
         self.current_thread.progress.connect(self._on_progress)
         self.current_thread.completed.connect(self._on_completed)
         self.current_thread.failed.connect(self._on_failed)
@@ -1195,10 +1208,31 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event) -> None:  # noqa: ANN001
         self._stop_preview_process()
+        still_running: list[str] = []
+        if self.current_thread and self.current_thread.isRunning():
+            self.current_thread.cancel()
+            if not self.current_thread.wait(3000):
+                still_running.append("scan")
         if self.preview_thread and self.preview_thread.isRunning():
             self.preview_thread.quit()
-            self.preview_thread.wait(1500)
+            if not self.preview_thread.wait(3000):
+                still_running.append("preview render")
         if self.transcode_thread and self.transcode_thread.isRunning():
             self.transcode_thread.cancel()
-            self.transcode_thread.wait(1500)
+            if not self.transcode_thread.wait(3000):
+                still_running.append("transcode")
+        if self.tool_install_thread and self.tool_install_thread.isRunning():
+            if not self.tool_install_thread.wait(3000):
+                still_running.append("tool install")
+        for thread in list(self._owned_threads):
+            if thread.isRunning() and not thread.wait(1000):
+                still_running.append("background task")
+        if still_running:
+            event.ignore()
+            QMessageBox.information(
+                self,
+                "Loom is finishing work",
+                "Loom is still finishing: " + ", ".join(still_running) + ".\n\nPlease close again after it finishes.",
+            )
+            return
         super().closeEvent(event)

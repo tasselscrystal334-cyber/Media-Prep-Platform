@@ -13,7 +13,7 @@ The desktop GUI is a PySide6 application named Loom. It opens with a light welco
 GUI code lives under `mediaqc/gui/`.
 
 - `app.py` creates the Qt application, sets Loom branding, shows the early splash screen, and opens the main window.
-- `main_window.py` owns the in-window menu bar, welcome cover, workspace layout, drag/drop media import, source preview filtering, progress, cancellation, logs, playback, transcode/export, and report opening.
+- `main_window.py` owns the in-window menu bar, welcome cover, workspace layout, drag/drop media import, source preview filtering, progress, cancellation, logs, playback, transcode/export, report opening, and safe shutdown of active Qt worker threads.
 - `theme.py` defines the light stylesheet.
 - `workers.py` keeps scan execution off the main thread and lazily imports heavier scan/report modules after the operator starts a scan.
 - `mediaqc/assets/loom_icon.svg` provides the packaged icon asset.
@@ -45,6 +45,7 @@ Packaged releases should expose the desktop application as `Loom`, without a GUI
 ## Known Limitations
 
 PyInstaller and macOS first-launch security checks can still add startup overhead before Python code runs. Loom shows a splash as soon as Qt initializes, but platform-level launch latency may still be visible on the first open.
+If scan, transcode, preview render, or tool installation is still running during shutdown, Loom waits briefly and may ask the operator to close again after the background task finishes.
 
 ## Future Improvements
 
@@ -63,5 +64,5 @@ PyInstaller and macOS first-launch security checks can still add startup overhea
 
 ## Revision History
 
-- Documentation version: 1.9
+- Documentation version: 1.10
 - Last updated: 2026-06-30

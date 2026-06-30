@@ -67,6 +67,10 @@ fi
 
 if [[ "${LAUNCH_GUI}" -eq 1 ]]; then
   if [[ "$(uname -s)" == "Darwin" ]]; then
+    osascript -e 'tell application "Loom" to quit' >/dev/null 2>&1 || true
+    osascript -e 'tell application "Loom Local" to quit' >/dev/null 2>&1 || true
+    sleep 1
+    pkill -f 'mediaqc.gui.app' >/dev/null 2>&1 || true
     "${ROOT_DIR}/scripts/launch_loom_macos.sh"
   else
     "${VENV_DIR}/bin/loom-gui"

@@ -42,6 +42,7 @@ All notable Loom changes are documented here.
 - Documentation and generated build/report artifacts have been cleaned so current Loom documentation stays focused on active product behavior.
 - Desktop GUI now uses one Import action instead of separate file/folder import buttons, wraps the workspace in scrollable responsive panels, and keeps menu/dropdown popups on a white background.
 - Playback no longer forces fullscreen by default.
+- Desktop GUI shutdown now tracks scan, transcode, preview-render, and FFmpeg-tool-install threads so closing the app does not destroy active Qt threads.
 
 ## [1.0.0] - 2026-06-27
 
