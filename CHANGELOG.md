@@ -28,8 +28,9 @@ All notable Loom changes are documented here.
 - Desktop GUI workspace now centers on imported media files for decode, analysis, playback, SHA256 verification, and transcode/export.
 - GUI batch import supports single files, multiple files, folders, and drag-and-drop into the media list.
 - GUI output defaults to MOV, writes to the source folder by default, supports custom destination and renaming controls, and keeps audio as copy by default.
-- GUI playback launches the selected file in a separate fullscreen FFplay window with crop filter controls.
+- GUI playback launches the selected file in a separate FFplay window with crop filter controls.
 - `/Applications/Loom Local.app` development launcher script for opening the current working tree instead of an older packaged app.
+- GUI playback and output live preview now open resizable FFplay floating windows with a Loom Player Controls dialog.
 
 ### Changed
 
@@ -39,6 +40,8 @@ All notable Loom changes are documented here.
 - Desktop GUI preset labels use Proxy for H.264/H.265 lightweight review/transcode outputs to avoid confusing them with the Preview panel.
 - Desktop GUI uses an in-window Loom menu bar during local Python launches so menus remain correctly branded and responsive.
 - Documentation and generated build/report artifacts have been cleaned so current Loom documentation stays focused on active product behavior.
+- Desktop GUI now uses one Import action instead of separate file/folder import buttons, wraps the workspace in scrollable responsive panels, and keeps menu/dropdown popups on a white background.
+- Playback no longer forces fullscreen by default.
 
 ## [1.0.0] - 2026-06-27
 

@@ -10,11 +10,11 @@ Covers the top source/action toolbar in the Loom desktop GUI.
 
 ## Architecture
 
-`MainWindow` builds a light batch media toolbar above the workspace. Primary actions include Import Files, Import Folder, Analyze, SHA256, Play, and Transcode. Activity focuses the logs tab. Encoding, frame-rate, proxy, and format choices live in the output settings column.
+`MainWindow` builds a light batch media toolbar above the workspace. Primary actions include Import, Analyze, SHA256, Play, and Transcode. Activity focuses the logs tab. Encoding, frame-rate, proxy, and format choices live in the output settings column.
 
 ## Workflow
 
-Operators import one or more media files or folders, then run analysis, SHA256 verification, playback, or transcode/export directly from the file list. Activity opens operational logs.
+Operators use the single Import action for one or more files, or drag files/folders into the file list, then run analysis, SHA256 verification, playback, or transcode/export directly from the file list. Activity opens operational logs.
 
 ## Dependencies
 
@@ -26,7 +26,7 @@ The source-row preset selector mirrors the built-in project profiles and remains
 
 ## Example
 
-Run `loom-gui`, open a source folder, choose a source-row preset, start a scan, and click Activity to focus logs.
+Run `loom-gui`, import media, choose output settings, start analysis or transcode, and click Activity to focus logs.
 
 ## Known Limitations
 
@@ -45,5 +45,5 @@ Add icons, keyboard shortcuts, and persistent toolbar state.
 
 ## Revision History
 
-- Documentation version: 1.2
-- Last updated: 2026-06-29
+- Documentation version: 1.3
+- Last updated: 2026-06-30

@@ -79,11 +79,11 @@ The V1.0 GUI provides a light PySide6 workspace with:
 - Menu bar sections for Loom, File, Edit, View, Presets, Window, and Help.
 - In-window Loom menu bar for local Python launches and packaged app runs.
 - Batch workspace for audio/video decode, analysis, playback, SHA256 verification, and transcode/export.
-- Import single files, multiple files, folders, or drag supported media into the file list.
+- Single Import action for one or more files, plus drag-and-drop support for media files and folders.
 - Direct output settings for Codec, Frame Rate, Proxy, and video Format. Format defaults to MOV and audio defaults to Copy original audio.
 - Output files default to the source folder, with optional custom destination, prefix, remove, and append renaming controls.
 - Source Preview, Output Preview, and Logs are separate right-side pages for compression and transcode workflows. Source previews show the detected media count, supported top-level media files, and ignore `.DS_Store`, folders, and unsupported sidecar files.
-- Start Live Preview generates a short output preview video with FFmpeg from the selected file, codec, frame-rate, proxy, format, and duration, then plays it in realtime with FFplay. Play opens the selected file in a separate fullscreen FFplay window with crop controls.
+- Start Live Preview generates a short output preview video with FFmpeg from the selected file, codec, frame-rate, proxy, format, and duration, then plays it in realtime with FFplay. Play opens the selected file in a separate resizable FFplay floating window with crop controls and Loom Player Controls.
 - Scan-complete CSV preview dialog showing up to 10 file rows and excluding folders.
 - Background scanning in a worker thread.
 - Automatic JSON, CSV, HTML, and PDF report export.

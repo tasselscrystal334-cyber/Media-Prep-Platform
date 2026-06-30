@@ -10,11 +10,11 @@ Covers the V1.0 workspace layout: in-window Loom menu bar, top action toolbar, m
 
 ## Architecture
 
-`MainWindow` composes the workspace with media import controls, Qt splitters, output planning tables, preview tabs, and background worker threads. Scan execution is delegated to `ScanWorker` and `QtScanThread`; transcode execution is delegated to a GUI `TranscodeThread`. Source preview filtering is delegated to `mediaqc/gui/source_preview.py`.
+`MainWindow` composes the workspace with a single Import entry, drag-and-drop media intake, scrollable Qt splitters, output planning tables, preview tabs, FFplay control dialogs, and background worker threads. Scan execution is delegated to `ScanWorker` and `QtScanThread`; transcode execution is delegated to a GUI `TranscodeThread`. Source preview filtering is delegated to `mediaqc/gui/source_preview.py`.
 
 ## Workflow
 
-Operators import files, import folders, or drag media into the Files to process list. They choose Codec, Frame Rate, Proxy, Format, destination, and renaming options, then run Analyze, SHA256, Play, or Transcode. Rules are customized in YAML under `config/` and do not occupy the main workspace.
+Operators import files or drag media folders into the Files to process list. They choose Codec, Frame Rate, Proxy, Format, destination, and renaming options, then run Analyze, SHA256, Play, or Transcode. Rules are customized in YAML under `config/` and do not occupy the main workspace.
 
 ## Dependencies
 
@@ -26,7 +26,7 @@ Configuration must remain explicit and versionable. Use YAML for rules, profiles
 
 ## Example
 
-The workspace exports JSON, CSV, HTML, and PDF for analysis/reporting and writes transcoded files to the source folder by default. Operators can choose a custom destination and batch rename with remove, append, and prefix controls. Format defaults to MOV; audio defaults to Copy original audio. Start Live Preview generates a short output preview video for the selected file, settings, duration, and output name, then launches FFplay for realtime playback.
+The workspace exports JSON, CSV, HTML, and PDF for analysis/reporting and writes transcoded files to the source folder by default. Operators can choose a custom destination and batch rename with remove, append, and prefix controls. Format defaults to MOV; audio defaults to Copy original audio. Start Live Preview generates a short output preview video for the selected file, settings, duration, and output name, then launches FFplay for realtime playback with Loom Player Controls.
 
 ## Known Limitations
 
@@ -47,5 +47,5 @@ Expand this document when the subsystem receives a new module, public API, UI su
 
 ## Revision History
 
-- Documentation version: 1.4
-- Last updated: 2026-06-29
+- Documentation version: 1.5
+- Last updated: 2026-06-30

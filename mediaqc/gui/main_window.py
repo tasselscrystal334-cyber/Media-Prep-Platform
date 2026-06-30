@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import subprocess
+import signal
 from pathlib import Path
 
 from mediaqc import __version__
@@ -21,6 +22,7 @@ from PySide6.QtWidgets import (
     QFileDialog,
     QFrame,
     QGridLayout,
+    QHeaderView,
     QHBoxLayout,
     QLabel,
     QLineEdit,
@@ -29,6 +31,7 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QPushButton,
     QProgressBar,
+    QScrollArea,
     QSizePolicy,
     QMessageBox,
     QSplitter,
@@ -183,6 +186,54 @@ class DropMediaList(QListWidget):
             self.dropped.emit(paths)
 
 
+class PlayerControlsDialog(QDialog):
+    def __init__(self, source: Path, process: subprocess.Popen, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.source = source
+        self.process = process
+        self.paused = False
+        self.setWindowTitle("Loom Player Controls")
+        self.resize(520, 140)
+        layout = QVBoxLayout(self)
+        title = QLabel(f"Playing: {source.name}")
+        title.setStyleSheet("font-weight: 700;")
+        layout.addWidget(title)
+        buttons = QHBoxLayout()
+        self.pause_button = QPushButton("Pause")
+        stop_button = QPushButton("Stop")
+        reveal_button = QPushButton("Reveal File")
+        self.pause_button.clicked.connect(self.toggle_pause)
+        stop_button.clicked.connect(self.stop_player)
+        reveal_button.clicked.connect(lambda: QDesktopServices.openUrl(QUrl.fromLocalFile(str(source.parent))))
+        buttons.addWidget(self.pause_button)
+        buttons.addWidget(stop_button)
+        buttons.addWidget(reveal_button)
+        buttons.addStretch(1)
+        layout.addLayout(buttons)
+
+    def toggle_pause(self) -> None:
+        if self.process.poll() is not None:
+            self.close()
+            return
+        stop_signal = getattr(signal, "SIGSTOP", None)
+        continue_signal = getattr(signal, "SIGCONT", None)
+        if stop_signal is None or continue_signal is None:
+            self.pause_button.setEnabled(False)
+            return
+        try:
+            self.process.send_signal(continue_signal if self.paused else stop_signal)
+        except OSError:
+            self.close()
+            return
+        self.paused = not self.paused
+        self.pause_button.setText("Resume" if self.paused else "Pause")
+
+    def stop_player(self) -> None:
+        if self.process.poll() is None:
+            self.process.terminate()
+        self.close()
+
+
 class MainWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
@@ -195,6 +246,7 @@ class MainWindow(QMainWindow):
         self.tool_install_thread: ToolInstallThread | None = None
         self.preview_thread: OutputPreviewThread | None = None
         self.preview_process: subprocess.Popen | None = None
+        self.player_controls: PlayerControlsDialog | None = None
         self.transcode_thread: TranscodeThread | None = None
         self.pending_tasks: list[GuiTask] = []
         self.last_outputs: dict[str, Path | None] = {}
@@ -222,12 +274,12 @@ class MainWindow(QMainWindow):
 
         file_menu = self.menuBar().addMenu("File")
         new_project = QAction("New Batch", self)
-        open_project = QAction("Import Folder...", self)
+        open_project = QAction("Import...", self)
         export_html = QAction("Open HTML Report", self)
         export_pdf = QAction("Export PDF", self)
         quit_action = QAction("Quit", self)
         new_project.triggered.connect(self._new_project)
-        open_project.triggered.connect(self._browse_project)
+        open_project.triggered.connect(self._browse_files)
         export_html.triggered.connect(self._open_html)
         export_pdf.triggered.connect(self._open_pdf)
         quit_action.triggered.connect(self.close)
@@ -452,11 +504,19 @@ class MainWindow(QMainWindow):
         layout.setSpacing(0)
         layout.addWidget(self._toolbar_panel())
         splitter = QSplitter(Qt.Orientation.Vertical)
-        splitter.addWidget(self._batch_panel())
-        splitter.addWidget(self._right_panel())
-        splitter.setSizes([460, 300])
+        splitter.setChildrenCollapsible(False)
+        splitter.addWidget(self._scrollable(self._batch_panel()))
+        splitter.addWidget(self._scrollable(self._right_panel()))
+        splitter.setSizes([360, 360])
         layout.addWidget(splitter, 1)
         return panel
+
+    def _scrollable(self, widget: QWidget) -> QScrollArea:
+        area = QScrollArea()
+        area.setWidgetResizable(True)
+        area.setFrameShape(QFrame.Shape.NoFrame)
+        area.setWidget(widget)
+        return area
 
     def _toolbar_panel(self) -> QWidget:
         toolbar = QFrame()
@@ -465,8 +525,7 @@ class MainWindow(QMainWindow):
         layout.setContentsMargins(14, 10, 14, 10)
         layout.setSpacing(14)
         buttons = [
-            ("Import Files", self._browse_files, "ToolbarButton"),
-            ("Import Folder", self._browse_project, "ToolbarButton"),
+            ("Import", self._browse_files, "ToolbarButton"),
             ("Analyze", self._start_scan, "ToolbarPrimaryButton"),
             ("SHA256", self._start_scan, "ToolbarButton"),
             ("Play", self._play_selected_media, "ToolbarButton"),
@@ -497,17 +556,16 @@ class MainWindow(QMainWindow):
 
         files_title = QLabel("Files to process")
         files_title.setStyleSheet("font-weight: 700; font-size: 15px;")
-        import_files = QPushButton("Import Files")
-        import_folder = QPushButton("Import Folder")
+        import_files = QPushButton("Import")
         clear_files = QPushButton("Clear")
         import_files.clicked.connect(self._browse_files)
-        import_folder.clicked.connect(self._browse_project)
         clear_files.clicked.connect(self._clear_files)
         file_buttons = QHBoxLayout()
         file_buttons.addWidget(import_files)
-        file_buttons.addWidget(import_folder)
         file_buttons.addWidget(clear_files)
+        file_buttons.addStretch(1)
         self.files_list = DropMediaList()
+        self.files_list.setMinimumHeight(180)
         self.files_list.dropped.connect(self._add_media_paths)
         self.files_list.currentRowChanged.connect(lambda _row: self._on_file_selection_changed())
 
@@ -555,6 +613,9 @@ class MainWindow(QMainWindow):
         self.output_table = QTableWidget(0, 2)
         self.output_table.setHorizontalHeaderLabels(["File", "Status"])
         self.output_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.output_table.setMinimumHeight(180)
+        self.output_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        self.output_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
         self.progress = QProgressBar()
         self.progress.setRange(0, 100)
 
@@ -595,6 +656,10 @@ class MainWindow(QMainWindow):
         layout.setColumnStretch(1, 1)
         layout.setColumnStretch(2, 1)
         layout.setColumnStretch(3, 2)
+        layout.setColumnMinimumWidth(0, 260)
+        layout.setColumnMinimumWidth(1, 180)
+        layout.setColumnMinimumWidth(2, 220)
+        layout.setColumnMinimumWidth(3, 300)
         return panel
 
     def _right_panel(self) -> QWidget:
@@ -606,7 +671,7 @@ class MainWindow(QMainWindow):
         self.source_preview = QTextEdit()
         self.source_preview.setReadOnly(True)
         self.source_preview.setText("Open a source folder or file.")
-        self.source_preview.setMinimumHeight(420)
+        self.source_preview.setMinimumHeight(220)
         source_layout.addWidget(self.source_preview)
 
         output_panel = QWidget()
@@ -616,13 +681,13 @@ class MainWindow(QMainWindow):
         self.output_preview = QTextEdit()
         self.output_preview.setReadOnly(True)
         self.output_preview.setText("Select a title, preset, and format, then start live preview.")
-        self.output_preview.setMinimumHeight(150)
-        self.output_preview.setMaximumHeight(190)
+        self.output_preview.setMinimumHeight(110)
+        self.output_preview.setMaximumHeight(150)
         self.output_preview_image = QLabel("Live output preview opens in an FFplay window.")
         self.output_preview_image.setObjectName("PreviewCanvas")
         self.output_preview_image.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.output_preview_image.setMinimumHeight(260)
-        self.output_preview_image.setMaximumHeight(260)
+        self.output_preview_image.setMinimumHeight(120)
+        self.output_preview_image.setMaximumHeight(170)
         self.output_preview_image.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         crop_layout = QHBoxLayout()
         self.crop_left = QLineEdit("0")
@@ -671,14 +736,14 @@ class MainWindow(QMainWindow):
             self._add_media_paths([folder])
 
     def _browse_files(self) -> None:
-        files, _selected_filter = QFileDialog.getOpenFileNames(
-            self,
-            "Select Media Files",
-            str(Path.home()),
-            "Media Files (*.mov *.mp4 *.mxf *.avi *.mkv *.png *.jpg *.jpeg *.tif *.tiff *.exr *.wav *.aiff *.mp3);;All Files (*)",
+        dialog = QFileDialog(self, "Import Media", str(Path.home()))
+        dialog.setOption(QFileDialog.Option.DontUseNativeDialog, True)
+        dialog.setFileMode(QFileDialog.FileMode.ExistingFiles)
+        dialog.setNameFilter(
+            "Media Files (*.mov *.mp4 *.mxf *.avi *.mkv *.png *.jpg *.jpeg *.tif *.tiff *.exr *.wav *.aiff *.mp3);;All Files (*)"
         )
-        if files:
-            self._add_media_paths(files)
+        if dialog.exec():
+            self._add_media_paths(dialog.selectedFiles())
 
     def _browse_output(self) -> None:
         folder = QFileDialog.getExistingDirectory(self, "Select Output Folder")
@@ -860,7 +925,10 @@ class MainWindow(QMainWindow):
             return
         command = [
             ffplay.path,
-            "-fs",
+            "-x",
+            "1280",
+            "-y",
+            "720",
             "-window_title",
             f"Loom Player - {source.name}",
         ]
@@ -875,7 +943,9 @@ class MainWindow(QMainWindow):
             self._log(f"Unable to launch player: {exc}")
             return
         self.right_tabs.setCurrentIndex(1)
-        self.output_preview_image.setText(f"Playing selected media in fullscreen FFplay:\n{source}")
+        self.output_preview_image.setText(f"Playing selected media in floating FFplay window:\n{source}")
+        self.player_controls = PlayerControlsDialog(source, self.preview_process, self)
+        self.player_controls.show()
         self._log(f"Playback started: {source}")
 
     def _crop_filter(self) -> str | None:
@@ -931,6 +1001,8 @@ class MainWindow(QMainWindow):
             self.output_preview_image.setText(f"Preview video generated:\n{output_path}\n\nUnable to launch ffplay.")
             self._log(f"Unable to launch ffplay: {exc}")
             return
+        self.player_controls = PlayerControlsDialog(Path(output_path), self.preview_process, self)
+        self.player_controls.show()
         self.output_preview_image.setText(f"Playing output preview in FFplay:\n{output_path}")
         self.output_preview.setText(
             "\n".join(

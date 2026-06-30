@@ -20,7 +20,7 @@ GUI code lives under `mediaqc/gui/`.
 
 ## Workflow
 
-Operators open Loom, choose New, Open, or Recent, then import one file, multiple files, a folder, or drag media into the file list. On first launch, Loom checks `ffmpeg`, `ffprobe`, and `ffplay`; if any are missing, the GUI prompts before installing them into `tools/plugins/ffmpeg`. The primary modules are decode, analysis, playback, SHA256 verification, and transcode/export. Output settings are direct controls for Codec, Frame Rate, Proxy, and Format; Format defaults to MOV and audio defaults to copying the original audio. Output files default to each source file's folder unless a custom destination is selected. Compression and transcode workflows use right-side Source Preview, Output Preview, and Logs pages. Play opens the selected file in a separate fullscreen FFplay window, and crop controls can be applied as an FFplay crop filter. Rules remain configurable through YAML files under `config/` rather than as a main workspace panel.
+Operators open Loom, choose New, Open, or Recent, then use a single Import entry to add one or more media files. Folders can also be added by drag and drop into the file list. On first launch, Loom checks `ffmpeg`, `ffprobe`, and `ffplay`; if any are missing, the GUI prompts before installing them into `tools/plugins/ffmpeg`. The primary modules are decode, analysis, playback, SHA256 verification, and transcode/export. Output settings are direct controls for Codec, Frame Rate, Proxy, and Format; Format defaults to MOV and audio defaults to copying the original audio. Output files default to each source file's folder unless a custom destination is selected. Compression and transcode workflows use paged Source Preview, Output Preview, and Logs views. Play opens the selected file in a separate resizable FFplay floating window with a small Loom Player Controls window, and crop controls can be applied as an FFplay crop filter. Rules remain configurable through YAML files under `config/` rather than as a main workspace panel.
 
 ## Dependencies
 
@@ -63,5 +63,5 @@ PyInstaller and macOS first-launch security checks can still add startup overhea
 
 ## Revision History
 
-- Documentation version: 1.8
-- Last updated: 2026-06-29
+- Documentation version: 1.9
+- Last updated: 2026-06-30

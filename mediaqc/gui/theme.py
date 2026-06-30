@@ -30,12 +30,23 @@ QMenu {
     border: 1px solid #dce2e9;
     padding: 6px;
 }
+QMenu QWidget {
+    background: #ffffff;
+}
 QMenu::item {
+    background: #ffffff;
     padding: 6px 26px 6px 18px;
 }
 QMenu::item:selected {
-    background: #edf4f8;
+    background: #ffffff;
     color: #315f78;
+}
+QComboBox QAbstractItemView {
+    background: #ffffff;
+    color: #26323f;
+    selection-background-color: #ffffff;
+    selection-color: #315f78;
+    border: 1px solid #dce2e9;
 }
 QFrame#WelcomeBackground {
     background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #fcfdfe, stop:1 #edf1f5);

@@ -10,7 +10,7 @@ Covers the paged right-side Source Preview, Output Preview, and Logs surfaces in
 
 ## Architecture
 
-The Source Preview page lists the selected source file and path. The Output Preview page shows generated report output paths, live preview summaries, crop controls, generated preview video paths, and realtime FFplay playback status. Fixed preview panel heights prevent Start Live Preview from resizing the workspace. The Logs page records scan, playback, transcode, and cancellation events.
+The Source Preview page lists the selected source file and path. The Output Preview page shows generated report output paths, live preview summaries, crop controls, generated preview video paths, and realtime FFplay playback status. Playback and output previews open in separate resizable FFplay windows with a small Loom Player Controls dialog for pause, stop, and reveal-file actions. Fixed preview panel heights and scrollable workspace panels prevent Start Live Preview from resizing the main workspace. The Logs page records scan, playback, transcode, and cancellation events.
 
 ## Workflow
 
@@ -26,7 +26,7 @@ Configuration must remain explicit and versionable. Use YAML for rules, profiles
 
 ## Example
 
-After a scan, use Open HTML or the File menu Export PDF action to inspect generated reports. For output preview, choose a file, codec, frame rate, proxy, format, and preview duration, then click Start Live Preview to generate a short output preview video and play the whole segment in FFplay. Play opens the selected source in a separate fullscreen FFplay window.
+After a scan, use Open HTML or the File menu Export PDF action to inspect generated reports. For output preview, choose a file, codec, frame rate, proxy, format, and preview duration, then click Start Live Preview to generate a short output preview video and play the whole segment in FFplay. Play opens the selected source in a separate floating FFplay window rather than forcing fullscreen.
 
 ## Known Limitations
 
@@ -47,5 +47,5 @@ Expand this document when the subsystem receives a new module, public API, UI su
 
 ## Revision History
 
-- Documentation version: 1.6
-- Last updated: 2026-06-29
+- Documentation version: 1.7
+- Last updated: 2026-06-30
